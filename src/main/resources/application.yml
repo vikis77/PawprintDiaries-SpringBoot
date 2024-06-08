@@ -1,0 +1,25 @@
+# swagger相关配置
+springdoc:
+    group-configs:
+    - group: 接口文档
+      packages-to-scan: com.qin.catcat.unite.controller
+knife4j:
+    enable: true
+    setting:
+        language: zh_cn
+
+#mysql配置
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/catcat?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&allowPublicKeyRetrieval=true
+        username: root
+        password: 
+        type: com.zaxxer.hikari.HikariDataSource
+        hikari:
+            mmaximum-pool-size: 15
+            minimum-idle: 5
+            idle-timeout: 30000
+
+
+
