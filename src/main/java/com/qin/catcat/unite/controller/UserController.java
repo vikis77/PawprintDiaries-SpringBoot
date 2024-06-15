@@ -38,28 +38,61 @@ public class UserController {
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         log.info("用户登录：{}",userLoginDTO.getUsername());
 
-        //1.查询数据库，是否存在用户
-        Boolean result = userService.Login(userLoginDTO);
-        // log.info(String.valueOf(result));
-        // System.out.println(String.valueOf(result));
-        //2.用户存在 && 账号状态正常，设置token
-        try {
-            //创建token
-            String token = Jwts.builder().setSubject(userLoginDTO.getUsername())//主题，可以放用户的详细信息(用户角色)
-            .setId(null)//用户ID
-            .setIssuedAt(new Date())//token创建时间
-            .setExpiration(new Date(System.currentTimeMillis()+600000))//toekn过期时间
-            .signWith(SignatureAlgorithm.HS256, "CATCAT")//加密方式和加密密码
-            .compact();
+        //1.查询数据库，是否存在用户 1验证通过 2密码错误 3用户名不存在
+        int result = userService.loginUser(userLoginDTO);
 
-        } catch (Exception e) {
-            
+        if(result==1){
+            //用户存在，账号状态正常，密码验证通过
+            //封装结果返回
+            UserLoginVO userLoginVO = UserLoginVO.builder()
+            .token("1")
+            .build();
+
+            return Result.success(userLoginVO,"登录成功");
+        }else if(result==2){
+            //密码错误
+            return Result.error("密码错误");
+        }else if(result==3){
+            //用户名不存在或账号状态异常
+            return Result.error("用户名不存在或账号状态异常");
+        }else{
+            return Result.error("登录出错了,请联系管理员");
         }
-        //封装结果返回
-        UserLoginVO userLoginVO = UserLoginVO.builder()
-        .token("1")
-        .build();
-        return Result.success(userLoginVO);
+        //2.用户存在 && 账号状态正常，设置token
+        // try {
+        //     //创建token
+        //     String token = Jwts.builder().setSubject(userLoginDTO.getUsername())//主题，可以放用户的详细信息(用户角色)
+        //     .setId(null)//用户ID
+        //     .setIssuedAt(new Date())//token创建时间
+        //     .setExpiration(new Date(System.currentTimeMillis()+600000))//toekn过期时间
+        //     .signWith(SignatureAlgorithm.HS256, "CATCAT")//加密方式和加密密码
+        //     .compact();
+
+        // } catch (Exception e) {
+            
+        // }
+        
+        
     }
     
+    /**
+    * 用户注册
+    * @param 
+    * @return 
+    */
+    @PostMapping("/register")
+    public Result<UserLoginVO> register(@RequestBody UserLoginDTO userLoginDTO) {
+        log.info("用户注册：{}",userLoginDTO.getUsername());
+
+        //1.查询数据库，是否存在用户 true注册成功，false注册失败（用户已存在）
+        Boolean result = userService.registerUser(userLoginDTO); 
+        if(result){
+            //注册成功
+            return Result.success("注册成功");
+        }else{
+            //注册失败，用户名已存在
+            return Result.error("注册失败，用户已存在");
+        }
+
+    }
 }

@@ -21,5 +21,11 @@ spring:
             minimum-idle: 5
             idle-timeout: 30000
 
-
+# # MyBatis Plus 的配置
+# mybatis-plus:
+#   # mybatis 配置文件的路径
+#   # config-location: "classpath:mybatis/mybatis.config"
+#   # mapper 映射文件的路径，可以有多个 
+#   mapper-locations:
+#     - "classpath*:mappers/**/*.xml"
 

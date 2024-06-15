@@ -8,7 +8,20 @@ public interface UserService {
     * @param 
     * @return 
     */  
-    public Boolean Login(UserLoginDTO userLoginDTO);
+    public int loginUser(UserLoginDTO userLoginDTO);
 
+    /**
+    * 注册
+    * @param 
+    * @return 
+    */
+    public Boolean registerUser(UserLoginDTO userLoginDTO);
+
+    /**
+    * 更新用户密码
+    * @param 
+    * @return 
+    */
+    public void updatePassword(Long userId,String newPassword);
 
 }

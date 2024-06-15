@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+// import com.baomidou.mybatisplus.test.autoconfigure.MybatisPlusTest;
+
 import jakarta.annotation.Resource;
 
 
@@ -23,3 +25,16 @@ class CatcatApplicationTests {
 	}
 
 }
+// @MybatisPlusTest
+// class MybatisPlusSampleTest {
+
+//     @Autowired
+//     private SampleMapper sampleMapper;
+
+//     @Test
+//     void testInsert() {
+//         Sample sample = new Sample();
+//         sampleMapper.insert(sample);
+//         assertThat(sample.getId()).isNotNull();
+//     }
+// }
