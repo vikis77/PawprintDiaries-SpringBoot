@@ -1,6 +1,7 @@
 package com.qin.catcat.unite.service;
 
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
+import com.qin.catcat.unite.popo.entity.User;
 
 public interface UserService {
     /**
@@ -8,7 +9,7 @@ public interface UserService {
     * @param 
     * @return 
     */  
-    public int loginUser(UserLoginDTO userLoginDTO);
+    public String loginUser(UserLoginDTO userLoginDTO);
 
     /**
     * 注册
@@ -23,5 +24,12 @@ public interface UserService {
     * @return 
     */
     public void updatePassword(Long userId,String newPassword);
+
+    /**
+    * 根据userId获取用户信息
+    * @param 
+    * @return 
+    */
+    public User getUserProfile(String userId);
 
 }

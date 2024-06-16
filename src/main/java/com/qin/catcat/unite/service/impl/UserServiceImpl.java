@@ -3,12 +3,20 @@ package com.qin.catcat.unite.service.impl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.exception.PasswordIncorrectException;
 import com.qin.catcat.unite.exception.UserNotExistException;
 import com.qin.catcat.unite.mapper.UserMapper;
@@ -25,13 +33,15 @@ public class UserServiceImpl implements UserService{
     private UserMapper userMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
-
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
     /**
     * 登录
     * @param 
     * @return 1验证通过 2密码错误 3用户名不存在
     */
-    public int loginUser(UserLoginDTO userLoginDTO){
+    public String loginUser(UserLoginDTO userLoginDTO){
+        
         int result=1;
 
         //1.查询用户是否存在且合法
@@ -62,10 +72,15 @@ public class UserServiceImpl implements UserService{
                     //密码验证通过
                     result=1;
                     log.info("密码验证通过");
-                    //生成Token
-                    return 1;
+                    // 认证用户
+
+                    // 生成 token
+                    String jwt = jwtTokenProvider.generateToken(userLoginDTO.getUsername(),user2.getUserId());
+                    System.out.println(jwt);
+                    // 返回 token
+                    return jwt;
                 }else{
-                    //密码验证失败
+                    //密码验证失败 
                     log.info("密码验证失败");
                     throw new PasswordIncorrectException("密码错误");
                 }
@@ -128,5 +143,15 @@ public class UserServiceImpl implements UserService{
             //更新用户密码到数据库
             userMapper.updateById(user);
         }
+    }
+
+    /**
+    * 根据userId获取用户信息
+    * @param 
+    * @return 
+    */
+    public User getUserProfile(String userId){
+        User user = userMapper.selectById(userId);
+        return user;
     }
 }

@@ -29,3 +29,8 @@ spring:
 #   mapper-locations:
 #     - "classpath*:mappers/**/*.xml"
 
+jwt:
+  secret: jwt_key
+  expiration: 3600000
+
+
