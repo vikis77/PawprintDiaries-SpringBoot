@@ -23,7 +23,7 @@ public interface UserService {
     * @param 
     * @return 
     */
-    public void updatePassword(Long userId,String newPassword);
+    public boolean updatePassword(String userId,String newPassword);
 
     /**
     * 根据userId获取用户信息
@@ -31,5 +31,6 @@ public interface UserService {
     * @return 
     */
     public User getUserProfile(String userId);
+
 
 }

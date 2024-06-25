@@ -7,7 +7,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.qin.catcat.unite.common.interceptor.JwtInterceptor;
 
+import lombok.extern.slf4j.Slf4j;
+
+//不过这里？？
 @Configuration
+@Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
@@ -15,6 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        log.info("WebConfig->addInterceptors()");
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns("/login","/register"); // 登录接口不需要 JWT 验证

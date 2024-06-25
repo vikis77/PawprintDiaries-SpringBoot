@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -13,18 +14,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
-* 用户类
+* 用户实体类
 */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("user")//mp的注解 指定数据库对应的表名
+@TableName(value = "user")//mp的注解 指定数据库对应的表名
 public class User {
-    //主键
-    @TableId(value = "id",type = IdType.AUTO)////mp的注解 指定主键
+    
     private Integer id;
-    //用户ID
+
+    @TableId(value = "user_id",type = IdType.INPUT)////mp的注解 指定主键
+    //用户ID 主键
     private String userId;
     //用户名
     private String username;

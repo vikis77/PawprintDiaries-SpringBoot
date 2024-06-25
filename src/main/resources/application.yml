@@ -29,8 +29,16 @@ spring:
 #   mapper-locations:
 #     - "classpath*:mappers/**/*.xml"
 
+#mybatis 分页插件
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
 jwt:
-  secret: jwt_key
-  expiration: 3600000
+  secret: and0a2V5
+  expiration: 3600000 #1小时
+
 
 

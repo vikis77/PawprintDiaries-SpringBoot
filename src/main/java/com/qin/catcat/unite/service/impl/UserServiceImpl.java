@@ -16,9 +16,12 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.exception.PasswordIncorrectException;
+import com.qin.catcat.unite.exception.UserAlreadyExistsException;
 import com.qin.catcat.unite.exception.UserNotExistException;
+import com.qin.catcat.unite.exception.updatePasswordFailedException;
 import com.qin.catcat.unite.mapper.UserMapper;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.User;
@@ -35,6 +38,7 @@ public class UserServiceImpl implements UserService{
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    @Autowired GeneratorIdUtil generatorIdUtil;
     /**
     * 登录
     * @param 
@@ -106,20 +110,24 @@ public class UserServiceImpl implements UserService{
     */
     public Boolean registerUser(UserLoginDTO userLoginDTO){
         QueryWrapper<User> wrapper = new QueryWrapper<>();//创建条件构造器
-        wrapper.eq("usename", userLoginDTO.getUsername());//条件构造
+        wrapper.eq("username", userLoginDTO.getUsername());//条件构造
         User storeUser = userMapper.selectOne(wrapper);//条件查询数据库
 
         if(storeUser!=null){
             //数据库已经存在此用户名，注册失败
-            return false;
+            throw new UserAlreadyExistsException("用户名已存在，注册失败");
         }
+
         //创建新用户
         User user = new User();
         user.setUsername(userLoginDTO.getUsername());
         //使用BCryptPasswordEncoder 加密密码
         String encodedPassword = passwordEncoder.encode(userLoginDTO.getPassword());
+        String userId = generatorIdUtil.GeneratorRandomId();//生成ID
+
         user.setPassword(encodedPassword);
         user.setStatus(1);
+        user.setUserId(userId);
 
         //保存用户到数据库
         int result = userMapper.insert(user);
@@ -131,17 +139,24 @@ public class UserServiceImpl implements UserService{
     * @param 
     * @return 
     */
-    public void updatePassword(Long userId,String newPassword){
+    public boolean updatePassword(String userId,String newPassword){
         //根据用户ID获取用户信息
         User user = userMapper.selectById(userId);
 
+        //用户存在
         if(user!=null){
             //使用 BCryptPasswordEncoder 加密新密码
             String encodedPassword = passwordEncoder.encode(newPassword);
             user.setPassword(encodedPassword);
 
             //更新用户密码到数据库
-            userMapper.updateById(user);
+            int result = userMapper.updateById(user);
+            if(result!=1){
+                throw new updatePasswordFailedException("更新密码失败");
+            }
+            return true;
+        }else{
+            throw new UserNotExistException("用户不存在");
         }
     }
 
@@ -151,7 +166,15 @@ public class UserServiceImpl implements UserService{
     * @return 
     */
     public User getUserProfile(String userId){
-        User user = userMapper.selectById(userId);
+        log.info(userId);
+        
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper
+            //排除密码字段
+            .select("id","user_id","username","nick_name","email","phone_number","brithday","address","avatar","role","status","create_time","update_time","number_of_post")
+            .eq("user_id", userId);
+        User user = userMapper.selectOne(queryWrapper);
+        // log.info(user.toString());
         return user;
     }
 }
