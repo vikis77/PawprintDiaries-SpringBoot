@@ -1,6 +1,8 @@
 package com.qin.catcat;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -37,7 +39,7 @@ class CatcatApplicationTests {
 
 	@Test
 	public void generateID(){
-		System.out.println("111");
+		System.out.println(Timestamp.from(Instant.now()));
 		System.out.println("@@"+generatorIdUtil.GeneratorRandomId());
 	}
 	@Test
