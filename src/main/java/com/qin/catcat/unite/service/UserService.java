@@ -32,5 +32,6 @@ public interface UserService {
     */
     public User getUserProfile(String userId);
 
-
+    //根据ID获取昵称
+    public String getNicknameFromId(String id);
 }

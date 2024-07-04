@@ -39,5 +39,8 @@ public class Post {
     @JsonProperty("send_time")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss.SSS")
     private Timestamp sendTime;
+    //更新时间
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss.SSS")
+    private Timestamp updateTime;
 
 }

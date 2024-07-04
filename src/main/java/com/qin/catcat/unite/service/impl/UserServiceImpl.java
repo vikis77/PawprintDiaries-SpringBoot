@@ -177,4 +177,19 @@ public class UserServiceImpl implements UserService{
         // log.info(user.toString());
         return user;
     }
+
+    //根据ID获取昵称
+    public String getNicknameFromId(String id){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", id).select("nick_name");
+        User user = userMapper.selectOne(queryWrapper);
+        if(user==null){
+            //TODO throw new
+            return "根据ID获取昵称失败";
+        }else{
+            String nickname = user.getNickName();
+            return nickname;
+        }
+        
+    }
 }
