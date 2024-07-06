@@ -35,6 +35,27 @@ public interface PostService {
     public IPage<Post> getPostBySendtime(int page,int pageSize);
 
     /**
+    * 根据点赞数分页查询前十条帖子
+    * @param 
+    * @return 
+    */
+    public IPage<Post> getPostByLikecount(int page,int pageSize);
+
+    /**
+    * 根据标题搜索相关帖子（匹配标题、匹配文章内容）分页搜索
+    * @param 
+    * @return 
+    */
+    public IPage<Post> getPostByTitle(String title,int page,int pageSize);
+
+    /**
+    * 根据作者昵称搜索相关帖子
+    * @param 
+    * @return 
+    */
+    public IPage<Post> getPostByNickname(String nickName,int page,int pageSize);
+    
+    /**
     * 根据帖子ID删除帖子
     * @param 
     * @return 

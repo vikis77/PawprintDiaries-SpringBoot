@@ -63,6 +63,45 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
+    * 根据点赞数分页查询前十条帖子
+    * @param 
+    * @return 
+    */
+    public IPage<Post> getPostByLikecount(int page,int pageSize){
+        Page<Post> postObj = new Page<>(page, pageSize);
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("like_count");
+        IPage<Post> posts = postMapper.selectPage(postObj, queryWrapper);
+        return posts;
+    }
+
+    /**
+    * 根据标题搜索相关帖子（匹配标题、匹配文章内容）分页搜索
+    * @param 
+    * @return 
+    */
+    public IPage<Post> getPostByTitle(String title,int page,int pageSize){
+        Page<Post> postObj = new Page<>(page, pageSize);
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("title",title).or().like("article", title);
+        IPage<Post> posts = postMapper.selectPage(postObj, queryWrapper);
+        return posts;
+    }
+
+    /**
+    * 根据作者昵称搜索相关帖子
+    * @param 
+    * @return 
+    */
+    public IPage<Post> getPostByNickname(String nickName,int page,int pageSize){
+        Page<Post> postObj = new Page<>(page, pageSize);
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("author_nickname", nickName);
+        IPage<Post> posts = postMapper.selectPage(postObj,queryWrapper);
+        return posts;
+    }
+
+    /**
     * 根据帖子ID删除帖子
     * @param 
     * @return 

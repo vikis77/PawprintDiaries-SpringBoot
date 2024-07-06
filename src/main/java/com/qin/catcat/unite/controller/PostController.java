@@ -156,16 +156,53 @@ public class PostController {
     * @param 
     * @return 
     */
+    @GetMapping("/getPostByLikeForPage")
+    public Result<IPage<Post>> getPostByLikecount(@RequestHeader("Authorization") String Token, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue="10") int pageSize) {
+        String username = jwtTokenProvider.getUsernameFromToken(Token);
+        log.info("用户{}请求根据点赞数分页查询前十条帖子,第{}页，每页{}条",username,page,pageSize);
+
+        IPage<Post> posts = postService.getPostByLikecount(page,pageSize);
+        return Result.success(posts);
+    }
+    
 
     /**
-    * 根据标题搜索相关帖子（匹配标题、匹配文章内容）
+    * 根据标题搜索相关帖子（匹配标题、匹配文章内容）分页搜索
     * @param 
     * @return 
     */
+    @GetMapping("/searchPostByTitle")
+    public Result<IPage<Post>> getPostByTitle(@RequestHeader("Authorization") String Token, 
+                                                @RequestParam(defaultValue = "") String title,
+                                                @RequestParam(defaultValue = "1") int page,
+                                                @RequestParam(defaultValue = "10") int pageSize)
+    {
+        String username = jwtTokenProvider.getUsernameFromToken(Token);
+        log.info("用户{}请求根据标题 {} 搜索相关帖子（匹配标题、匹配文章内容）,第{}页，每页{}条",username,title,page,pageSize);
+
+        IPage<Post> posts = postService.getPostByTitle(title,page,pageSize);
+        return Result.success(posts);
+    }
 
     /**
     * 根据作者昵称搜索相关帖子
     * @param 
     * @return 
     */
+    @GetMapping("/searchPostByNickname")
+    public Result<IPage<Post>> getPostByNickname(@RequestHeader("Authorization") String Token, 
+                                                    @RequestParam String nickName,
+                                                    @RequestParam(defaultValue = "1") int page,
+                                                    @RequestParam(defaultValue = "10") int pageSize)
+    {
+        String username = jwtTokenProvider.getUsernameFromToken(Token);
+        log.info("用户{}请求根根据作者昵称 {} 搜索相关帖子,第{}页，每页{}条",username,nickName,page,pageSize);
+
+        if(nickName==null){
+            // TODO throw new
+        }
+
+        IPage<Post> posts = postService.getPostByNickname(nickName,page,pageSize);
+        return Result.success(posts);
+    }
 }
