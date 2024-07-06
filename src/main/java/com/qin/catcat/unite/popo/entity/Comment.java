@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,20 +18,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("comment")
+@Builder
 public class Comment {
     //主键ID
     @TableId(value = "comment_id",type = IdType.INPUT)
     private Long commentId;
     //帖子ID
-    private Long postID;
-    //帖子内容
+    private Long postId;
+    //帖子类型
     private String commentType;
+    //评论内容
+    private String commentContext;
     //评论者ID
-    private Long commentator;
+    private Long commentatorId;
     //评论时间
     private Timestamp commentTime;
     //评论点赞数
-    private Integer numOfComment;
+    private Integer likeCount;
     
 
 }
