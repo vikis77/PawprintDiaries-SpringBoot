@@ -36,12 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig {
-    @Autowired
-    private JwtInterceptor jwtInterceptor;
-    @Autowired 
-    private MyAuthenticationSuccessHandler myAuthenticationSuccessHandler;
-    // @Autowired
-    // private MyAuthenticationFailureHandler myAuthenticationFailureHandler;
+    @Autowired private JwtInterceptor jwtInterceptor;
+    @Autowired private MyAuthenticationSuccessHandler myAuthenticationSuccessHandler;
     @Autowired private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
 
     // 配置了 BCryptPasswordEncoder 用于密码加密
@@ -62,28 +58,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.info("SecurityConfig >>> SecurityFilterChain");
-        // return http.authorizeHttpRequests(
-        //         (authz)->authz
-        //                 .requestMatchers(
-        //                     "/v3/api-docs/**",       // Springdoc OpenAPI 3
-        //                     "/swagger-ui/**",        // Swagger UI
-        //                     "/swagger-ui.html",      // Swagger UI
-        //                     "/swagger-resources/**", // Swagger resources
-        //                     "/webjars/**",           // Webjars for Swagger UI
-        //                     "/knife4j/**",            // Knife4j resources
-        //                     "/doc.html",               //放行文档
-        //                     "/login",
-        //                     "/register"
-        //                     // "/profile"
-        //                     ).permitAll()  
-        //                 .anyRequest().authenticated()) // 其他请求必须经过身份验证
-        
-        //                 // .requestMatchers("**").permitAll().anyRequest().permitAll()) // 允许所有请求无需身份验证
-		//                 .csrf(AbstractHttpConfigurer::disable) // 禁用csrf，因为通常 API 不需要 CSRF 保护
-		//                 // .cors(conf->conf.configurationSource(corsConfigurationSource())) // 配置跨域 允许所有来源、方法和头部的跨域请求
-		//                 .sessionManagement(conf->conf.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 禁用session Spring Security 不会创建或使用 HTTP 会话来存储认证信息，适合 RESTful API 的无状态特性
-        //                 // .formLogin(withDefaults())
-		//                 .build();
 
         //开启授权保护
         http.authorizeHttpRequests(authorize -> authorize
@@ -112,7 +86,7 @@ public class SecurityConfig {
             // .httpBasic(withDefaults());
         http.csrf(csrf->csrf.disable());// 禁用csrf，因为通常 API 不需要 CSRF 保护
 		http.cors(conf->conf.configurationSource(corsConfigurationSource())); // 配置跨域 允许所有来源、方法和头部的跨域请求
-        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class); //添加JwtAuthenticationTokenFilter过滤器
         return http.build();
     }
 

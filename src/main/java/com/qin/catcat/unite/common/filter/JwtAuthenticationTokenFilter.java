@@ -16,6 +16,7 @@ import com.alibaba.fastjson.JSON;
 import com.qin.catcat.unite.common.enumclass.enumStatusCode;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.exception.JWTIdentityVerificationFailedException;
 
 import jakarta.servlet.FilterChain;
@@ -24,15 +25,31 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Created by qin on 2024//.
+ *  <p>该Filter的作用是，
+ *  1.从客户端的Request Header中拿到Token
+ *  2.对Token进行合法性验证
+ *  3.从Token中提取出用户名和用户ID
+ *  4.与SecurityContext里存的登陆用户进行对比
+ *  5.如果一致，则放行，否则抛出JWTIdentityVerificationFailedException
+ */
 @Component
 @Slf4j
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
- 
+
     @Autowired
     JwtTokenProvider jwtTokenProvider;
- 
+
+    /**
+     * 在每次HTTP请求时执行该过滤器
+     * @param request
+     * @param response
+     * @param chain
+     * @throws ServletException
+     * @throws IOException
+     */
     @Override
-    //自定义过滤器方法，用于在每次HTTP请求时执行
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
@@ -61,10 +78,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     String contextUsername = (String) authentication.getName();
                     if(contextUserId.equals(tokenUserId) && contextUsername.equals(tokenUsername)){
                         log.info("JWT内容身份检验通过");
+                        TokenHolder.setToken(tokenHeader); //将token放入ThreadLocal
                     }else{
                         throw new JWTIdentityVerificationFailedException("JWT内容身份检验失败");
                     }
-                    // log.info("@@userId:{}",contextUserId);
                 }
 
             }catch (Exception ex){
@@ -74,6 +91,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             }
         }
         //放通、进入security自带的过滤器
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response); //放行
+        } finally {
+            TokenHolder.clear(); //清除ThreadLocal
+        }
     }
 }
