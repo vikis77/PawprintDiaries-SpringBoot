@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
@@ -31,17 +32,20 @@ class CatcatApplicationTests {
 	@Autowired private GeneratorIdUtil generatorIdUtil;
 	@Autowired CatMapper catMapper;
 
-
+	//测试获取数据库连接
 	@Test
 	void contextLoadsOne() throws Exception{
 		System.out.println("获取的数据库连接为:"+dataSource.getConnection());
 	}
 
+	//测试生成随机ID
 	@Test
 	public void generateID(){
 		System.out.println(Timestamp.from(Instant.now()));
 		System.out.println("@@"+generatorIdUtil.GeneratorRandomId());
 	}
+
+	//测试分页
 	@Test
 	public void test(){
 		Page<Cat> pageObj = new Page<>(1,1);
@@ -49,9 +53,20 @@ class CatcatApplicationTests {
         List<Cat> pageinfo = pageObj.getRecords();
 		log.info(pageinfo.toString());
 	}
-	        
 
+	//测试redis
+	@Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    @Test
+    void RedisTemplateTest() {
+        redisTemplate.opsForValue().set("key_name", "my name is Jacky");
+        System.out.println("缓存设置成功");
+        String value = (String) redisTemplate.opsForValue().get("key_name");
+        System.out.println(value);
+    }
+	    
 }
+
 // @MybatisPlusTest
 // class MybatisPlusSampleTest {
 

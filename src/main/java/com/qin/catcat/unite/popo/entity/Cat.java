@@ -1,5 +1,6 @@
 package com.qin.catcat.unite.popo.entity;
 
+import java.io.Serializable;
 import java.sql.Date;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -19,7 +20,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName(value = "cat")
-public class Cat {
+public class Cat implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     @TableId(value = "cat_id",type = IdType.INPUT)
     //ID 主键
     private Long catId;

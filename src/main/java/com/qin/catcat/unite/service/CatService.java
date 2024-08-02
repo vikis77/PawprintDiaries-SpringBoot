@@ -6,7 +6,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 // import com.github.pagehelper.PageInfo;
 import com.qin.catcat.unite.popo.dto.CatDTO;
+import com.qin.catcat.unite.popo.dto.CoordinateDTO;
+import com.qin.catcat.unite.popo.dto.DonateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.Coordinate;
+import com.qin.catcat.unite.popo.vo.CoordinateVO;
 
 public interface CatService {
     /**
@@ -58,4 +62,39 @@ public interface CatService {
     * @return 
     */
     public void delete(Long ID);
+
+    /**
+    * 新增猫猫坐标
+    * @param 
+    * @return 
+    */
+    public void addCoordinate(CoordinateDTO coordinateDTO);
+
+    /**
+    * 删除猫猫坐标
+    * @param 
+    * @return 
+    */
+    public void deleteCoordinate(List<Long> ids);
+
+    /**
+    * 修改坐标信息
+    * @param 
+    * @return 
+    */
+    public void updateCoordinate(Coordinate coordinate);
+
+    /**
+    * 查找猫猫坐标 全部坐标信息（最新）
+    * @param 
+    * @return 
+    */
+    public List<CoordinateVO> selectCoordinate();
+
+    /**
+    * 查询单只猫的历史坐标信息（分页）
+    * @param 
+    * @return 
+    */
+    public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id,int page,int size);
 }

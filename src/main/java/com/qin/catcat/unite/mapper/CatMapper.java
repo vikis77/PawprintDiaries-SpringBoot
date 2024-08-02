@@ -14,4 +14,5 @@ public interface CatMapper extends BaseMapper<Cat>{
     //查找全部猫猫信息
     @Select("Select * from cat")
     List<Cat> findAll();
+
 }

@@ -14,15 +14,21 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 // import com.github.pagehelper.PageInfo;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.popo.dto.CatDTO;
+import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.Coordinate;
+import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.service.CatService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
 
 @RestController
@@ -130,5 +136,76 @@ public class CatController {
 
         catService.delete(ID);
         return Result.success();
+    }
+
+    /**
+    * 新增猫猫坐标 (遍历猫名列表)
+    * @param 
+    * @return 
+    */
+    @PostMapping("/addCoordinate")
+    public Result<?> addCoordinate(@RequestBody CoordinateDTO coordinateDTO){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求新增猫猫坐标",username);
+
+        catService.addCoordinate(coordinateDTO);
+        return Result.success();
+    }
+
+    /**
+    * 删除坐标信息
+    * @param 坐标信息id的列表
+    * @return 
+    */
+    @DeleteMapping("/deleteCoordinate")
+    public Result<?> deleteCoordinate(@RequestParam List<Long> ids){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求删除猫猫坐标",username);
+
+        catService.deleteCoordinate(ids);
+        return Result.success();
+        
+    }
+
+    /**
+    * 修改坐标信息
+    * @param 
+    * @return 
+    */
+    @PutMapping("/updateCoordinate")
+    public Result<?> updateCoordinate(@RequestBody Coordinate coordinate){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求修改猫猫坐标",username);
+
+        catService.updateCoordinate(coordinate);
+        return Result.success();
+    }
+
+    /**
+    * 查找猫猫坐标 全部坐标信息（最新）
+    * @param 
+    * @return 
+    */
+    @GetMapping("/findCoordinate")
+    public Result<List<CoordinateVO>> findCoordinate(){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求查找猫猫坐标",username);
+
+        List<CoordinateVO> coordinates = catService.selectCoordinate();
+        return Result.success(coordinates);
+    }
+
+    /**
+    * 查询单只猫的历史坐标信息（分页）
+    * @param 
+    * @return 
+    */
+    @GetMapping("/findCoordinateByPage")
+    public Result<IPage<CoordinateVO>> findCoordinateByPage(@RequestParam Long catId,@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "10") int size){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求查询单只猫的历史坐标信息",username);
+
+        IPage<CoordinateVO> coordinates = catService.selectCoordinateByCatId(catId,page,size);
+        return Result.success(coordinates);
     }
 }
