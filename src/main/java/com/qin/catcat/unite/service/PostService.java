@@ -68,4 +68,18 @@ public interface PostService {
     * @return 
     */
     public int update(Post post);
+
+    /**
+    * 根据帖子ID点赞
+    * @param 
+    * @return 
+    */
+    public int likePost(String postId);
+
+    /**
+    * 根据帖子ID取消点赞
+    * @param 
+    * @return 
+    */
+    public int unlikePost(String postId);   
 }

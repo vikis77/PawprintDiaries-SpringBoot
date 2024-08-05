@@ -17,6 +17,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.dto.UpdatePostDTO;
 import com.qin.catcat.unite.popo.entity.Post;
@@ -204,5 +205,33 @@ public class PostController {
 
         IPage<Post> posts = postService.getPostByNickname(nickName,page,pageSize);
         return Result.success(posts);
+    }
+
+    /**
+    * 点赞帖子
+    * @param 
+    * @return 
+    */
+    @PostMapping("/likePost")
+    public Result<String> likePost(@RequestParam String postId){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求点赞帖子{}",username,postId);
+
+        postService.likePost(postId);
+        return Result.success();
+    }
+
+    /**
+    * 取消点赞
+    * @param 
+    * @return 
+    */
+    @PostMapping("/unlikePost")
+    public Result<String> unlikePost(@RequestParam String postId){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求取消点赞帖子{}",username,postId);
+
+        postService.unlikePost(postId);
+        return Result.success();
     }
 }
