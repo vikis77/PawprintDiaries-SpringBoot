@@ -48,7 +48,10 @@ public class RedisConfig{
 
       // 定义一个特定缓存的配置
       Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-      cacheConfigurations.put("allCats", defaultCacheConfig.entryTtl(Duration.ofMinutes(1))); // 为 allCats 设置过期时间为 30 分钟
+      cacheConfigurations.put("allCats", defaultCacheConfig.entryTtl(Duration.ofMinutes(10))); // 为 allCats 设置过期时间为 10 分钟
+      cacheConfigurations.put("post_like",defaultCacheConfig.entryTtl(Duration.ofMinutes(10)));
+      cacheConfigurations.put("postForSendtime",defaultCacheConfig.entryTtl(Duration.ofMinutes(10)));
+      cacheConfigurations.put("postForLikecount",defaultCacheConfig.entryTtl(Duration.ofMinutes(10)));
 
       return RedisCacheManager.builder(connectionFactory)
               .cacheDefaults(defaultCacheConfig.entryTtl(Duration.ofMinutes(60))) // 默认过期时间 60 分钟
