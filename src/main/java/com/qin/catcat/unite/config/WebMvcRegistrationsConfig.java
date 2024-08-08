@@ -26,5 +26,7 @@ public class WebMvcRegistrationsConfig extends WebMvcConfigurationSupport {
                     .addResourceLocations("classpath:/META-INF/resources/");
             registry.addResourceHandler("/webjars/**")
                     .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        //     registry.addResourceHandler("/upload.html")
+        //             .addResourceLocations("classpath:/META-INF/resources/");
     }
 }

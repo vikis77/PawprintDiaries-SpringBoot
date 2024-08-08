@@ -70,7 +70,9 @@ public class SecurityConfig {
                 "/webjars/**",           // Webjars for Swagger UI
                 "/knife4j/**",            // Knife4j resources)
                 "/login",
-                "/register"
+                "/register",
+                "/upload/**",
+                "/upload/catImage"
             ).permitAll()
             //对所有请求开启授权保护
             .anyRequest()

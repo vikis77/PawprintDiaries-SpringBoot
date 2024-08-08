@@ -20,6 +20,8 @@ spring:
             mmaximum-pool-size: 15
             minimum-idle: 5
             idle-timeout: 30000
+    thymeleaf:
+      cache: false # 开发时关闭缓存，不然看不到实时页面
 
 #mybatis 分页插件
 pagehelper:
@@ -31,4 +33,5 @@ pagehelper:
 jwt:
   secret: and0a2V5
   expiration: 3600000 #1小时
+
 

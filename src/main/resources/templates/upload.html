@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>图片上传</title>
+</head>
+<body>
+    <h1>上传图片</h1>
+    <form method="POST" action="/upload/catImage" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*"/>
+        <button type="submit">上传</button>
+    </form>
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <title>Thymeleaf</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <td>用户名</td>
+            <td>密码</td>
+        </tr>
+        <tr th:each="user:${users}">
+            <td th:text="${user.name}"></td>
+            <td th:text="${user.password}"></td>
+        </tr>
+    </table>
+</body>
+</html> -->
