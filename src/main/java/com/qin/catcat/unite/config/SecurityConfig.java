@@ -72,7 +72,8 @@ public class SecurityConfig {
                 "/login",
                 "/register",
                 "/upload/**",
-                "/upload/catImage"
+                "/upload/catImage",
+                "/catLocation" // // 放行 WebSocket 端点
             ).permitAll()
             //对所有请求开启授权保护
             .anyRequest()
@@ -86,7 +87,9 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 ;});
             // .httpBasic(withDefaults());
-        http.csrf(csrf->csrf.disable());// 禁用csrf，因为通常 API 不需要 CSRF 保护
+        http.csrf(csrf->csrf.
+            ignoringRequestMatchers("/ws/**"). // 忽略 WebSocket 端点的 CSRF 保护
+            disable());// 禁用csrf，因为通常 API 不需要 CSRF 保护
 		http.cors(conf->conf.configurationSource(corsConfigurationSource())); // 配置跨域 允许所有来源、方法和头部的跨域请求
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class); //添加JwtAuthenticationTokenFilter过滤器
         return http.build();

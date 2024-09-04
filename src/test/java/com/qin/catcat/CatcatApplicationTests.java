@@ -3,6 +3,7 @@ package com.qin.catcat;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -64,6 +65,8 @@ class CatcatApplicationTests {
         String value = (String) redisTemplate.opsForValue().get("key_name");
         System.out.println(value);
     }
+
+
 	    
 }
 

@@ -1,4 +1,4 @@
-package com.qin.catcat.unite.handle;
+package com.qin.catcat.unite.controller.handle;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

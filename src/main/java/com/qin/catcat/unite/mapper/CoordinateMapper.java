@@ -20,7 +20,7 @@ public interface CoordinateMapper extends BaseMapper<Coordinate> {
 
         /**
          * 查询全部猫猫坐标
-         * 
+         * (SQL优化 延迟关联)
          * @return
          */
         @Select("SELECT coord.id, coord.cat_id, c.catname, coord.longitude,coord.latitude,coord.update_time,coord.area,coord.description "

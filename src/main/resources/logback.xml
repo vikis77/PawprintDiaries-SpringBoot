@@ -1,31 +1,3 @@
-<!-- <Configuration>
-    <property name="LOG_DIR" value="/var/log/path"/>
-    <property name="LOG_PREFIX" value="application"/>
-
-    <springProfile name="console-logging">
-        <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-        <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-        </root>
-    </springProfile>
-
-    <springProfile name="file-logging">
-        <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${LOG_DIR}/${LOG_PREFIX}.log</file>
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${LOG_DIR}/archived/${LOG_PREFIX}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                    <maxFileSize>100MB</maxFileSize>
-                </timeBasedFileNamingAndTriggeringPolicy>
-            </rollingPolicy>
-        </appender>
-        <root level="INFO">
-            <appender-ref ref="ROLLING"/>
-        </root>
-    </springProfile>
-</Configuration> -->
 
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

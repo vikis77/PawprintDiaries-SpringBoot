@@ -1,0 +1,24 @@
+<configuration>
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] [%X{requestId}] %logger{50} [%line] - %msg%n"/>
+
+    <!-- ConsoleAppender 配置 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${PATTERN}</pattern>
+            <!-- <charset>UTF-8</charset> -->
+        </encoder>
+    </appender>
+
+    <!-- LogstashTcpSocketAppender 配置 -->
+    <appender name="STASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        <includeCallerData>true</includeCallerData>
+        <destination>localhost:9061</destination>
+    </appender>
+
+    <!-- 根日志配置 -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STASH" />
+    </root>
+</configuration>
