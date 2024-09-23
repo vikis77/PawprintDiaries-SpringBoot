@@ -1,27 +1,21 @@
-package com.qin.catcat.unite.popo.entity;
+package com.qin.catcat.unite.popo.vo;
+
+import java.util.List;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qin.catcat.unite.popo.entity.PostPics;
+
+import lombok.Data;
 
 import java.sql.Timestamp;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /* 
- * 帖子表
+ * 响应给前端的单个帖子的全部信息
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@TableName(value = "post")
-public class Post {
+public class SinglePostVO {
     //主键ID
     @TableId(value = "post_id",type = IdType.INPUT)
     private Long postId;
@@ -31,6 +25,10 @@ public class Post {
     private String article;
     //作者ID
     private Long authorId;
+    //作者昵称
+    private String authorNickname;
+    //作者头像
+    private String authorAvatar;
     //点赞数
     private Integer likeCount;
     // 收藏数
@@ -44,6 +42,6 @@ public class Post {
     //更新时间
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss.SSS")
     private Timestamp updateTime;
-    //首页图片地址
-    private String coverPicture;
+    //帖子全部图片集合
+    private List<PostPics> images;
 }

@@ -1,7 +1,9 @@
 package com.qin.catcat.unite.service;
 
+import com.qin.catcat.unite.popo.dto.RegisterDTO;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.vo.MyPageVO;
 
 public interface UserService {
     /**
@@ -16,7 +18,7 @@ public interface UserService {
     * @param 
     * @return 
     */
-    public Boolean registerUser(UserLoginDTO userLoginDTO);
+    public Boolean registerUser(RegisterDTO registerDTO);
 
     /**
     * 更新用户密码
@@ -30,7 +32,7 @@ public interface UserService {
     * @param 
     * @return 
     */
-    public User getUserProfile(String userId);
+    public MyPageVO getUserProfile(String userId);
 
     //根据ID获取昵称
     public String getNicknameFromId(String id);

@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.vo.HomePostVO;
+import com.qin.catcat.unite.popo.vo.SinglePostVO;
 
 public interface PostService {
     /**
@@ -25,14 +27,14 @@ public interface PostService {
     * @param 
     * @return 
     */
-    public Post getPostByPostId(String PostId);
+    public SinglePostVO getPostByPostId(String PostId);
 
     /**
     * 根据发布时间分页查询前十条帖子
     * @param 
     * @return 
     */
-    public IPage<Post> getPostBySendtime(int page,int pageSize);
+    public IPage<HomePostVO> getPostBySendtime(int page,int pageSize);
 
     /**
     * 根据点赞数分页查询前十条帖子

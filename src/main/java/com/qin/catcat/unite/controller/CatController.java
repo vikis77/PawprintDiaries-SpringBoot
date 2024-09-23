@@ -18,8 +18,10 @@ import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
+import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 import com.qin.catcat.unite.service.CatService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,9 +61,14 @@ public class CatController {
     * @return 
     */
     @GetMapping("/findAll")
-    public Result<List<Cat>> getAll(@RequestHeader("Authorization") String Token){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
-        log.info("用户{}请求查找全部猫猫信息",username);
+    public Result<List<Cat>> getAll(){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求查找全部猫猫信息");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求查找全部猫猫信息",username);
+        }
 
         List<Cat> cats = catService.selectAll();
         return Result.success(cats);
@@ -108,6 +115,24 @@ public class CatController {
 
         Cat cat = catService.selectById(ID);
         return Result.success(cat);
+    }
+
+    /**
+    * 查询某只猫猫的照片（分页）
+    * @param 
+    * @return 
+    */
+    @GetMapping("/findPhotoByIdforPage")
+    public Result<List<CatPics>> getPhotoByIdforPage(@RequestParam String catId,@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "10") int size) {
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求查询某只猫猫的照片");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求查询某只猫猫的照片",username);
+        }
+        List<CatPics> picsList = catService.selectPhotoById(catId,page,size);
+        return Result.success(picsList);
     }
     
     /**
@@ -188,8 +213,13 @@ public class CatController {
     */
     @GetMapping("/findCoordinate")
     public Result<List<CoordinateVO>> findCoordinate(){
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求查找猫猫坐标",username);
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求查找全部猫猫坐标");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求查找猫猫坐标",username);
+        }
 
         List<CoordinateVO> coordinates = catService.selectCoordinate();
         return Result.success(coordinates);
@@ -202,10 +232,33 @@ public class CatController {
     */
     @GetMapping("/findCoordinateByPage")
     public Result<IPage<CoordinateVO>> findCoordinateByPage(@RequestParam Long catId,@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "10") int size){
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求查询单只猫的历史坐标信息",username);
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求查询单只猫的历史坐标信息");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求查询单只猫的历史坐标信息",username);
+        }
 
         IPage<CoordinateVO> coordinates = catService.selectCoordinateByCatId(catId,page,size);
         return Result.success(coordinates);
+    }
+
+    /**
+    * 数据分析接口
+    * @param 
+    * @return 
+    */
+    @GetMapping("/analysis")
+    public Result<DataAnalysisVO> analysis(){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求数据分析");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求数据分析",username);
+        }
+        DataAnalysisVO resVo = catService.analysis();
+        return Result.success(resVo);
     }
 }

@@ -2,6 +2,7 @@ package com.qin.catcat.unite.service.impl;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -18,12 +19,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 // import com.github.pagehelper.PageInfo;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.mapper.CatMapper;
+import com.qin.catcat.unite.mapper.CatPicsMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
+import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 import com.qin.catcat.unite.service.CatService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> implements CatService{
     @Autowired CatMapper catMapper;
+    @Autowired CatPicsMapper catPicsMapper;
     @Autowired CoordinateMapper coordinateMapper;
     @Autowired GeneratorIdUtil generatorIdUtil;
 
@@ -118,6 +123,28 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         log.info("根据猫猫ID查找某一只猫猫信息完成");
         return cat;
     }
+
+    /**
+    * 根据猫猫ID查找猫猫图片
+    * @param 
+    * @return 
+    */
+    public List<CatPics> selectPhotoById(String ID, int page, int size) {
+        // 创建分页对象
+        Page<CatPics> pageObg = new Page<>(page,size);
+
+        // 构造查询条件
+        QueryWrapper<CatPics> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("cat_id", ID)
+            .orderByDesc("create_time"); //最新的图片在前
+
+        // 执行查询并返回结果
+        IPage<CatPics> result = catPicsMapper.selectPage(pageObg, queryWrapper);
+
+        log.info("根据猫猫ID:{} 查找猫猫图片完成, 返回{}张图片", ID, result.getRecords().size());
+        return result.getRecords(); // 返回图片列表
+    }
+
 
     /**
     * 更新某只猫信息
@@ -246,5 +273,111 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         IPage<CoordinateVO> coordinateVOIPage = coordinateMapper.selectCoordinatesByCatId(pageObj, cat_id);
         log.info("分页查询单只猫的历史坐标信息完成");
         return coordinateVOIPage;
+    }
+
+    /**
+    * 数据分析
+    * @param 
+    * @return 
+    */
+    public DataAnalysisVO analysis(){
+        List<Cat> cats = catMapper.findAll();
+        HashMap<String, Integer> ageDistribution = new HashMap<>();
+        // HashMap<String, Integer> quantityChange = new HashMap<>();
+        HashMap<String, Integer> healthStatus = new HashMap<>();
+        HashMap<String, Integer> areaDistribution = new HashMap<>();
+        HashMap<String, Integer> genderRatio = new HashMap<>();
+        HashMap<String, Integer> sterilizationRatio = new HashMap<>();
+        HashMap<String, Integer> vaccinationRatio = new HashMap<>();
+        // 初始化
+        ageDistribution.put("3个月以内", 0);
+        ageDistribution.put("3-6个月", 0);
+        ageDistribution.put("6-12个月", 0);
+        ageDistribution.put("12-18个月", 0);
+        ageDistribution.put("18-24个月", 0);
+        ageDistribution.put("24个月以上", 0);
+        healthStatus.put("健康", 0);
+        healthStatus.put("疾病", 0);
+        healthStatus.put("营养不良", 0);
+        healthStatus.put("肥胖", 0);
+        areaDistribution.put("北门", 0);
+        areaDistribution.put("岐头", 0);
+        areaDistribution.put("凤翔", 0);
+        areaDistribution.put("厚德楼", 0);
+        areaDistribution.put("香晖苑", 0);
+        genderRatio.put("公猫", 0);
+        genderRatio.put("母猫", 0);
+        sterilizationRatio.put("已绝育", 0);
+        sterilizationRatio.put("未绝育", 0);
+        vaccinationRatio.put("已接种", 0);
+        vaccinationRatio.put("未接种", 0);
+
+        for(Cat cat : cats){
+            Integer age = cat.getAge();
+            if (age < 3){
+                ageDistribution.put("3个月以内", ageDistribution.getOrDefault("3个月以内", 0) + 1);
+            } else if (age >= 3 && age < 6){
+                ageDistribution.put("3-6个月", ageDistribution.getOrDefault("3-6个月", 0) + 1);
+            } else if (age >= 6 && age < 12){
+                ageDistribution.put("6-12个月", ageDistribution.getOrDefault("6-12个月", 0) + 1);
+            } else if (age >= 12 && age < 18){
+                ageDistribution.put("12-18个月", ageDistribution.getOrDefault("12-18个月", 0) + 1);
+            } else if (age >= 18 && age < 24){
+                ageDistribution.put("18-24个月", ageDistribution.getOrDefault("18-24个月", 0) + 1);
+            } else if (age >= 24){
+                ageDistribution.put("24个月以上", ageDistribution.getOrDefault("24个月以上", 0) + 1);
+            }
+
+            if (cat.getHealthStatus().equals("健康")){
+                healthStatus.put("健康", healthStatus.getOrDefault("健康", 0) + 1);
+            } else if (cat.getHealthStatus().equals("疾病")){
+                healthStatus.put("疾病", healthStatus.getOrDefault("疾病", 0) + 1);
+            } else if (cat.getHealthStatus().equals("营养不良")){
+                healthStatus.put("营养不良", healthStatus.getOrDefault("营养不良", 0) + 1);
+            } else if (cat.getHealthStatus().equals("肥胖")){
+                healthStatus.put("肥胖", healthStatus.getOrDefault("肥胖", 0) + 1);
+            }
+
+            if (cat.getArea().equals("北门")){
+                areaDistribution.put("北门", areaDistribution.getOrDefault("北门", 0) + 1);
+            } else if (cat.getArea().equals("岐头")){
+                areaDistribution.put("岐头", areaDistribution.getOrDefault("岐头", 0) + 1);
+            } else if (cat.getArea().equals("凤翔")){
+                areaDistribution.put("凤翔", areaDistribution.getOrDefault("凤翔", 0) + 1);
+            } else if (cat.getArea().equals("厚德楼")){
+                areaDistribution.put("厚德楼", areaDistribution.getOrDefault("厚德楼", 0) + 1);
+            } else if (cat.getArea().equals("香晖苑")){
+                areaDistribution.put("香晖苑", areaDistribution.getOrDefault("香晖苑", 0) + 1);
+            }
+
+            if (cat.getGender().equals(1)){
+                genderRatio.put("公猫", genderRatio.getOrDefault("公猫", 0) + 1);
+            } else if (cat.getGender().equals(0)){
+                genderRatio.put("母猫", genderRatio.getOrDefault("母猫", 0) + 1);
+            }
+
+            if (cat.getSterilizationStatus().equals("已绝育")){
+                sterilizationRatio.put("已绝育", sterilizationRatio.getOrDefault("已绝育", 0) + 1);
+            } else if (cat.getSterilizationStatus().equals("未绝育")){
+                sterilizationRatio.put("未绝育", sterilizationRatio.getOrDefault("未绝育", 0) + 1);
+            }
+
+            if (cat.getVaccinationStatus().equals("已接种")){
+                vaccinationRatio.put("已接种", vaccinationRatio.getOrDefault("已接种", 0) + 1);
+            } else if (cat.getVaccinationStatus().equals("未接种")){
+                vaccinationRatio.put("未接种", vaccinationRatio.getOrDefault("未接种", 0) + 1);
+            }
+        }
+
+        DataAnalysisVO dataAnalysisVO = new DataAnalysisVO();
+        dataAnalysisVO.setAgeDistribution(ageDistribution);
+        // dataAnalysisVO.setQuantityChange(quantityChange);
+        dataAnalysisVO.setHealthStatus(healthStatus);
+        dataAnalysisVO.setAreaDistribution(areaDistribution);
+        dataAnalysisVO.setGenderRatio(genderRatio);
+        dataAnalysisVO.setSterilizationRatio(sterilizationRatio);
+        dataAnalysisVO.setVaccinationRatio(vaccinationRatio);
+            
+        return dataAnalysisVO;
     }
 }

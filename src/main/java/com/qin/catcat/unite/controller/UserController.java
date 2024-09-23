@@ -6,9 +6,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.popo.dto.RegisterDTO;
 // import com.qin.catcat.unite.common.utils.JwtTokenProviderUtils;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.vo.HomePostVO;
+import com.qin.catcat.unite.popo.vo.MyPageVO;
 import com.qin.catcat.unite.popo.vo.UserLoginVO;
 import com.qin.catcat.unite.service.UserService;
 
@@ -18,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
+import java.rmi.registry.Registry;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -70,11 +75,11 @@ public class UserController {
     * @return 
     */
     @PostMapping("/register")
-    public Result<UserLoginVO> register(@RequestBody UserLoginDTO userLoginDTO) {
-        log.info("用户注册：{}",userLoginDTO.getUsername());
+    public Result<UserLoginVO> register(@RequestBody RegisterDTO registerDTO) {
+        log.info("用户注册：{}",registerDTO.getUsername());
 
         //1.查询数据库，是否存在用户 true注册成功，false注册失败（用户已存在）
-        Boolean result = userService.registerUser(userLoginDTO); 
+        Boolean result = userService.registerUser(registerDTO); 
         if(result){
             //注册成功
             return Result.success("注册成功");
@@ -90,11 +95,17 @@ public class UserController {
     * @return 
     */
     @GetMapping("/profile")
-    public Result<User> getUserProfile(@RequestHeader("Authorization") String token) {
-        String userId = jwtTokenProvider.getUserIdFromJWT(token);
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        log.info("用户:"+username+" userId:"+userId+" 获取个人信息");
-        User user = userService.getUserProfile(userId);
+    public Result<MyPageVO> getUserProfile() {
+
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求获取个人信息");
+        } else {
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户:"+username+" 请求获取个人信息");
+        }
+
+        String userId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+        MyPageVO user = userService.getUserProfile(userId);
         return Result.success(user);
     }
 

@@ -1,28 +1,25 @@
-package com.qin.catcat.unite.popo.entity;
+package com.qin.catcat.unite.popo.vo;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.qin.catcat.unite.popo.entity.Post;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
-* 用户实体类
-*/
+/* 响应给前端的我的页面信息 */
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@TableName(value = "user")//mp的注解 指定数据库对应的表名
-public class User {
-
+@AllArgsConstructor
+@Builder
+public class MyPageVO {
+    // 整个User (不包括密码，密码需要设为空)
     @TableId(value = "user_id",type = IdType.INPUT)////mp的注解 指定主键
     //用户ID 主键
     private String userId;
@@ -58,4 +55,7 @@ public class User {
     private Integer followCount;
     //个性签名
     private String signature;
+
+    //加上该作者的首页帖子的集合
+    private List<Post> postList;
 }

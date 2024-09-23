@@ -9,7 +9,9 @@ public enum enumStatusCode {
     PASSWORD_UPDATE_FAILURE("1004","密码更新失败"),
     USER_ALREADY_EXISTS("1005","用户名，注册失败"),
     INTERNAL_SERVER_ERROR("5001", "服务器内部错误"),
-    UNKNOWNERROR("6000","未知错误");
+    UNKNOWNERROR("6000","未知错误"),
+    TOKEN_EXPIRED("2001","Token过期"),
+    TOKEN_INVALID("2002","Token无效");
 
     private final String code;
     private final String message;

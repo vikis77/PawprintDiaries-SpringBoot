@@ -26,6 +26,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.qin.catcat.unite.common.filter.JwtAuthenticationTokenFilter;
 import com.qin.catcat.unite.common.interceptor.JwtInterceptor;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 // import com.qin.catcat.unite.common.jwt.JwtTokenFilter;
@@ -57,41 +58,67 @@ public class SecurityConfig {
     //过滤器链
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("SecurityConfig >>> SecurityFilterChain");
+        log.info("SecurityConfig >>> 进入Security过滤器配置");
 
         //开启授权保护
         http.authorizeHttpRequests(authorize -> authorize
-            .requestMatchers(
-                "/doc.html",            //放行/doc.html
-                "/v3/api-docs/**",       // Springdoc OpenAPI 3
-                "/swagger-ui/**",        // Swagger UI
-                "/swagger-ui.html",      // Swagger UI
-                "/swagger-resources/**", // Swagger resources
-                "/webjars/**",           // Webjars for Swagger UI
-                "/knife4j/**",            // Knife4j resources)
-                "/login",
-                "/register",
-                "/upload/**",
-                "/upload/catImage",
-                "/catLocation" // // 放行 WebSocket 端点
-            ).permitAll()
-            //对所有请求开启授权保护
-            .anyRequest()
-            //已认证的请求会被自动授权
-            .authenticated()
-            )
-            .formLogin(form->{form
-                // .loginProcessingUrl("http://localhost:8080/login")
-                .successHandler(myAuthenticationSuccessHandler)//认证成功时的处理
-                // .failureHandler(myAuthenticationFailureHandler)//认证失败时的处理
-                .loginProcessingUrl("/login")
-                ;});
-            // .httpBasic(withDefaults());
+                .requestMatchers(
+                    "/doc.html",            //放行/doc.html
+                    "/v3/api-docs/**",       // Springdoc OpenAPI 3
+                    "/swagger-ui/**",        // Swagger UI
+                    "/swagger-ui.html",      // Swagger UI
+                    "/swagger-resources/**", // Swagger resources
+                    "/webjars/**",           // Webjars for Swagger UI
+                    "/knife4j/**",            // Knife4j resources)
+                    "/user/login", // 放行登录端点
+                    "/user/register", // 放行注册端点
+                    "/upload/**", // 放行上传端点
+                    "/upload/catImage", // 放行特定上传端点
+                    "/catLocation", // // 放行 WebSocket 端点
+                    "/cat/findAll", // 放行查询猫猫端点
+                    "/cat/findCoordinate", // 放行查询全部猫猫坐标端点
+                    "/cat/findCoordinateByPage", // 放行查询单只猫猫坐标端点
+                    "/cat/findPhotoByIdforPage", // 放行查询猫猫照片端点
+                    "/cat/analysis", // 放行数据分析端点
+                    "/post/getAllPost", // 放行首页帖子端点
+                    "post/getPostByPostid",
+                    "post/getPostBySendtimeForPage"
+                ).permitAll()
+                //对所有请求开启授权保护
+                .anyRequest()
+                //已认证的请求会被自动授权
+                .authenticated()
+            );
+        
+        // 配置 API 登录端点
+        http.formLogin(form->{form
+                .loginProcessingUrl("http://localhost:8080/login") // 使用 API 登录端点
+                .successHandler(myAuthenticationSuccessHandler) // 认证成功时的处理
+                // .failureHandler(myAuthenticationFailureHandler) // 认证失败时的处理
+                // .loginProcessingUrl("/login")
+                .permitAll();
+            }
+        );
+        
+        // 禁用csrf，因为通常 API 不需要 CSRF 保护
         http.csrf(csrf->csrf.
             ignoringRequestMatchers("/ws/**"). // 忽略 WebSocket 端点的 CSRF 保护
-            disable());// 禁用csrf，因为通常 API 不需要 CSRF 保护
-		http.cors(conf->conf.configurationSource(corsConfigurationSource())); // 配置跨域 允许所有来源、方法和头部的跨域请求
-        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class); //添加JwtAuthenticationTokenFilter过滤器
+            disable()
+        );
+        
+        // 配置 CORS，允许所有来源、方法和头部的跨域请求
+		http.cors(conf->conf.configurationSource(corsConfigurationSource()));
+
+        //添加 JwtAuthenticationTokenFilter 过滤器
+        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // 禁用默认的登录页面，确保所有 API 请求返回 JSON 格式的错误响应
+        http.exceptionHandling(handling ->handling
+        .authenticationEntryPoint((request, response, authException) -> {
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"message\":\"Unauthorized\"}");
+        }));
         return http.build();
     }
 
@@ -99,9 +126,10 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("*");
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
+        configuration.addAllowedOrigin("*"); // 允许所有来源
+        configuration.addAllowedMethod("*"); // 允许所有方法
+        configuration.addAllowedHeader("*"); // 允许所有头部
+        configuration.addExposedHeader("Authorization"); // 允许前端获取Authorization头
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

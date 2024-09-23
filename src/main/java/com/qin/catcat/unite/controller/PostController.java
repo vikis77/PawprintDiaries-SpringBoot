@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
@@ -21,6 +22,8 @@ import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.dto.UpdatePostDTO;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.vo.HomePostVO;
+import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.service.PostService;
 import com.qin.catcat.unite.service.UserService;
 
@@ -49,26 +52,26 @@ public class PostController {
     * @param 
     * @return 
     */
-    @PostMapping("/addpost")
-    public Result<?> addPost(@RequestHeader("Authorization") String Token,@RequestBody PostDTO postDTO) {
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
-        String userId = jwtTokenProvider.getUserIdFromJWT(Token);
-        log.info("用户{}请求新增帖子",username);
+    // @PostMapping("/addpost")
+    // public Result<?> addPost(@RequestHeader("Authorization") String Token,@RequestBody PostDTO postDTO) {
+    //     String username = jwtTokenProvider.getUsernameFromToken(Token);
+    //     String userId = jwtTokenProvider.getUserIdFromJWT(Token);
+    //     log.info("用户{}请求新增帖子",username);
 
-        Post post = new Post();
-        BeanUtils.copyProperties(postDTO, post);//属性拷贝DTO to entity
-        String userNickname = userService.getNicknameFromId(userId); //根据用户ID查询用户昵称
+    //     Post post = new Post();
+    //     BeanUtils.copyProperties(postDTO, post);//属性拷贝DTO to entity
+    //     String userNickname = userService.getNicknameFromId(userId); //根据用户ID查询用户昵称
 
-        post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
-        post.setLikeCount(0);//设置点赞数 初始化0
-        post.setAuthorId(Long.parseLong(userId));//设置作者ID（即用户本ID）
-        post.setAuthorNickname(userNickname);//设置作者昵称
-        post.setCommentCount(0);//设置评论数 初始化0
-        post.setSendTime(Timestamp.from(Instant.now()));//设置发帖时间
+    //     post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
+    //     post.setLikeCount(0);//设置点赞数 初始化0
+    //     post.setAuthorId(Long.parseLong(userId));//设置作者ID（即用户本ID）
+    //     post.setAuthorNickname(userNickname);//设置作者昵称
+    //     post.setCommentCount(0);//设置评论数 初始化0
+    //     post.setSendTime(Timestamp.from(Instant.now()));//设置发帖时间
 
-        Boolean signal = postService.add(post);
-        return Result.success();
-    }
+    //     Boolean signal = postService.add(post);
+    //     return Result.success();
+    // }
 
     /**
     * 删除帖子
@@ -92,22 +95,22 @@ public class PostController {
     * @param 
     * @return 
     */
-    @PutMapping("/updatepost")
-    public Result<?> updatePost(@RequestHeader("Authorization") String Token,@RequestBody UpdatePostDTO updatePostDTO){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
-        log.info("用户{}请求更新帖子{}",username,updatePostDTO.getPostId());
+    // @PutMapping("/updatepost")
+    // public Result<?> updatePost(@RequestHeader("Authorization") String Token,@RequestBody UpdatePostDTO updatePostDTO){
+    //     String username = jwtTokenProvider.getUsernameFromToken(Token);
+    //     log.info("用户{}请求更新帖子{}",username,updatePostDTO.getPostId());
 
-        Post post = postService.getPostByPostId(String.valueOf(updatePostDTO.getPostId()));//根据帖子ID查询帖子
-        post.setArticle(updatePostDTO.getArticle());//更新文章
-        post.setTitle(updatePostDTO.getTitle());//更新标题
-        post.setUpdateTime(Timestamp.from(Instant.now()));//更新更新时间
-        int signal = postService.update(post);
-        if(signal!=1){
-            return Result.error("更新失败");
-        }else{
-            return Result.success();
-        }
-    }
+    //     Post post = postService.getPostByPostId(String.valueOf(updatePostDTO.getPostId()));//根据帖子ID查询帖子
+    //     post.setArticle(updatePostDTO.getArticle());//更新文章
+    //     post.setTitle(updatePostDTO.getTitle());//更新标题
+    //     post.setUpdateTime(Timestamp.from(Instant.now()));//更新更新时间
+    //     int signal = postService.update(post);
+    //     if(signal!=1){
+    //         return Result.error("更新失败");
+    //     }else{
+    //         return Result.success();
+    //     }
+    // }
 
 
     /**
@@ -116,11 +119,17 @@ public class PostController {
     * @return 
     */
     @GetMapping("/getAllPost")
-    public Result<List<Post>> getAllPost(@RequestHeader("Authorization") String Token){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
-        log.info("用户{}请求查询全部帖子",username);
+    public Result<List<Post>> getAllPost(){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求查询全部帖子");
+        }
+        else{
+           String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+          log.info("用户{}请求查询全部帖子",username);
+        }
 
         List<Post> posts = postService.getAllPost();
+        log.info("查询到的帖子：{}",JSON.toJSONString(posts));
         return Result.success(posts);
     }
 
@@ -130,11 +139,16 @@ public class PostController {
     * @return 
     */
     @GetMapping("/getPostByPostid")
-    public Result<Post> getPostByPostid(@RequestHeader("Authorization") String Token, @RequestParam String postId){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
-        log.info("用户{}请求根据帖子ID查询帖子{}",username,postId);
+    public Result<SinglePostVO> getPostByPostid(@RequestParam String postId){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求根据帖子ID查询帖子");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求根据帖子ID查询帖子{}",username,postId);
+        }
 
-        Post post = postService.getPostByPostId(postId);
+        SinglePostVO post = postService.getPostByPostId(postId);
         return Result.success(post);
     }
 
@@ -144,11 +158,18 @@ public class PostController {
     * @return 
     */
     @GetMapping("/getPostBySendtimeForPage")
-    public Result<IPage<Post>> getPostBySendtime(@RequestHeader("Authorization") String Token, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue="10") int pageSize){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
-        log.info("用户{}请求根据发布时间分页查询前十条帖子,第{}页，每页{}条",username,page,pageSize);
+    public Result<IPage<HomePostVO>> getPostBySendtime(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue="10") int pageSize){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求根据发布时间分页查询前十条帖子");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求根据发布时间分页查询前十条帖子,第{}页，每页{}条",username,page,pageSize);
+        }
 
-        IPage<Post> posts = postService.getPostBySendtime(page,pageSize);
+        IPage<HomePostVO> posts = postService.getPostBySendtime(page,pageSize);
+        //打印日志
+        log.info("查询到的帖子：{}",JSON.toJSONString(posts));
         return Result.success(posts);
     }
 

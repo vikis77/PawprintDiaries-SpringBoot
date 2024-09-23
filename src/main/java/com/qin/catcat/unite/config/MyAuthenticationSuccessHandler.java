@@ -82,7 +82,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
 
         //构建响应头 Token放响应头
         response.setHeader("Authorization", "Bearer " + JwtToken);
-        response.getWriter().write("登录成功");
+        // response.getWriter().write("登录成功");
         response.getWriter().flush();
         //构建响应体 Token放响应体
         response.setContentType("application/json;charset=UTF-8");

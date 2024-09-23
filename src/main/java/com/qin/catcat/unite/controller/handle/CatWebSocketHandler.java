@@ -73,6 +73,7 @@ public class CatWebSocketHandler extends TextWebSocketHandler{
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session,@NonNull CloseStatus status) throws Exception{
         subscribedSessions.remove(session);
+        log.info("Session {} disconnected", session.getId());
         super.afterConnectionClosed(session,status);
     }
 

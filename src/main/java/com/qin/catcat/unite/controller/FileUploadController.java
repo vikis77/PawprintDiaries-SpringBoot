@@ -7,6 +7,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,12 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.qin.catcat.unite.common.utils.TokenHolder;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/upload")
@@ -29,8 +34,55 @@ import java.io.IOException;
 @Slf4j
 public class FileUploadController {
 
-    private static final String UPLOAD_DIR = "E:\\01-Codes\\JavaCode\\catcat\\src\\main\\resources\\cat_pics"; // 上传文件存储的目录
+    private static final String UPLOAD_DIR = "E:\\01-Codes\\JavaCode\\catcat\\src\\main\\resources\\upload_pics_test"; // 上传文件存储的目录
 
+    // 从配置文件获取文件上传目录
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
+    @PostMapping("/catImageTest")
+    public ResponseEntity<String> uploadImageTest(@RequestParam("file") MultipartFile file) {
+        log.info("用户{}上传图片：{}",TokenHolder.getToken(),file.getOriginalFilename());
+
+        if (file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No file selected");
+        }
+
+        try {
+            // 确保目录存在
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            // 保存文件
+            String fileName = file.getOriginalFilename();
+            File dest = new File(uploadDir, fileName);
+            file.transferTo(dest);
+
+            // // 获取项目根目录的绝对路径
+            // String projectRoot = Paths.get("").toAbsolutePath().toString();
+            // // 设置文件存储路径
+            // String fileName = file.getOriginalFilename();
+            // String filePath = projectRoot + "/src/main/resources/upload_pics_test/" + fileName;
+            // File dest = new File(filePath);
+            
+            // // 确保目录存在
+            // dest.getParentFile().mkdirs();
+
+            // // 保存文件到指定路径
+            // file.transferTo(dest);
+            
+            // 返回图片的 URL
+            // String fileUrl = "http://localhost:8080/images/" + fileName;
+            return ResponseEntity.ok("File uploaded successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
+        }
+    }
+
+    // 客户端上传图片并调用Python识别猫猫服务
     @PostMapping("/catImage")
     public String uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -55,6 +107,7 @@ public class FileUploadController {
         }
     }
 
+    // 调用Python预测服务
     private String callPythonPredictionService(String filePath) throws IOException {
         // Python服务的URL
         String pythonServiceUrl = "http://localhost:5000/predict";

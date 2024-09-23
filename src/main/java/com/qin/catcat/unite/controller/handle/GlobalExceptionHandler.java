@@ -47,7 +47,10 @@ public class GlobalExceptionHandler {
         return Result.error(ex.getMessage(),enumStatusCode.USER_ALREADY_EXISTS);
     }
     
-
+    // @ExceptionHandler(UnloginUserRequestHomePostException.class){
+    // public ResponseEntity<String> UnloginUserRequestHomePostException(UnloginUserRequestHomePostException ex) {
+    //     return new ResponseEntity<>("请先登录", HttpStatus.UNAUTHORIZED);
+    // }
     // @ExceptionHandler(Exception.class)
     // public ResponseEntity<String> handleAllExceptions(Exception ex) {
     //     return new ResponseEntity<>("服务器内部错误: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

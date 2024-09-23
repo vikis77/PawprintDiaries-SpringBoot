@@ -9,8 +9,10 @@ import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.dto.DonateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
+import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 
 public interface CatService {
     /**
@@ -48,6 +50,13 @@ public interface CatService {
     * @return 
     */
     public Cat selectById(String ID);
+
+    /**
+    * 根据猫猫ID查找猫猫图片
+    * @param 
+    * @return 
+    */
+    public List<CatPics> selectPhotoById(String ID, int page, int size);
 
     /**
     * 更新某只猫信息
@@ -97,4 +106,11 @@ public interface CatService {
     * @return 
     */
     public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id,int page,int size);
+
+    /**
+    * 数据分析
+    * @param 
+    * @return 
+    */
+    public DataAnalysisVO analysis();
 }

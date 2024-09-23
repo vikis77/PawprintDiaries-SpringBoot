@@ -62,4 +62,11 @@ public class Result<T> implements Serializable {
         return result;
     }
 
+    public static <T> Result<T> fail(String Code,String msg) {
+        Result<T> result = new Result<T>();
+        result.msg = msg;
+        result.code = Code;
+        return result;
+    }
+
 }

@@ -10,18 +10,22 @@ knife4j:
 
 #mysql配置
 spring:
-    datasource:
-        driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://localhost:3306/catcat?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&allowPublicKeyRetrieval=true
-        username: root
-        password: 
-        type: com.zaxxer.hikari.HikariDataSource
-        hikari:
-            mmaximum-pool-size: 15
-            minimum-idle: 5
-            idle-timeout: 30000
-    thymeleaf:
-      cache: false # 开发时关闭缓存，不然看不到实时页面
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/catcat?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      mmaximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+  thymeleaf:
+    cache: false # 开发时关闭缓存，不然看不到实时页面
+  servlet:
+    multipart: #配置 Spring Boot 的上传文件大小限制
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 #mybatis 分页插件
 pagehelper:
@@ -31,7 +35,14 @@ pagehelper:
   params: count=countSql
 
 jwt:
-  secret: and0a2V5
+  secret: XnpcgH6NWZRJ+77sEAXst0B0BDnOCbF97M08ZdX/OAE=
   expiration: 3600000 #1小时
 
+
+# 配置 Tomcat 
+server:
+  tomcat:
+    max-http-form-post-size: 10485760  # 设置最大上传大小为10MB
+
+  
 

@@ -15,7 +15,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.config.RabbitMQConfig;
 import com.qin.catcat.unite.mapper.PostMapper;
+import com.qin.catcat.unite.mapper.PostPicsMapper;
+import com.qin.catcat.unite.mapper.UserMapper;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.entity.PostPics;
+import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.vo.HomePostVO;
+import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.service.PostService;
 
 @Service
@@ -23,7 +29,9 @@ public class PostServiceImpl implements PostService{
 
     private static final String LIKE_KEY = "post_likes";
 
+    @Autowired UserMapper userMapper;
     @Autowired PostMapper postMapper;
+    @Autowired PostPicsMapper postPicsMapper;
     @Autowired StringRedisTemplate RedisTemplate; //使用redis
     @Autowired RabbitTemplate rabbitTemplate; //使用rabbitmq
 
@@ -51,13 +59,44 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
-    * 根据帖子ID查询帖子
+    * 根据帖子ID查询帖子全部图片
     * @param 
     * @return 
     */
-    public Post getPostByPostId(String PostId){
-        Post post = postMapper.selectById(PostId);
-        return post;
+    public SinglePostVO getPostByPostId(String postId){
+        // 查询帖子基本信息
+        Post post = postMapper.selectById(postId);
+
+        if (post == null) {
+            return null; // 或者抛出一个异常，表示未找到对应的帖子
+        }
+
+        SinglePostVO singlePostVO = new SinglePostVO();
+        singlePostVO.setPostId(post.getPostId());
+        singlePostVO.setTitle(post.getTitle());
+        singlePostVO.setArticle(post.getArticle());
+        singlePostVO.setAuthorId(post.getAuthorId());
+        singlePostVO.setLikeCount(post.getLikeCount());
+        singlePostVO.setCollectingCount(post.getCollectingCount());
+        singlePostVO.setCommentCount(post.getCommentCount());
+        singlePostVO.setSendTime(post.getSendTime());
+        singlePostVO.setUpdateTime(post.getUpdateTime());
+
+        // 根据作者ID查询作者昵称、作者头像
+        User author = userMapper.selectById(post.getAuthorId());
+        if (author != null) {
+            singlePostVO.setAuthorNickname(author.getNickName());
+            singlePostVO.setAuthorAvatar(author.getAvatar());
+        }else{
+            throw new RuntimeException("作者不存在");
+        }
+
+        // 根据帖子ID查询帖子的全部图片（post_pics表）
+        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Long.parseLong(postId));
+
+        singlePostVO.setImages(postPicsList);
+
+        return singlePostVO;
     }
 
     /**
@@ -66,12 +105,9 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     @Cacheable(value = "postForSendtime")
-    public IPage<Post> getPostBySendtime(int page,int pageSize){
-        Page<Post> postObj = new Page<>(page, pageSize);
-        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.orderByDesc("send_time");
-        IPage<Post> posts = postMapper.selectPage(postObj, queryWrapper);
-        return posts;
+    public IPage<HomePostVO> getPostBySendtime(int page,int pageSize){
+        Page<HomePostVO> postObj = new Page<>(page,pageSize);
+        return postMapper.selectPostsBySendtime(postObj);
     }
 
     /**

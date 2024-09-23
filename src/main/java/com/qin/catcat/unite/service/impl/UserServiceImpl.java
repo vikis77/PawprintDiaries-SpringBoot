@@ -2,6 +2,7 @@ package com.qin.catcat.unite.service.impl;
 
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,9 +23,13 @@ import com.qin.catcat.unite.exception.PasswordIncorrectException;
 import com.qin.catcat.unite.exception.UserAlreadyExistsException;
 import com.qin.catcat.unite.exception.UserNotExistException;
 import com.qin.catcat.unite.exception.updatePasswordFailedException;
+import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.UserMapper;
+import com.qin.catcat.unite.popo.dto.RegisterDTO;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
+import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.vo.MyPageVO;
 import com.qin.catcat.unite.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService{
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private PostMapper postMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -45,9 +52,9 @@ public class UserServiceImpl implements UserService{
     * @return 1验证通过 2密码错误 3用户名不存在
     */
     public String loginUser(UserLoginDTO userLoginDTO){
-        
-        int result=1;
 
+        int result = 0;
+        
         //1.查询用户是否存在且合法
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();// 使用QueryWrapper构建查询条件
         queryWrapper
@@ -80,7 +87,7 @@ public class UserServiceImpl implements UserService{
 
                     // 生成 token
                     String jwt = jwtTokenProvider.generateToken(userLoginDTO.getUsername(),user2.getUserId());
-                    System.out.println(jwt);
+                    log.info("生成的token："+jwt);
                     // 返回 token
                     return jwt;
                 }else{
@@ -108,9 +115,9 @@ public class UserServiceImpl implements UserService{
     * @param 
     * @return 
     */
-    public Boolean registerUser(UserLoginDTO userLoginDTO){
+    public Boolean registerUser(RegisterDTO registerDTO){
         QueryWrapper<User> wrapper = new QueryWrapper<>();//创建条件构造器
-        wrapper.eq("username", userLoginDTO.getUsername());//条件构造
+        wrapper.eq("username", registerDTO.getUsername());//条件构造
         User storeUser = userMapper.selectOne(wrapper);//条件查询数据库
 
         if(storeUser!=null){
@@ -120,9 +127,10 @@ public class UserServiceImpl implements UserService{
 
         //创建新用户
         User user = new User();
-        user.setUsername(userLoginDTO.getUsername());
+        user.setUsername(registerDTO.getUsername());
+        user.setEmail(registerDTO.getEmail());
         //使用BCryptPasswordEncoder 加密密码
-        String encodedPassword = passwordEncoder.encode(userLoginDTO.getPassword());
+        String encodedPassword = passwordEncoder.encode(registerDTO.getPassword());
         String userId = generatorIdUtil.GeneratorRandomId();//生成ID
 
         user.setPassword(encodedPassword);
@@ -165,17 +173,25 @@ public class UserServiceImpl implements UserService{
     * @param 
     * @return 
     */
-    public User getUserProfile(String userId){
-        log.info(userId);
-        
+    public MyPageVO getUserProfile(String userId){
+        // 获取用户信息        
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper
             //排除密码字段
-            .select("id","user_id","username","nick_name","email","phone_number","brithday","address","avatar","role","status","create_time","update_time","number_of_post")
+            .select("user_id","username","nick_name","email","phone_number","brithday","address","avatar","role","status","create_time","update_time","post_count","fans_count","follow_count","signature")
             .eq("user_id", userId);
         User user = userMapper.selectOne(queryWrapper);
-        // log.info(user.toString());
-        return user;
+
+        // 根据userId获取该用户的所有帖子信息
+        QueryWrapper<Post> queryWrapperPost = new QueryWrapper<>();
+        queryWrapperPost.eq("author_id", user.getUserId());
+        List<Post> postsList = postMapper.selectList(queryWrapperPost);
+
+        MyPageVO userInfo = new MyPageVO();
+        BeanUtils.copyProperties(user, userInfo); // 把user属性拷贝到userInfo
+        userInfo.setPostList(postsList);
+
+        return userInfo;
     }
 
     //根据ID获取昵称

@@ -50,5 +50,6 @@ public class Cat implements Serializable {
     private String vaccinationStatus;
     //不良行为记录
     private String badRecord;
-
+    //区域
+    private String area;
 }
