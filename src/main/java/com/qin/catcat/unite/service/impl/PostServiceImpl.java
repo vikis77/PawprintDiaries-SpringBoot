@@ -1,9 +1,13 @@
 package com.qin.catcat.unite.service.impl;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,18 +17,26 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.qin.catcat.unite.config.RabbitMQConfig;
+import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
+import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
+// import com.qin.catcat.unite.config.RabbitMQConfig;
 import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.PostPicsMapper;
 import com.qin.catcat.unite.mapper.UserMapper;
+import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.entity.PostPics;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.service.PostService;
+import com.qin.catcat.unite.service.UserService;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class PostServiceImpl implements PostService{
 
     private static final String LIKE_KEY = "post_likes";
@@ -34,13 +46,33 @@ public class PostServiceImpl implements PostService{
     @Autowired PostPicsMapper postPicsMapper;
     @Autowired StringRedisTemplate RedisTemplate; //使用redis
     @Autowired RabbitTemplate rabbitTemplate; //使用rabbitmq
+    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired UserService userService;
+    @Autowired GeneratorIdUtil generatorIdUtil;
 
     /**
     * 新增帖子
     * @param 
     * @return 
     */
-    public Boolean add(Post post){
+    public Boolean add(PostDTO postDto){
+        Post post = new Post();
+        // BeanUtils.copyProperties(postDto, post);//属性拷贝DTO to entity
+
+        String userId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+        String userNickname = userService.getNicknameFromId(userId); //根据用户ID查询用户昵称
+
+        post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
+        post.setTitle(postDto.getTitle()); // 设置标题
+        post.setArticle(postDto.getArticle()); // 设置文章
+        post.setAuthorId(Long.parseLong(userId));//设置作者ID（即用户本ID）
+        post.setLikeCount(0);//设置点赞数 初始化0
+        post.setCollectingCount(0); // 设置收藏数 初始化0
+        post.setCommentCount(0);//设置评论数 初始化0
+        post.setSendTime(Timestamp.from(Instant.now()));//设置发帖时间
+        post.setUpdateTime(Timestamp.from(Instant.now()));//设置更新时间
+        post.setCoverPicture(postDto.getPictrueList().get(0));//设置封面(默认为第一张图片)
+        
         int siginal = postMapper.insert(post);
         if(siginal!=1){
             //TODO throw new 
@@ -151,6 +183,20 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
+    * 判断是否有权限删除
+    * @param 
+    * @return 
+    */
+    public Boolean isLegalDelete(String postId){
+        Post post = postMapper.selectById(postId);
+        if(String.valueOf(post.getAuthorId()).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()))){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
     * 根据帖子ID删除帖子
     * @param 
     * @return 
@@ -197,7 +243,7 @@ public class PostServiceImpl implements PostService{
         hashOps.put(LIKE_KEY, postId, String.valueOf(Integer.parseInt(likeCount)+1)); //点赞数+1 参数说明：键、字段、值
 
         // 发送消息到消息队列，持久化到数据库
-        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME,postId);
+        // rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME,postId);
 
         // 返回点赞数
         return Integer.parseInt(likeCount) + 1;
@@ -214,7 +260,7 @@ public class PostServiceImpl implements PostService{
         hashOps.increment(LIKE_KEY, postId, -1); //点赞数-1 参数说明：key、field、value
 
         // 发送消息到消息队列，持久化到数据库
-        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME,postId);
+        // rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME,postId);
 
         // 返回点赞数
         return 1;

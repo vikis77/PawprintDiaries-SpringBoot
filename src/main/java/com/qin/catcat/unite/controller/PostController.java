@@ -4,9 +4,10 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
-import org.apache.tomcat.util.openssl.pem_password_cb;
+// import org.apache.tomcat.util.openssl.pem_password_cb;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,9 +40,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 //帖子控制器
 @RestController
-@RequestMapping("/post")
+@RequestMapping("/api/post")
 @Tag(name = "帖子接口")
 @Slf4j
+// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class PostController {
     @Autowired PostService postService;
     @Autowired JwtTokenProvider jwtTokenProvider;
@@ -52,26 +54,15 @@ public class PostController {
     * @param 
     * @return 
     */
-    // @PostMapping("/addpost")
-    // public Result<?> addPost(@RequestHeader("Authorization") String Token,@RequestBody PostDTO postDTO) {
-    //     String username = jwtTokenProvider.getUsernameFromToken(Token);
-    //     String userId = jwtTokenProvider.getUserIdFromJWT(Token);
-    //     log.info("用户{}请求新增帖子",username);
+    @PostMapping("/addpost")
+    public Result<?> addPost(@RequestBody PostDTO postDTO) {
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+        log.info("用户{}请求新增帖子",username);
+        // System.out.println("接收到的图片列表: " + postDTO.getPostNames());
 
-    //     Post post = new Post();
-    //     BeanUtils.copyProperties(postDTO, post);//属性拷贝DTO to entity
-    //     String userNickname = userService.getNicknameFromId(userId); //根据用户ID查询用户昵称
-
-    //     post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
-    //     post.setLikeCount(0);//设置点赞数 初始化0
-    //     post.setAuthorId(Long.parseLong(userId));//设置作者ID（即用户本ID）
-    //     post.setAuthorNickname(userNickname);//设置作者昵称
-    //     post.setCommentCount(0);//设置评论数 初始化0
-    //     post.setSendTime(Timestamp.from(Instant.now()));//设置发帖时间
-
-    //     Boolean signal = postService.add(post);
-    //     return Result.success();
-    // }
+        Boolean signal = postService.add(postDTO);
+        return Result.success();
+    }
 
     /**
     * 删除帖子
@@ -79,15 +70,23 @@ public class PostController {
     * @return 
     */
     @DeleteMapping("/deletepost")
-    public Result<?> deletePost(@RequestHeader("Authorization") String Token,@RequestParam String postId){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
+    public Result<?> deletePost(@RequestParam String postId){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求删除帖子{}",username,postId);
 
-        Boolean signal = postService.delete(postId);
-        if(!signal){
-            return Result.error("删除帖子失败");
+        // 鉴权：当前用户ID必须等于帖子发布者ID
+        if (postService.isLegalDelete(postId)) { // 有权删除
+            Boolean signal = postService.delete(postId);
+            if(!signal){
+                log.info("删除帖子失败");
+                return Result.error("删除帖子失败");
+            }
+            log.info("删除帖子成功");
+            return Result.success();
+        } else {
+            log.info("无权删除帖子");
+            return Result.error("无权删除帖子");
         }
-        return Result.success();
     }
 
     /**

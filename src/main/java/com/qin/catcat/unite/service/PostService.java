@@ -3,6 +3,7 @@ package com.qin.catcat.unite.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
@@ -13,7 +14,7 @@ public interface PostService {
     * @param 
     * @return 
     */
-    public Boolean add(Post post);
+    public Boolean add(PostDTO post);
 
     /**
     * 查询全部帖子
@@ -57,6 +58,13 @@ public interface PostService {
     */
     public IPage<Post> getPostByNickname(String nickName,int page,int pageSize);
     
+    /**
+    * 判断是否有权限删除
+    * @param 
+    * @return 
+    */
+    public Boolean isLegalDelete(String postId);
+
     /**
     * 根据帖子ID删除帖子
     * @param 

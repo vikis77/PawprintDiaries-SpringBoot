@@ -70,19 +70,19 @@ public class SecurityConfig {
                     "/swagger-resources/**", // Swagger resources
                     "/webjars/**",           // Webjars for Swagger UI
                     "/knife4j/**",            // Knife4j resources)
-                    "/user/login", // 放行登录端点
-                    "/user/register", // 放行注册端点
-                    "/upload/**", // 放行上传端点
-                    "/upload/catImage", // 放行特定上传端点
-                    "/catLocation", // // 放行 WebSocket 端点
-                    "/cat/findAll", // 放行查询猫猫端点
-                    "/cat/findCoordinate", // 放行查询全部猫猫坐标端点
-                    "/cat/findCoordinateByPage", // 放行查询单只猫猫坐标端点
-                    "/cat/findPhotoByIdforPage", // 放行查询猫猫照片端点
-                    "/cat/analysis", // 放行数据分析端点
-                    "/post/getAllPost", // 放行首页帖子端点
-                    "post/getPostByPostid",
-                    "post/getPostBySendtimeForPage"
+                    "/api/user/login", // 放行登录端点
+                    "/api/user/register", // 放行注册端点
+                    "/api/upload/**", // 放行上传端点
+                    "/api/upload/catImage", // 放行特定上传端点
+                    "/api/catLocation", // // 放行 WebSocket 端点
+                    "/api/cat/findAll", // 放行查询猫猫端点
+                    "/api/cat/findCoordinate", // 放行查询全部猫猫坐标端点
+                    "/api/cat/findCoordinateByPage", // 放行查询单只猫猫坐标端点
+                    "/api/cat/findPhotoByIdforPage", // 放行查询猫猫照片端点
+                    "/api/cat/analysis", // 放行数据分析端点
+                    "/api/post/getAllPost", // 放行首页帖子端点
+                    "/api/post/getPostByPostid",
+                    "/api/post/getPostBySendtimeForPage"
                 ).permitAll()
                 //对所有请求开启授权保护
                 .anyRequest()

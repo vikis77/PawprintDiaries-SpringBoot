@@ -15,4 +15,7 @@ public interface CatMapper extends BaseMapper<Cat>{
     @Select("Select * from cat")
     List<Cat> findAll();
 
+    //搜索猫猫信息，匹配猫猫名字和catId
+    @Select("select * from cat where catname like concat('%',#{words},'%') or cat_id like concat('%',#{words},'%')")
+    List<Cat> selectCatByCatWords(String words);
 }

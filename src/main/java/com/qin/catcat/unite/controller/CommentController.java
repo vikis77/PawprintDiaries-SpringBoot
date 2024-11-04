@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,8 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Tag(name = "评论接口")
-@RequestMapping("/comment")
+@RequestMapping("/api/comment")
 @Slf4j
+// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class CommentController {
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired CommentService commentService;

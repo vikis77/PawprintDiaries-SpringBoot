@@ -10,7 +10,9 @@ import java.util.List;
 
 import jakarta.annotation.PostConstruct;
 
-
+/* 
+ * 初始化数据，在应用启动时，提前写入缓存，做数据预热
+ */
 @Service
 public class DataInitializationService {
 

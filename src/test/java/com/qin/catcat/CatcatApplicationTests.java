@@ -2,6 +2,8 @@ package com.qin.catcat;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;  // 导入status()
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content; // 导入content()
 
 import java.io.File;
@@ -15,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.sql.DataSource;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,18 +33,19 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+// 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
-
-// import com.baomidou.mybatisplus.test.autoconfigure.MybatisPlusTest;
-// import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-// import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import com.qin.catcat.unite.popo.entity.EsPostIndex;
+import com.qin.catcat.unite.repository.EsPostIndexRepository;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootTest
 @Slf4j
 @AutoConfigureMockMvc
+// @ImportAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
 class CatcatApplicationTests {
 
 	@Resource
@@ -56,7 +62,35 @@ class CatcatApplicationTests {
 	private GeneratorIdUtil generatorIdUtil;
 	@Autowired
 	CatMapper catMapper;
+	@Autowired
+    private EsPostIndexRepository EsPostIndexRepository;
 
+
+	// 测试ES查询全部
+	@Test
+    public void getAllPosts() {
+		List<EsPostIndex> EsPostIndexs = new ArrayList<>();
+		EsPostIndexs = (List<EsPostIndex>) EsPostIndexRepository.findAll();
+		// 断言返回的列表不为空
+		assertNotNull(EsPostIndexs);
+		assertFalse(EsPostIndexs.isEmpty());
+		// // 打印数据
+		log.info(EsPostIndexs.toString());
+		System.out.println("111");
+    }
+
+	// 测试ES查询文章标题
+    public List<EsPostIndex> searchByTitle(String title) {
+        return EsPostIndexRepository.findByTitle(title);
+    }
+
+	// 测试ES查询文章标题或内容
+	@Test
+    public List<EsPostIndex> searchByTitleOrArticle(String query) {
+        // return EsPostIndexRepository.findByTitleOrArticle(query, query);
+        return EsPostIndexRepository.findByTitleOrArticle("流浪猫", "流浪猫");
+    }
+	
 	// 测试获取数据库连接
 	@Test
 	void contextLoadsOne() throws Exception {

@@ -7,10 +7,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.qin.catcat.unite.common.result.Result;
+import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.popo.vo.QiniuTokenVO;
+import com.qiniu.util.Auth;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +35,20 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 @RestController
-@RequestMapping("/upload")
+@RequestMapping("/api/upload")
 @Tag(name = "文件上传")
 @Slf4j
+// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class FileUploadController {
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+    
+    @Value("${qiniu.access-key}")
+    private String accessKey;
+    @Value("${qiniu.secret-key}")
+    private String secretKey;
+    @Value("${qiniu.bucket}")
+    private String bucket;
 
     private static final String UPLOAD_DIR = "E:\\01-Codes\\JavaCode\\catcat\\src\\main\\resources\\upload_pics_test"; // 上传文件存储的目录
 
@@ -134,5 +150,16 @@ public class FileUploadController {
                 return responseString;
             }
         }
+    }
+
+    // 获取七牛云上传凭证
+    @GetMapping("/qiniuUploadToken")
+    public Result<QiniuTokenVO> getUploadToken() {
+        log.info("用户{}请求获取七牛云上传凭证",jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken()));
+
+        Auth auth = Auth.create(accessKey, secretKey);
+        QiniuTokenVO qiniuTokenVO = new QiniuTokenVO();
+        qiniuTokenVO.setQiniuToken(auth.uploadToken(bucket));
+        return Result.success(qiniuTokenVO);
     }
 }

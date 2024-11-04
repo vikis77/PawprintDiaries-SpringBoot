@@ -1,5 +1,7 @@
 package com.qin.catcat.unite.popo.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,4 +17,6 @@ public class PostDTO {
     private String title;
     //文章
     private String article;
+    // 帖子名集合
+    private List<String> pictrueList;
 }

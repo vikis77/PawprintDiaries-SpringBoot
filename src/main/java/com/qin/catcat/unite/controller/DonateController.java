@@ -15,15 +15,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("/donate")
+@RequestMapping("/api/donate")
 @Tag(name = "捐赠接口")
 @Slf4j
+// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class DonateController {
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired DonateService donateService;

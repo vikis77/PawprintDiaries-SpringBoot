@@ -27,6 +27,7 @@ import com.qin.catcat.unite.service.CatService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,9 +35,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 
 @RestController
-@RequestMapping("/cat")
+@RequestMapping("/api/cat")
 @Tag(name = "猫猫接口")
 @Slf4j
+// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class CatController {
     @Autowired private CatService catService;
     @Autowired private JwtTokenProvider jwtTokenProvider;

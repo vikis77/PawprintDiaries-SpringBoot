@@ -19,38 +19,38 @@ import com.qin.catcat.unite.common.rabbitMq.LikeMessageListener;
  * @since 1.0
  * */
 
-@Configuration
-@EnableRabbit
-public class RabbitMQConfig {
+// @Configuration
+// @EnableRabbit
+// public class RabbitMQConfig {
 
-    public static final String QUEUE_NAME = "PostLikeQueue";
+//     public static final String QUEUE_NAME = "PostLikeQueue";
 
-    @Bean
-    public Queue queue() {
-        return new Queue(QUEUE_NAME, true);
-    }
+//     @Bean
+//     public Queue queue() {
+//         return new Queue(QUEUE_NAME, true);
+//     }
 
-    // 注入连接工厂
-    @Bean
-    public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
-        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        return rabbitTemplate;
-    }
+//     // 注入连接工厂
+//     @Bean
+//     public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
+//         final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+//         return rabbitTemplate;
+//     }
 
-    // 注入监听容器
-    @Bean
-    public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
-                                                    MessageListenerAdapter listenerAdapter) {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(QUEUE_NAME);
-        container.setMessageListener(listenerAdapter);
-        return container;
-    }
+//     // 注入监听容器
+//     @Bean
+//     public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
+//                                                     MessageListenerAdapter listenerAdapter) {
+//         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+//         container.setConnectionFactory(connectionFactory);
+//         container.setQueueNames(QUEUE_NAME);
+//         container.setMessageListener(listenerAdapter);
+//         return container;
+//     }
 
-    // 注入监听适配器
-    @Bean
-    public MessageListenerAdapter listenerAdapter(LikeMessageListener listener) {
-        return new MessageListenerAdapter(listener, "receiveMessage");
-    }
-}
+//     // 注入监听适配器
+//     @Bean
+//     public MessageListenerAdapter listenerAdapter(LikeMessageListener listener) {
+//         return new MessageListenerAdapter(listener, "receiveMessage");
+//     }
+// }
