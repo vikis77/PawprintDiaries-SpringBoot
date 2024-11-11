@@ -31,7 +31,7 @@ public class Coordinate {
     /**
      * 主键
      */
-    @TableId(value = "id",type = IdType.INPUT)
+    @TableId(value = "id",type = IdType.AUTO)
     private long id;
     /**
      * 纬度
@@ -45,4 +45,8 @@ public class Coordinate {
      * 更新时间
      */
     private Timestamp updateTime;
+    /* 
+     * 上传者
+     */
+    private String uploader;
 }

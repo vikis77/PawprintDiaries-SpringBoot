@@ -15,6 +15,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.param.UploadCoordinateParam;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
@@ -170,6 +171,7 @@ public class CatController {
     * @param 
     * @return 
     */
+    // TODO 暂时弃用
     @PostMapping("/addCoordinate")
     public Result<?> addCoordinate(@RequestBody CoordinateDTO coordinateDTO){
         String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
@@ -245,6 +247,24 @@ public class CatController {
         IPage<CoordinateVO> coordinates = catService.selectCoordinateByCatId(catId,page,size);
         return Result.success(coordinates);
     }
+
+    /**
+    * 上传小猫Map表单
+    * @param 
+    * @return 
+    */
+    @PostMapping("/uploadCatCoordinate")
+    public Result<?> uploadCoordinate(@RequestBody UploadCoordinateParam uploadCoordinateParam) {
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求上传小猫Map表单");
+        } else {
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求上传小猫Map表单，表单：{}",username,uploadCoordinateParam);
+        }
+        catService.addUploadCoordinate(uploadCoordinateParam);
+        return Result.success();
+    }
+    
 
     /**
     * 数据分析接口

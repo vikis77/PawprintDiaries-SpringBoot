@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qin.catcat.unite.param.UploadCoordinateParam;
 // import com.github.pagehelper.PageInfo;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
@@ -113,4 +114,11 @@ public interface CatService {
     * @return 
     */
     public DataAnalysisVO analysis();
+
+    /**
+    * 新增上传表单坐标
+    * @param 
+    * @return 
+    */
+    public int addUploadCoordinate(UploadCoordinateParam uploadCoordinateParam);
 }

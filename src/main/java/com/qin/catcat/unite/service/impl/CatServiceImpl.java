@@ -2,6 +2,7 @@ package com.qin.catcat.unite.service.impl;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CatPicsMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
+import com.qin.catcat.unite.param.UploadCoordinateParam;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
@@ -379,5 +381,24 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         dataAnalysisVO.setVaccinationRatio(vaccinationRatio);
             
         return dataAnalysisVO;
+    }
+
+    /**
+    * 新增上传表单坐标
+    * @param 
+    * @return 
+    */
+    public int addUploadCoordinate(UploadCoordinateParam uploadCoordinateParam) {
+        Coordinate coordinate = new Coordinate();
+        coordinate.setCatId(uploadCoordinateParam.getCatId());
+        coordinate.setLatitude(uploadCoordinateParam.getLatitude());
+        coordinate.setLongitude(uploadCoordinateParam.getLongitude());
+        coordinate.setUploader(uploadCoordinateParam.getUploader());
+        coordinate.setDescription("");
+        coordinate.setArea("");
+        coordinate.setUpdateTime(Timestamp.from(Instant.now()));
+        int res = coordinateMapper.insert(coordinate);
+        return res;
+
     }
 }
