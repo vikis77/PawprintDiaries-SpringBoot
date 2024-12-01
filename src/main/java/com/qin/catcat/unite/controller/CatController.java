@@ -111,12 +111,13 @@ public class CatController {
     * @param 
     * @return 
     */
-    @GetMapping("/fingById")
-    public Result<Cat> getById(@RequestHeader("Authorization") String Token,@RequestParam String ID) {
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
+    @GetMapping("/findById")
+    public Result<Cat> getById(@RequestParam String ID) {
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求根据猫猫ID查找某一只猫猫信息 {}",username,ID);
 
         Cat cat = catService.selectById(ID);
+        log.info("根据猫猫ID查找某一只猫猫信息完成,结果为 {}",cat);
         return Result.success(cat);
     }
 
@@ -144,10 +145,10 @@ public class CatController {
     * @return 
     */
     @PostMapping("/update")
-    public Result<?> update(@RequestHeader("Authorization") String Token,@RequestBody Cat cat){
-        String username = jwtTokenProvider.getUsernameFromToken(Token);
+    public Result<?> update(@RequestBody Cat cat){
+        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求更新{}猫信息",username,cat.getCatname());
-
+        log.info("{}",cat);
         catService.update(cat);
         return Result.success();
     }

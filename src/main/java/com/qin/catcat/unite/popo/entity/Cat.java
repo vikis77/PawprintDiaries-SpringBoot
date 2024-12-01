@@ -52,4 +52,6 @@ public class Cat implements Serializable {
     private String badRecord;
     //区域
     private String area;
+    //撸猫指南
+    private String catGuide;
 }

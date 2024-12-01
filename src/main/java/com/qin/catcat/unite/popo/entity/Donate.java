@@ -1,7 +1,6 @@
 package com.qin.catcat.unite.popo.entity;
 
 import java.sql.Timestamp;
-import java.time.OffsetDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
