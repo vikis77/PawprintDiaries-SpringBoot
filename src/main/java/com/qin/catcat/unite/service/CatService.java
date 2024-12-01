@@ -109,6 +109,21 @@ public interface CatService {
     public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id,int page,int size);
 
     /**
+    * 按日期查询小猫坐标信息
+    * @param date 日期
+    * @return 
+    */
+    public List<CoordinateVO> selectCoordinateByDate(String date);
+
+    /**
+    * 按日期和猫猫ID查询坐标信息
+    * @param date 日期
+    * @param catId 猫猫ID
+    * @return 
+    */
+    public List<CoordinateVO> selectCoordinateByDateAndCatId(String date,Long catId);
+
+    /**
     * 数据分析
     * @param 
     * @return 

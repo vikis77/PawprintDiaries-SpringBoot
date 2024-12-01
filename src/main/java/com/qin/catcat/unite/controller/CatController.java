@@ -113,9 +113,13 @@ public class CatController {
     */
     @GetMapping("/findById")
     public Result<Cat> getById(@RequestParam String ID) {
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求根据猫猫ID查找某一只猫猫信息 {}",username,ID);
-
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求查询某只猫猫信息");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求查询某只猫猫信息",username);
+        }
         Cat cat = catService.selectById(ID);
         log.info("根据猫猫ID查找某一只猫猫信息完成,结果为 {}",cat);
         return Result.success(cat);
@@ -248,6 +252,46 @@ public class CatController {
         IPage<CoordinateVO> coordinates = catService.selectCoordinateByCatId(catId,page,size);
         return Result.success(coordinates);
     }
+
+    /**
+    * 按日期查询小猫坐标信息
+    * @param date 日期
+    * @return 
+    */
+    @GetMapping("/findCoordinateByDate")
+    public Result<List<CoordinateVO>> findCoordinateByDate(@RequestParam String date){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求按日期查询小猫坐标信息");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求按日期查询小猫坐标信息",username);
+        }
+
+        List<CoordinateVO> coordinates = catService.selectCoordinateByDate(date);
+        return Result.success(coordinates);
+    }
+
+    /**
+    * 按日期和猫猫ID查询坐标信息
+    * @param date 日期
+    * @param catId 猫猫ID
+    * @return 
+    */
+    @GetMapping("/findCoordinateByDateAndCat")
+    public Result<List<CoordinateVO>> findCoordinateByDateAndCat(@RequestParam String date,@RequestParam Long catId){
+        if (TokenHolder.getToken() == null) {
+            log.info("未登录用户请求按日期和猫猫ID查询坐标信息");
+        }
+        else{
+            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
+            log.info("用户{}请求按日期和猫猫ID查询坐标信息",username);
+        }
+
+        List<CoordinateVO> coordinates = catService.selectCoordinateByDateAndCatId(date,catId);
+        return Result.success(coordinates);
+    }
+
 
     /**
     * 上传小猫Map表单

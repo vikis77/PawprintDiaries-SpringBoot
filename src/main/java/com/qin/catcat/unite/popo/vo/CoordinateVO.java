@@ -48,14 +48,14 @@ public class CoordinateVO {
     private String catName;
 
     //全属性构造函数
-    public CoordinateVO(Long id, Long catId, String catName , Double longitude, Double latitude,  Timestamp updateTime, String area, String description) {
-        this.id = id;
-        this.area = area;
-        this.catId = catId;
-        this.description = description;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.updateTime = updateTime;
-        this.catName = catName;
-    }
+    // public CoordinateVO(Long id, Long catId, String catName , Double longitude, Double latitude,  Timestamp updateTime, String area, String description) {
+    //     this.id = id;
+    //     this.area = area;
+    //     this.catId = catId;
+    //     this.description = description;
+    //     this.latitude = latitude;
+    //     this.longitude = longitude;
+    //     this.updateTime = updateTime;
+    //     this.catName = catName;
+    // }
 }

@@ -76,9 +76,12 @@ public class SecurityConfig {
                     "/api/upload/catImage", // 放行特定上传端点
                     "/api/catLocation", // // 放行 WebSocket 端点
                     "/api/cat/findAll", // 放行查询猫猫端点
+                    "/api/cat/findById", // 放行按ID查询猫猫端点
                     "/api/cat/findCoordinate", // 放行查询全部猫猫坐标端点
+                    "/api/cat/findCoordinateByDate", // 放行按日期查询猫猫坐标端点
                     "/api/cat/findCoordinateByPage", // 放行查询单只猫猫坐标端点
                     "/api/cat/findPhotoByIdforPage", // 放行查询猫猫照片端点
+                    "/api/cat/findCoordinateByDateAndCat", // 放行按日期和猫猫ID查询坐标端点
                     "/api/cat/analysis", // 放行数据分析端点
                     "/api/post/getAllPost", // 放行首页帖子端点
                     "/api/post/getPostByPostid",

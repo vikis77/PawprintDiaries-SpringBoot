@@ -3,8 +3,12 @@ package com.qin.catcat.unite.service.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -275,6 +279,72 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         IPage<CoordinateVO> coordinateVOIPage = coordinateMapper.selectCoordinatesByCatId(pageObj, cat_id);
         log.info("分页查询单只猫的历史坐标信息完成");
         return coordinateVOIPage;
+    }
+
+    /**
+    * 按日期查询小猫坐标信息
+    * @param date 日期
+    * @return 
+    */
+    public List<CoordinateVO> selectCoordinateByDate(String date){
+        // 构建查询条件 - 使用LIKE进行日期匹配
+        QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("update_time", date)
+                   .orderByDesc("update_time"); // 按时间倒序排序
+        
+        // 执行查询
+        List<Coordinate> coordinates = coordinateMapper.selectList(queryWrapper);
+        
+        // 使用HashSet存储已处理的猫ID
+        Set<Long> processedCatIds = new HashSet<>();
+        List<CoordinateVO> coordinateVOs = new ArrayList<>();
+        
+        // 遍历所有坐标记录
+        for(Coordinate coordinate : coordinates) {
+            Long catId = coordinate.getCatId();
+            // 如果这只猫还没处理过
+            if(!processedCatIds.contains(catId)) {
+                CoordinateVO vo = new CoordinateVO();
+                BeanUtils.copyProperties(coordinate, vo);
+                // 查询猫名
+                Cat cat = catMapper.selectById(catId);
+                if(cat != null) {
+                    vo.setCatName(cat.getCatname());
+                }
+                coordinateVOs.add(vo);
+                processedCatIds.add(catId);
+            }
+        }
+        
+        log.info("按日期{}查询小猫坐标信息完成,共查询到{}条记录", date, coordinateVOs.size());
+        return coordinateVOs;
+    }
+
+    /**
+    * 按日期和猫猫ID查询坐标信息
+    * @param date 日期
+    * @param catId 猫猫ID
+    * @return 
+    */
+    public List<CoordinateVO> selectCoordinateByDateAndCatId(String date,Long catId){
+        QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("update_time", date)
+                    .eq("cat_id", catId)
+                    .orderByDesc("update_time"); // 按时间倒序排序
+        List<Coordinate> coordinates = coordinateMapper.selectList(queryWrapper);
+        List<CoordinateVO> coordinateVOs = new ArrayList<>();
+        
+        // 查询猫名
+        Cat cat = catMapper.selectById(catId);
+        String catName = cat != null ? cat.getCatname() : null;
+        
+        for(Coordinate coordinate : coordinates){
+            CoordinateVO vo = new CoordinateVO();
+            BeanUtils.copyProperties(coordinate, vo);
+            vo.setCatName(catName); // 设置猫名
+            coordinateVOs.add(vo);
+        }
+        return coordinateVOs;
     }
 
     /**
