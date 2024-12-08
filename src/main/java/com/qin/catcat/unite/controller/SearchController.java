@@ -37,7 +37,7 @@ public class SearchController {
         String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求搜索 {} {} {}",username,words,page,size);
 
-        SearchVO resVo = searchSerivce.search(words,page,size);
+        SearchVO resVo = searchSerivce.searchForEsAndMysql(words,page,size);
         return Result.success(resVo);
     }
     

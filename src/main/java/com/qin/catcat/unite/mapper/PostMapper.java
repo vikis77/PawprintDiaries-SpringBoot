@@ -85,4 +85,5 @@ public interface PostMapper extends BaseMapper<Post>{
     */
     @Select("SELECT post_id,title,article FROM POST")
     List<EsPostIndex> selectEsPostIndex();
+
 }

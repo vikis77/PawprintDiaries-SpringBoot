@@ -2,13 +2,12 @@ package com.qin.catcat.unite.service;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.param.UploadCoordinateParam;
-// import com.github.pagehelper.PageInfo;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
-import com.qin.catcat.unite.popo.dto.DonateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
@@ -17,123 +16,102 @@ import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 
 public interface CatService {
     /**
-    * 新增猫猫信息
-    * @param 
-    * @return 
-    */
-    public void add(CatDTO cat);
-
-    /**
-    * 查找全部猫猫信息
-    * @param 
-    * @return 
-    */
-    public List<Cat> selectAll();
-
-    /**
-     * 分页查找全部猫猫信息
-     * @param page 页码，从0开始
-     * @param size 每页大小
-     * @return 分页结果
+     * 获取所有猫咪列表
      */
-    public IPage<Cat> selectByPage(int page,int size);
+    List<Cat> list();
 
     /**
-    * 根据猫猫名字查找猫猫信息 可能有多只
-    * @param 
-    * @return 
-    */
-    public List<Cat> selectByName(String name);
+     * 根据ID获取猫咪信息
+     */
+    Cat getById(Long id);
 
     /**
-    * 根据猫猫ID查找某一只猫猫信息
-    * @param 
-    * @return 
-    */
-    public Cat selectById(String ID);
+     * 创建新猫咪
+     */
+    void createCat(CatDTO catDTO);
 
     /**
-    * 根据猫猫ID查找猫猫图片
-    * @param 
-    * @return 
-    */
-    public List<CatPics> selectPhotoById(String ID, int page, int size);
+     * 更新猫咪信息
+     */
+    void update(Cat cat);
 
     /**
-    * 更新某只猫信息
-    * @param 
-    * @return 
-    */
-    public void update(Cat cat);
+     * 删除猫咪
+     */
+    void delete(Long id);
 
     /**
-    * 根据猫猫ID删除信息
-    * @param 
-    * @return 
-    */
-    public void delete(Long ID);
+     * 上传猫咪照片
+     */
+    String uploadPhoto(Long catId, MultipartFile file);
 
     /**
-    * 新增猫猫坐标
-    * @param 
-    * @return 
-    */
-    public void addCoordinate(CoordinateDTO coordinateDTO);
+     * 获取猫咪照片列表
+     */
+    List<String> getPhotos(Long catId);
 
     /**
-    * 删除猫猫坐标
-    * @param 
-    * @return 
-    */
-    public void deleteCoordinate(List<Long> ids);
+     * 获取猫咪位置列表
+     */
+    List<CoordinateDTO> getLocations(Long catId);
 
     /**
-    * 修改坐标信息
-    * @param 
-    * @return 
-    */
-    public void updateCoordinate(Coordinate coordinate);
+     * 添加猫咪位置
+     */
+    void addCoordinate(CoordinateDTO coordinateDTO);
 
     /**
-    * 查找猫猫坐标 全部坐标信息（最新）
-    * @param 
-    * @return 
-    */
-    public List<CoordinateVO> selectCoordinate();
+     * 删除猫咪位置
+     */
+    void deleteCoordinate(List<Long> ids);
 
     /**
-    * 查询单只猫的历史坐标信息（分页）
-    * @param 
-    * @return 
-    */
-    public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id,int page,int size);
+     * 更新猫咪位置
+     */
+    void updateCoordinate(Coordinate coordinate);
 
     /**
-    * 按日期查询小猫坐标信息
-    * @param date 日期
-    * @return 
-    */
-    public List<CoordinateVO> selectCoordinateByDate(String date);
+     * 获取所有猫咪位置
+     */
+    List<CoordinateVO> selectCoordinate();
 
     /**
-    * 按日期和猫猫ID查询坐标信息
-    * @param date 日期
-    * @param catId 猫猫ID
-    * @return 
-    */
-    public List<CoordinateVO> selectCoordinateByDateAndCatId(String date,Long catId);
+     * 分页获取猫咪位置
+     */
+    IPage<CoordinateVO> selectCoordinateByCatId(Long catId, int page, int size);
 
     /**
-    * 数据分析
-    * @param 
-    * @return 
-    */
-    public DataAnalysisVO analysis();
+     * 根据日期获取猫咪位置
+     */
+    List<CoordinateVO> selectCoordinateByDate(String date);
 
     /**
-    * 新增上传表单坐标
-    * @param 
-    * @return 
-    */
-    public int addUploadCoordinate(UploadCoordinateParam uploadCoordinateParam);
+     * 根据日期和猫咪ID获取位置
+     */
+    List<CoordinateVO> selectCoordinateByDateAndCatId(String date, Long catId);
+
+    /**
+     * 添加上传的坐标信息
+     */
+    void addUploadCoordinate(UploadCoordinateParam param);
+
+    /**
+     * 获取数据分析结果
+     */
+    DataAnalysisVO analysis();
+
+    /**
+     * 分页获取猫咪列表
+     */
+    IPage<Cat> selectByPage(int page, int size);
+
+    /**
+     * 根据名字查找猫咪
+     */
+    List<Cat> selectByName(String name);
+
+    /**
+     * 分页获取猫咪照片
+     */
+    List<CatPics> selectPhotoById(String catId, int page, int size);
 }

@@ -39,8 +39,6 @@ public class MyPageVO {
     private String address;
     //头像
     private String avatar;
-    //用户角色
-    private String role;
     //账号状态
     private Integer status;
     //创建时间

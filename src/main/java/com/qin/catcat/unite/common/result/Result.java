@@ -62,6 +62,19 @@ public class Result<T> implements Serializable {
         return result;
     }
 
+    public static <T> Result<T> fail() {
+        Result<T> result = new Result<T>();
+        result.code = enumStatusCode.UNKNOWNERROR.getCode();
+        return result;
+    }
+
+    public static <T> Result<T> fail(String msg) {
+        Result<T> result = new Result<T>();
+        result.msg = msg;
+        result.code = enumStatusCode.UNKNOWNERROR.getCode();
+        return result;
+    }
+
     public static <T> Result<T> fail(String Code,String msg) {
         Result<T> result = new Result<T>();
         result.msg = msg;

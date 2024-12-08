@@ -1,7 +1,7 @@
 package com.qin.catcat.unite.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.common.result.Result;
@@ -9,33 +9,29 @@ import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.popo.dto.DonateDTO;
 import com.qin.catcat.unite.popo.entity.Donate;
+import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.DonateService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-
-
+@Tag(name = "捐赠接口")
 @RestController
 @RequestMapping("/api/donate")
-@Tag(name = "捐赠接口")
 @Slf4j
-// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class DonateController {
-    @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired DonateService donateService;
+    @Autowired private JwtTokenProvider jwtTokenProvider;
+    @Autowired private DonateService donateService;
 
     /**
-    * 新增捐赠 前端随意传一个id字段即可
-    * @param 
-    * @return 
-    */
-    @GetMapping("/add")
+     * 新增捐赠记录
+     * @param donateDTO 捐赠信息数据传输对象
+     * @return 操作结果
+     */
+    @Operation(summary = "新增捐赠")
+    @HasPermission("system:donate:add")
+    @PostMapping("/add")
     public Result<?> addDonate(@RequestBody DonateDTO donateDTO) {
         String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求新增捐赠", username);
@@ -45,11 +41,13 @@ public class DonateController {
     }
 
     /**
-    * 删除捐赠
-    * @param 
-    * @return 
-    */
-    @GetMapping("/delete")
+     * 删除捐赠记录
+     * @param id 捐赠记录ID
+     * @return 操作结果
+     */
+    @Operation(summary = "删除捐赠")
+    @HasPermission("system:donate:delete")
+    @DeleteMapping("/delete")
     public Result<?> deleteDonate(@RequestParam(name = "id") Long id) {
         String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求删除捐赠", username);
@@ -59,11 +57,13 @@ public class DonateController {
     }
 
     /**
-    * 更新捐赠
-    * @param 
-    * @return 
-    */
-    @GetMapping("/update")
+     * 更新捐赠记录
+     * @param donateDTO 更新后的捐赠信息
+     * @return 操作结果
+     */
+    @Operation(summary = "更新捐赠")
+    @HasPermission("system:donate:edit")
+    @PutMapping("/update")
     public Result<?> updateDonate(@RequestBody DonateDTO donateDTO) {
         String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
         log.info("用户{}请求更新捐赠", username);
@@ -73,17 +73,21 @@ public class DonateController {
     }
 
     /**
-    * 获取捐赠信息 （分页）
-    * @param 
-    * @return 
-    */
-    @GetMapping("/get")
-    public Result<?> getDonate(@RequestParam(name = "page",defaultValue = "1") Integer page, @RequestParam(name = "limit",defaultValue = "10") Integer limit) {
+     * 分页获取捐赠记录
+     * @param page 页码
+     * @param limit 每页大小
+     * @return 捐赠记录列表（分页）
+     */
+    @Operation(summary = "查询捐赠")
+    @HasPermission("system:donate:view")
+    @GetMapping("/list")
+    public Result<IPage<Donate>> getDonate(
+            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @RequestParam(name = "limit", defaultValue = "10") Integer limit) {
         String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求获取捐赠", username);
+        log.info("用户{}请求获取捐赠列表，第{}页，每页{}条", username, page, limit);
 
         IPage<Donate> donate = donateService.getDonate(page, limit);
         return Result.success(donate);
     }
-    
 }

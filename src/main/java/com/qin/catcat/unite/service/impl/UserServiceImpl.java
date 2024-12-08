@@ -178,7 +178,7 @@ public class UserServiceImpl implements UserService{
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper
             //排除密码字段
-            .select("user_id","username","nick_name","email","phone_number","brithday","address","avatar","role","status","create_time","update_time","post_count","fans_count","follow_count","signature")
+            .select("user_id","username","nick_name","email","phone_number","brithday","address","avatar","status","create_time","update_time","post_count","fans_count","follow_count","signature")
             .eq("user_id", userId);
         User user = userMapper.selectOne(queryWrapper);
 

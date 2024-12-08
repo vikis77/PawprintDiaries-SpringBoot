@@ -63,32 +63,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         String tokenHeader = request.getHeader("Authorization");
         log.info("请求头：{}",tokenHeader);
 
+        // 如果请求头中包含Token
         if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) { // 确保是 Bearer Token 格式
             String token = tokenHeader.substring(7);  // 提取 token 部分
             try {
-                //验证token合法性
-                // jwtTokenProvider.validateToken(tokenHeader);
-                // log.info("Token格式检验通过");
-
-                // String tokenUsername = jwtTokenProvider.getUsernameFromToken(tokenHeader);//从Token中提取用户名
-                // String tokenUserId = jwtTokenProvider.getUserIdFromJWT(tokenHeader);//从Token中提取用户ID
-                // Date tokenExpiration = jwtTokenProvider.getExpirationDateFromToken(tokenHeader); // 从Token中提取过期时间
-                // log.info("Token解析->tokenUsername:{} tokenUserId:{} 过期时间：{}",tokenUsername,tokenUserId,tokenExpiration);
-
-                // 读取SecurityContext里存的登陆用户,与token解析出来的用户进行判断
-                // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                // if (authentication != null && authentication.isAuthenticated()) {
-                //     Map<String, String> details = (Map<String, String>) authentication.getDetails();
-                //     String contextUserId = (String) details.get("userId");
-                //     String contextUsername = (String) authentication.getName();
-                //     if(contextUserId.equals(tokenUserId) && contextUsername.equals(tokenUsername)){
-                //         log.info("JWT内容身份检验通过");
-                //         TokenHolder.setToken(tokenHeader); //将token放入ThreadLocal
-                //     }else{
-                //         throw new JWTIdentityVerificationFailedException("JWT内容身份检验失败");
-                //     }
-                // }
-
                 // 验证 Token 的合法性
                 if (jwtTokenProvider.validateToken(token)) {
                     log.info("Token格式检验通过");

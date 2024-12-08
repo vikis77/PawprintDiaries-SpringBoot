@@ -99,58 +99,58 @@ public class FileUploadController {
     }
 
     // 客户端上传图片并调用Python识别猫猫服务
-    @PostMapping("/catImage")
-    public String uploadImage(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return "文件为空，请选择一个文件上传";
-        }
+    // @PostMapping("/catImage")
+    // public String uploadImage(@RequestParam("file") MultipartFile file) {
+    //     if (file.isEmpty()) {
+    //         return "文件为空，请选择一个文件上传";
+    //     }
 
-        String fileName = file.getOriginalFilename();
-        // 上传文件存储的目录
-        File destinationFile = new File(UPLOAD_DIR + File.separator + fileName);
-        String file_path = UPLOAD_DIR + File.separator + fileName;
-        try {
-            // 保存文件到目标位置
-            file.transferTo(destinationFile);
-            // 调用Python预测服务
-            String predictionResult = callPythonPredictionService(file_path);
-            log.info(predictionResult);
-            return predictionResult;
-            // return "文件上传成功: " + fileName;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "文件上传失败: " + e.getMessage();
-        }
-    }
+    //     String fileName = file.getOriginalFilename();
+    //     // 上传文件存储的目录
+    //     File destinationFile = new File(UPLOAD_DIR + File.separator + fileName);
+    //     String file_path = UPLOAD_DIR + File.separator + fileName;
+    //     try {
+    //         // 保存文件到目标位置
+    //         file.transferTo(destinationFile);
+    //         // 调用Python预测服务
+    //         String predictionResult = callPythonPredictionService(file_path);
+    //         log.info(predictionResult);
+    //         return predictionResult;
+    //         // return "文件上传成功: " + fileName;
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //         return "文件上传失败: " + e.getMessage();
+    //     }
+    // }
 
     // 调用Python预测服务
-    private String callPythonPredictionService(String filePath) throws IOException {
-        // Python服务的URL
-        String pythonServiceUrl = "http://localhost:5000/predict";
+    // private String callPythonPredictionService(String filePath) throws IOException {
+    //     // Python服务的URL
+    //     String pythonServiceUrl = "http://localhost:5000/predict";
 
-        // 使用HttpClient发起POST请求
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            // 创建HttpPost请求
-            HttpPost uploadFile = new HttpPost(pythonServiceUrl);
+    //     // 使用HttpClient发起POST请求
+    //     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+    //         // 创建HttpPost请求
+    //         HttpPost uploadFile = new HttpPost(pythonServiceUrl);
 
-            // 使用MultipartEntityBuilder构建multipart请求
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+    //         // 使用MultipartEntityBuilder构建multipart请求
+    //         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 
-            // 将文件路径作为字符串参数添加到请求体中
-            builder.addTextBody("file_path", filePath);
+    //         // 将文件路径作为字符串参数添加到请求体中
+    //         builder.addTextBody("file_path", filePath);
 
-            // 构建HttpEntity
-            HttpEntity entity = builder.build();
-            uploadFile.setEntity(entity);
+    //         // 构建HttpEntity
+    //         HttpEntity entity = builder.build();
+    //         uploadFile.setEntity(entity);
 
-            try (CloseableHttpResponse response = httpClient.execute(uploadFile)) {
-                String responseString = EntityUtils.toString(response.getEntity());
-                log.info(responseString);
-                // 处理响应
-                return responseString;
-            }
-        }
-    }
+    //         try (CloseableHttpResponse response = httpClient.execute(uploadFile)) {
+    //             String responseString = EntityUtils.toString(response.getEntity());
+    //             log.info(responseString);
+    //             // 处理响应
+    //             return responseString;
+    //         }
+    //     }
+    // }
 
     // 获取七牛云上传凭证
     @GetMapping("/qiniuUploadToken")

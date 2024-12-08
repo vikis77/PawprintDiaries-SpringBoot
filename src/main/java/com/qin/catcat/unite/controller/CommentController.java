@@ -4,123 +4,158 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.popo.entity.Comment;
+import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.CommentService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.extern.slf4j.Slf4j;
 
-@RestController
+/**
+ * @Description 评论管理控制器
+ *
+ * @Author qrb
+ * @Version 1.0
+ * @Since 
+ */
+
 @Tag(name = "评论接口")
+@RestController
 @RequestMapping("/api/comment")
 @Slf4j
-// @CrossOrigin(origins = "https://pawprintdiaries.luckyiur.com") // 允许的来源
 public class CommentController {
-    @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired CommentService commentService;
-    @Autowired GeneratorIdUtil generatorIdUtil;
+    @Autowired private JwtTokenProvider jwtTokenProvider;
+    @Autowired private CommentService commentService;
+    @Autowired private GeneratorIdUtil generatorIdUtil;
 
     /**
-    * 新增评论
-    * @param 
-    * @return 
-    */ 
+     * 新增评论
+     * @param Token 用户认证token
+     * @param context 评论内容
+     * @param postId 帖子ID
+     * @return 操作结果
+     */ 
+    @Operation(summary = "新增评论")
+    @HasPermission("system:comment:add")
     @PostMapping("/add")
-    public Result<?> addComment(@RequestHeader("Authorization") String Token,@RequestParam String context,@RequestParam Long postId){
+    public Result<?> addComment(
+            @RequestHeader("Authorization") String Token,
+            @RequestParam String context,
+            @RequestParam Long postId) {
         String username = jwtTokenProvider.getUsernameFromToken(Token);
         String userId = jwtTokenProvider.getUserIdFromJWT(Token);
         log.info("用户{}请求新增评论",username);
 
-        //构建评论实体对象
         Comment comment = Comment.builder()
-        .commentId(Long.valueOf(generatorIdUtil.GeneratorRandomId()))//评论ID
-        .commentTime(Timestamp.from(Instant.now()))//评论时间
-        .likeCount(0)//点赞数
-        .commentatorId(Long.valueOf(userId))//评论者ID
-        .commentType("普通评论")//评论类型 TODO
-        .postId(postId)//评论的帖子的ID
-        .commentContext(context)//评论内容
-        .build();
+            .commentId(Long.valueOf(generatorIdUtil.GeneratorRandomId()))
+            .commentTime(Timestamp.from(Instant.now()))
+            .likeCount(0)
+            .commentatorId(Long.valueOf(userId))
+            .commentType("普通评论")
+            .postId(postId)
+            .commentContext(context)
+            .build();
 
-        Boolean signal = commentService.addComment(comment);
-
-        //TODO
+        commentService.addComment(comment);
         return Result.success();
     }
 
     /**
-    * 删除评论
-    * @param 
-    * @return 
-    */
+     * 删除评论
+     * @param Token 用户认证token
+     * @param commentId 评论ID
+     * @return 操作结果
+     */
+    @Operation(summary = "删除评论")
+    @HasPermission("system:comment:delete")
     @DeleteMapping("/deleteComment")
-    public Result<?> deleteComent(@RequestHeader("Authorization") String Token,@RequestParam Long commentId){
+    public Result<?> deleteComment(
+            @RequestHeader("Authorization") String Token,
+            @RequestParam Long commentId) {
         String username = jwtTokenProvider.getUsernameFromToken(Token);
         String userId = jwtTokenProvider.getUserIdFromJWT(Token);
         log.info("用户{}请求删除评论",username);
 
-        Boolean signal = commentService.deleteComment(commentId);
-        //TODO
+        commentService.deleteComment(commentId);
         return Result.success();
-
     }
     
     /**
-    * 根据帖子ID分页查询前十条评论(按评论时间 最新)
-    * @param 
-    * @return 
-    */
+     * 根据帖子ID分页查询评论(按评论时间降序)
+     * @param Token 用户认证token
+     * @param postId 帖子ID
+     * @param page 页码
+     * @param size 每页大小
+     * @return 评论列表（分页）
+     */
+    @Operation(summary = "按时间查询评论")
+    @HasPermission("system:comment:view")
     @GetMapping("/getCommentByPostidByDescTime")
-    public Result<IPage<Comment>> getCommentByPostidByDescTime(@RequestHeader("Authorization") String Token,@RequestParam Long postId,@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "10") int size){
+    public Result<IPage<Comment>> getCommentByPostidByDescTime(
+            @RequestHeader("Authorization") String Token,
+            @RequestParam Long postId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String username = jwtTokenProvider.getUsernameFromToken(Token);
         String userId = jwtTokenProvider.getUserIdFromJWT(Token);
-        log.info("用户{}请求根据帖子ID分页查询前十条评论(按评论时间 最新)",username);
+        log.info("用户{}请求根据帖子ID分页查询评论(按评论时间降序)",username);
 
         IPage<Comment> comments = commentService.getCommentByPostidOrderByDescTime(postId,page,size);
         return Result.success(comments);
     }
 
     /**
-    * 根据帖子ID分页查询前十条评论(按点赞数 最多)
-    * @param 
-    * @return 
-    */
+     * 根据帖子ID分页查询评论(按点赞数降序)
+     * @param Token 用户认证token
+     * @param postId 帖子ID
+     * @param page 页码
+     * @param size 每页大小
+     * @return 评论列表（分页）
+     */
+    @Operation(summary = "按点赞数查询评论")
+    @HasPermission("system:comment:view")
     @GetMapping("/getCommentByPostidByDescLikecount")
-    public Result<IPage<Comment>> getCommentByPostidByDescLikecount(@RequestHeader("Authorization") String Token,@RequestParam Long postId,@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "10") int size){
+    public Result<IPage<Comment>> getCommentByPostidByDescLikecount(
+            @RequestHeader("Authorization") String Token,
+            @RequestParam Long postId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String username = jwtTokenProvider.getUsernameFromToken(Token);
         String userId = jwtTokenProvider.getUserIdFromJWT(Token);
-        log.info("用户{}请求根据帖子ID分页查询前十条评论(按点赞数 最多)",username);
+        log.info("用户{}请求根据帖子ID分页查询评论(按点赞数降序)",username);
 
         IPage<Comment> comments = commentService.getCommentByPostidOrderByDescLikecount(postId,page,size);
         return Result.success(comments);
     }
 
     /**
-    * 根据父评论Id分页查询前十条子评论 (按评论时间 最新)
-    * @param 
-    * @return 
-    */
+     * 根据父评论ID分页查询子评论(按评论时间降序)
+     * @param Token 用户认证token
+     * @param fatherId 父评论ID
+     * @param page 页码
+     * @param size 每页大小
+     * @return 子评论列表（分页）
+     */
+    @Operation(summary = "查询子评论")
+    @HasPermission("system:comment:view")
     @GetMapping("/getCommentByFatheridByDescTime")
-    public Result<IPage<Comment>> getCommentByFatheridByDescTime(@RequestHeader("Authorization") String Token,@RequestParam Long father_id,@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "10") int size){
+    public Result<IPage<Comment>> getCommentByFatheridByDescTime(
+            @RequestHeader("Authorization") String Token,
+            @RequestParam Long fatherId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String username = jwtTokenProvider.getUsernameFromToken(Token);
         String userId = jwtTokenProvider.getUserIdFromJWT(Token);
-        log.info("用户{}请求根据父评论Id分页查询前十条子评论 (按评论时间 最新)",username);
+        log.info("用户{}请求根据父评论ID分页查询子评论(按评论时间降序)",username);
 
-        IPage<Comment> comments = commentService.getCommentByFatheridByDescTime(father_id,page,size);
+        IPage<Comment> comments = commentService.getCommentByFatheridByDescTime(fatherId,page,size);
         return Result.success(comments);
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -40,18 +41,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> implements CatService{
+public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatService {
     @Autowired CatMapper catMapper;
     @Autowired CatPicsMapper catPicsMapper;
     @Autowired CoordinateMapper coordinateMapper;
     @Autowired GeneratorIdUtil generatorIdUtil;
 
-    /**
-    * 新增猫猫信息
-    * @param 
-    * @return 
-    */
-    public void add(CatDTO catDTO){
+    // ================ 猫咪基本信息相关方法 ================
+    
+    @Override
+    public void createCat(CatDTO catDTO){
         Cat cat = new Cat();
 
         //属性拷贝DTO to entity
@@ -66,25 +65,15 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         log.info("新增完成");
     }
 
-    /**
-    * 查找全部猫猫信息
-    * @param 
-    * @return 
-    */
-    // 缓存所有猫猫信息
     @Cacheable(value = "allCats")
-    public List<Cat> selectAll(){
+    @Override
+    public List<Cat> list(){
         List<Cat> cats = catMapper.findAll();
         log.info("查找全部猫猫信息完成");
         return cats;
     }
 
-    /**
-     * 分页查找全部猫猫信息
-     * @param page 页码，从0开始
-     * @param size 每页大小
-     * @return 分页结果
-     */
+    @Override
     public IPage<Cat> selectByPage(int page,int size){
         Page<Cat> pageObj = new Page<>(page,size);
         QueryWrapper<Cat> wrapper = new QueryWrapper<>();
@@ -93,11 +82,7 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         return pageInfo;
     }
 
-    /**
-    * 根据猫猫名字查找猫猫信息 可能有多只
-    * @param 
-    * @return 
-    */
+    @Override
     public List<Cat> selectByName(String name){
         if (name == null || name.isEmpty()) {
             log.warn("猫猫名字不能为空");
@@ -119,22 +104,33 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         return cats;
     }
 
-    /**
-    * 根据猫猫ID查找某一只猫猫信息
-    * @param 
-    * @return 
-    */
-    public Cat selectById(String ID){
+    @Override
+    public Cat getById(Long ID){
         Cat cat = catMapper.selectById(ID);
         log.info("根据猫猫ID查找某一只猫猫信息完成");
         return cat;
     }
 
-    /**
-    * 根据猫猫ID查找猫猫图片
-    * @param 
-    * @return 
-    */
+    public void update(Cat cat){
+        int rows = catMapper.updateById(cat);
+        if(rows<=0){
+            log.info("更新失败");
+            //TODO throw new 
+        }
+        log.info("更新{}猫信息完成",cat.getCatname());
+    }
+
+    public void delete(Long ID){
+        int row = catMapper.deleteById(ID);
+        if(row<=0){
+            log.info("删除失败");
+            //TODO throw new 
+        }
+        log.info("根据猫猫ID删除信息完成");
+    }
+
+    // ================ 猫咪照片相关方法 ================
+
     public List<CatPics> selectPhotoById(String ID, int page, int size) {
         // 创建分页对象
         Page<CatPics> pageObg = new Page<>(page,size);
@@ -151,40 +147,20 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         return result.getRecords(); // 返回图片列表
     }
 
-
-    /**
-    * 更新某只猫信息
-    * @param 
-    * @return 
-    */
-    public void update(Cat cat){
-        int rows = catMapper.updateById(cat);
-        if(rows<=0){
-            log.info("更新失败");
-            //TODO throw new 
-        }
-        log.info("更新{}猫信息完成",cat.getCatname());
+    @Override
+    public String uploadPhoto(Long catId, MultipartFile file) {
+        // TODO: 实现照片上传逻辑
+        return "photo_url";
     }
 
-    /**
-    * 根据猫猫ID删除信息
-    * @param 
-    * @return 
-    */
-    public void delete(Long ID){
-        int row = catMapper.deleteById(ID);
-        if(row<=0){
-            log.info("删除失败");
-            //TODO throw new 
-        }
-        log.info("根据猫猫ID删除信息完成");
+    @Override
+    public List<String> getPhotos(Long catId) {
+        // TODO: 实现获取照片列表逻辑
+        return List.of();
     }
 
-    /**
-    * 新增猫猫坐标
-    * @param coordinateDTO 坐标信息DTO
-    * @return 
-    */
+    // ================ 猫咪坐标相关方法 ================
+
     public void addCoordinate(CoordinateDTO coordinateDTO){
         // 获取列表中的猫猫名
         List<String> catNames = coordinateDTO.getCatNames();
@@ -226,11 +202,19 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         }
     }
 
-    /**
-    * 删除猫猫坐标
-    * @param 
-    * @return 
-    */
+    @Override
+    public void addUploadCoordinate(UploadCoordinateParam uploadCoordinateParam) {
+        Coordinate coordinate = new Coordinate();
+        coordinate.setCatId(uploadCoordinateParam.getCatId());
+        coordinate.setLatitude(uploadCoordinateParam.getLatitude());
+        coordinate.setLongitude(uploadCoordinateParam.getLongitude());
+        coordinate.setUploader(uploadCoordinateParam.getUploader());
+        coordinate.setDescription("");
+        coordinate.setArea("");
+        coordinate.setUpdateTime(Timestamp.from(Instant.now()));
+        coordinateMapper.insert(coordinate);
+    }
+
     public void deleteCoordinate(List<Long> ids){
         if(CollectionUtils.isEmpty(ids)){
             log.info("猫猫ID列表为空");
@@ -246,34 +230,17 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         log.info("删除猫猫坐标完成");
     }
 
-    /**
-    * 修改坐标信息
-    * @param 
-    * @return 
-    */
     public void updateCoordinate(Coordinate coordinate){
         coordinateMapper.updateById(coordinate);
         log.info("更新猫猫坐标完成");
     }
 
-    /**
-    * 查找猫猫坐标 全部坐标信息（最新）
-    * @param 
-    * @return 
-    */
     public List<CoordinateVO> selectCoordinate(){
         List<CoordinateVO> CoordinateVOs = coordinateMapper.getAllCatsWithLatestCoordinates();
         log.info("查找猫猫坐标完成");
         return CoordinateVOs;
     }
 
-    /**
-     * 分页查询单只猫的历史坐标信息
-     * @param catId 猫ID
-     * @param page 页码，从1开始
-     * @param size 每页大小
-     * @return 分页结果
-     */
     public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id,int page,int size){
         Page<CoordinateVO> pageObj = new Page<>(page, size);
         IPage<CoordinateVO> coordinateVOIPage = coordinateMapper.selectCoordinatesByCatId(pageObj, cat_id);
@@ -281,11 +248,6 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         return coordinateVOIPage;
     }
 
-    /**
-    * 按日期查询小猫坐标信息
-    * @param date 日期
-    * @return 
-    */
     public List<CoordinateVO> selectCoordinateByDate(String date){
         // 构建查询条件 - 使用LIKE进行日期匹配
         QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
@@ -320,12 +282,6 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         return coordinateVOs;
     }
 
-    /**
-    * 按日期和猫猫ID查询坐标信息
-    * @param date 日期
-    * @param catId 猫猫ID
-    * @return 
-    */
     public List<CoordinateVO> selectCoordinateByDateAndCatId(String date,Long catId){
         QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
         queryWrapper.like("update_time", date)
@@ -347,11 +303,14 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         return coordinateVOs;
     }
 
-    /**
-    * 数据分析
-    * @param 
-    * @return 
-    */
+    @Override
+    public List<CoordinateDTO> getLocations(Long catId) {
+        // TODO: 实现获取位置列表逻辑
+        return List.of();
+    }
+
+    // ================ 数据分析相关方法 ================
+
     public DataAnalysisVO analysis(){
         List<Cat> cats = catMapper.findAll();
         HashMap<String, Integer> ageDistribution = new HashMap<>();
@@ -451,24 +410,5 @@ public class CatServiceImpl  extends ServiceImpl<CoordinateMapper, Coordinate> i
         dataAnalysisVO.setVaccinationRatio(vaccinationRatio);
             
         return dataAnalysisVO;
-    }
-
-    /**
-    * 新增上传表单坐标
-    * @param 
-    * @return 
-    */
-    public int addUploadCoordinate(UploadCoordinateParam uploadCoordinateParam) {
-        Coordinate coordinate = new Coordinate();
-        coordinate.setCatId(uploadCoordinateParam.getCatId());
-        coordinate.setLatitude(uploadCoordinateParam.getLatitude());
-        coordinate.setLongitude(uploadCoordinateParam.getLongitude());
-        coordinate.setUploader(uploadCoordinateParam.getUploader());
-        coordinate.setDescription("");
-        coordinate.setArea("");
-        coordinate.setUpdateTime(Timestamp.from(Instant.now()));
-        int res = coordinateMapper.insert(coordinate);
-        return res;
-
     }
 }

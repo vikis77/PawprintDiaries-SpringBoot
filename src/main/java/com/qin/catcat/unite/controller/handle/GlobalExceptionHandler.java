@@ -13,9 +13,15 @@ import com.qin.catcat.unite.exception.PasswordIncorrectException;
 import com.qin.catcat.unite.exception.UserNotExistException;
 import com.qin.catcat.unite.exception.updatePasswordFailedException;
 import com.qin.catcat.unite.exception.UserAlreadyExistsException;
+import com.qin.catcat.unite.exception.BusinessException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(BusinessException.class)
+    public Result<String> handleBusinessException(BusinessException ex) {
+        return Result.error(ex.getMessage(),enumStatusCode.BUSINESS_ERROR);
+    }
 
     // 处理自定义的密码错误异常
     @ExceptionHandler(PasswordIncorrectException.class)

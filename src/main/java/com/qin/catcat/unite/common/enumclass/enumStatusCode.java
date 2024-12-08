@@ -11,7 +11,8 @@ public enum enumStatusCode {
     INTERNAL_SERVER_ERROR("5001", "服务器内部错误"),
     UNKNOWNERROR("6000","未知错误"),
     TOKEN_EXPIRED("2001","Token过期"),
-    TOKEN_INVALID("2002","Token无效");
+    TOKEN_INVALID("2002","Token无效"),
+    BUSINESS_ERROR("4000","业务错误");
 
     private final String code;
     private final String message;

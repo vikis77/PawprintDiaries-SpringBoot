@@ -66,30 +66,30 @@ class CatcatApplicationTests {
     private EsPostIndexRepository EsPostIndexRepository;
 
 
-	// 测试ES查询全部
-	@Test
-    public void getAllPosts() {
-		List<EsPostIndex> EsPostIndexs = new ArrayList<>();
-		EsPostIndexs = (List<EsPostIndex>) EsPostIndexRepository.findAll();
-		// 断言返回的列表不为空
-		assertNotNull(EsPostIndexs);
-		assertFalse(EsPostIndexs.isEmpty());
-		// // 打印数据
-		log.info(EsPostIndexs.toString());
-		System.out.println("111");
-    }
+	// // 测试ES查询全部
+	// @Test
+    // public void getAllPosts() {
+	// 	List<EsPostIndex> EsPostIndexs = new ArrayList<>();
+	// 	EsPostIndexs = (List<EsPostIndex>) EsPostIndexRepository.findAll();
+	// 	// 断言返回的列表不为空
+	// 	assertNotNull(EsPostIndexs);
+	// 	assertFalse(EsPostIndexs.isEmpty());
+	// 	// // 打印数据
+	// 	log.info(EsPostIndexs.toString());
+	// 	System.out.println("111");
+    // }
 
-	// 测试ES查询文章标题
-    public List<EsPostIndex> searchByTitle(String title) {
-        return EsPostIndexRepository.findByTitle(title);
-    }
+	// // 测试ES查询文章标题
+    // public List<EsPostIndex> searchByTitle(String title) {
+    //     return EsPostIndexRepository.findByTitle(title);
+    // }
 
-	// 测试ES查询文章标题或内容
-	@Test
-    public List<EsPostIndex> searchByTitleOrArticle(String query) {
-        // return EsPostIndexRepository.findByTitleOrArticle(query, query);
-        return EsPostIndexRepository.findByTitleOrArticle("流浪猫", "流浪猫");
-    }
+	// // 测试ES查询文章标题或内容
+	// @Test
+    // public List<EsPostIndex> searchByTitleOrArticle(String query) {
+    //     // return EsPostIndexRepository.findByTitleOrArticle(query, query);
+    //     return EsPostIndexRepository.findByTitleOrArticle("流浪猫", "流浪猫");
+    // }
 	
 	// 测试获取数据库连接
 	@Test

@@ -174,10 +174,13 @@ knife4j:
   setting:
     language: zh_cn
 
-# 启用缓存调试日志
+# 日志配置
 logging:
   level:
     org.springframework.cache: DEBUG
+    root: DEBUG  # 根日志级别
+    com.qin.catcat: DEBUG  # 项目包的日志级别
+    org.springframework: INFO  # Spring框架的日志级别
 
 # 上传的图片存储的位置，部署时需要修改
 file:
@@ -189,6 +192,8 @@ qiniu:
   secret-key: b2CrZvzYP6CtCeHTFUz0qD8RnfXp2uF_wsZPAngE
   bucket: iur-blog
   upload-url: https://cdn.luckyiur.com/catcat/post_pics/
+
+
 
 
 

@@ -142,7 +142,10 @@ spring:
   #   port: 5672
   #   username: guest
   #   password: guest
-
+  elasticsearch:
+    uris: http://localhost:9200
+    username: elastic
+    password: Un4kHY7C6gMJkjwKRVfZ
 # MyBatis 分页插件
 pagehelper:
   helperDialect: mysql
@@ -170,7 +173,15 @@ springdoc:
 logging:
   level:
     org.springframework.cache: DEBUG
-
+    root: DEBUG  # 根日志级别
+    com.qin.catcat: DEBUG  # 项目包的日志级别
+    org.springframework: INFO  # Spring框架的日志级别
 # 上传的图片存储的位置，部署时需要修改
 file:
   upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics
+# 七牛云的配置
+qiniu:
+  access-key: FvZbXvCH0RyNyxE_8glWs0AJMTos7IvQoXeaWglA
+  secret-key: b2CrZvzYP6CtCeHTFUz0qD8RnfXp2uF_wsZPAngE
+  bucket: iur-blog
+  upload-url: https://cdn.luckyiur.com/catcat/post_pics/

@@ -38,5 +38,9 @@ public class CoordinateDTO {
      * 经度
      */
     private Double longitude;
+    /**
+     * 上传者
+     */
+    // private String uploader;
 
 }

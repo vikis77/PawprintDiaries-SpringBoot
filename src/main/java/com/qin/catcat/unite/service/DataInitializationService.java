@@ -27,7 +27,7 @@ public class DataInitializationService {
     @EventListener(ApplicationReadyEvent.class) // 监听应用启动事件
     public void init() {
         // 查询全部猫猫数据，提前写入缓存
-        catService.selectAll();
+        catService.list();
 
         // 查询前十条帖子数据，提前写入缓存
         postService.getPostBySendtime(1, 10);

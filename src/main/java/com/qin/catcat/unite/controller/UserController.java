@@ -14,6 +14,7 @@ import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
 import com.qin.catcat.unite.popo.vo.UserLoginVO;
+import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.UserService;
 
 import io.jsonwebtoken.Jwts;
@@ -97,6 +98,7 @@ public class UserController {
     * @return 
     */
     @GetMapping("/profile")
+    @HasPermission("system:profile:view")
     public Result<MyPageVO> getUserProfile() {
 
         if (TokenHolder.getToken() == null) {
