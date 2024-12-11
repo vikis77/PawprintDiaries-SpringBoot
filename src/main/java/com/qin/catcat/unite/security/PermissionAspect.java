@@ -20,6 +20,8 @@ import com.qin.catcat.unite.popo.entity.Permission;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.service.PermissionService;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @Description 权限切面
  *
@@ -29,6 +31,7 @@ import com.qin.catcat.unite.service.PermissionService;
  */
 @Aspect
 @Component
+@Slf4j
 public class PermissionAspect {
     
     @Autowired
@@ -67,7 +70,9 @@ public class PermissionAspect {
         for (String permission : permissionCodes) {
             userPermissions.addAll(permissionService.getAllPermissionsByCode(permission));
         }
-        
+        // 打印用户权限
+        log.info("用户所拥有的权限: {}", userPermissions);
+        log.info("请求所需要权限: {}", requiredPermission);
         if (userPermissions.contains(requiredPermission)) {
             return joinPoint.proceed();
         }

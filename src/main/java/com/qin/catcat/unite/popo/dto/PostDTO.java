@@ -17,6 +17,6 @@ public class PostDTO {
     private String title;
     //文章
     private String article;
-    // 帖子名集合
+    // 图片集合
     private List<String> pictrueList;
 }

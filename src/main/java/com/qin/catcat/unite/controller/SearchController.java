@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/api/search")
 @Tag(name = "搜索模块")
 @Slf4j
-// @CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173")
 public class SearchController {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;

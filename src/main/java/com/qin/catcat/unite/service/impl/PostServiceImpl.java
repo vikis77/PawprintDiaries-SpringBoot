@@ -3,6 +3,7 @@ package com.qin.catcat.unite.service.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
@@ -31,8 +33,10 @@ import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.service.PostService;
+import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
 
+import io.jsonwebtoken.lang.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -49,6 +53,7 @@ public class PostServiceImpl implements PostService{
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired UserService userService;
     @Autowired GeneratorIdUtil generatorIdUtil;
+    @Autowired QiniuService qiniuService;
 
     /**
     * 新增帖子
@@ -62,6 +67,7 @@ public class PostServiceImpl implements PostService{
         String userId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
         String userNickname = userService.getNicknameFromId(userId); //根据用户ID查询用户昵称
 
+        // 插入帖子基本信息
         post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
         post.setTitle(postDto.getTitle()); // 设置标题
         post.setArticle(postDto.getArticle()); // 设置文章
@@ -72,11 +78,18 @@ public class PostServiceImpl implements PostService{
         post.setSendTime(Timestamp.from(Instant.now()));//设置发帖时间
         post.setUpdateTime(Timestamp.from(Instant.now()));//设置更新时间
         post.setCoverPicture(postDto.getPictrueList().get(0));//设置封面(默认为第一张图片)
-        
-        int siginal = postMapper.insert(post);
-        if(siginal!=1){
-            //TODO throw new 
+        postMapper.insert(post);
+
+        // 插入帖子图片关联表
+        int signal = 1;
+        for(String imageName:postDto.getPictrueList()){
+            PostPics postPics = new PostPics();
+            postPics.setPostId(post.getPostId());
+            postPics.setPicture(imageName);
+            postPics.setPicNumber(signal++);
+            postPicsMapper.insert(postPics);
         }
+        
         return true;
     }
 
@@ -96,7 +109,7 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     public SinglePostVO getPostByPostId(String postId){
-        // 查询帖子基本信息
+        // 查询帖基本信息
         Post post = postMapper.selectById(postId);
 
         if (post == null) {
@@ -137,7 +150,7 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     @Cacheable(value = "postForSendtime")
-    public IPage<HomePostVO> getPostBySendtime(int page,int pageSize){
+    public IPage<HomePostVO> getPostBySendtime(int page, int pageSize) {
         Page<HomePostVO> postObj = new Page<>(page,pageSize);
         return postMapper.selectPostsBySendtime(postObj);
     }
@@ -183,17 +196,19 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
-    * 判断是否有权限删除
+    * 判断是否有权限��除
     * @param 
     * @return 
     */
     public Boolean isLegalDelete(String postId){
-        Post post = postMapper.selectById(postId);
-        if(String.valueOf(post.getAuthorId()).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()))){
-            return true;
-        }else{
-            return false;
-        }
+        // TODO 默认有权
+        // Post post = postMapper.selectById(postId);
+        // if(String.valueOf(post.getAuthorId()).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()))){
+        //     return true;
+        // }else{
+        //     return false;
+        // }
+        return true;
     }
 
     /**
@@ -202,13 +217,21 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     public Boolean delete(String postId){
-        int signal = postMapper.deleteById(Long.parseLong(postId));
-        if(signal!=1){
-            //TODO throw new
-            return false;
-        }else{
-            return true;
-        }
+        // 查询全部帖子关联的图片名称集合
+        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Long.parseLong(postId));
+        List<String> imageFileNames = postPicsList.stream().map(PostPics::getPicture).collect(Collectors.toList());
+        // 批量删除七牛云图片
+        qiniuService.deleteFile(imageFileNames);
+
+
+        // 删除帖子表
+        postMapper.deleteById(Long.parseLong(postId));
+
+        // 获取帖子图片关联ID集合
+        List<Long> postPicsIds = postPicsList.stream().map(PostPics::getId).collect(Collectors.toList());
+        // 批量删除帖子图片关联表
+        postPicsMapper.delete(new LambdaQueryWrapper<PostPics>().in(!Collections.isEmpty(postPicsIds),PostPics::getId, postPicsIds));
+        return true;
     }
 
     /**

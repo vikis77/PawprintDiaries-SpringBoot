@@ -10,13 +10,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.qin.catcat.unite.popo.entity.PredictionResult;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 
 @Service
+@Slf4j
 public class CatPredictionService {
     private final String PREDICTION_URL = "http://localhost:5000/predict";
     
     public PredictionResult predictCatBreed(MultipartFile image) throws IOException {
+        log.info("开始调用python预测服务");
         RestTemplate restTemplate = new RestTemplate();
         
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -37,6 +41,7 @@ public class CatPredictionService {
             PredictionResult result = response.getBody();
             if (result != null) {
                 if (result.getSuccess() != null && result.getSuccess()) {
+                    log.info("预测服务返回结果: {}", result);
                     return result;
                 } else {
                     throw new RuntimeException("预测服务返回错误: " + result.getMessage());

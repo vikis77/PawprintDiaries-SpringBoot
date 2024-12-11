@@ -44,8 +44,6 @@ public class PostController {
     @HasPermission("system:post:add")
     @PostMapping("/addpost")
     public Result<?> addPost(@RequestBody PostDTO postDTO) {
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求新增帖子",username);
         postService.add(postDTO);
         return Result.success();
     }
@@ -59,9 +57,6 @@ public class PostController {
     @HasPermission("system:post:delete")
     @DeleteMapping("/deletepost")
     public Result<?> deletePost(@RequestParam String postId){
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求删除帖子{}",username,postId);
-
         // 鉴权：当前用户ID必须等于帖子发布者ID
         if (postService.isLegalDelete(postId)) {
             Boolean signal = postService.delete(postId);

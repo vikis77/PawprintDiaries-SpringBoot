@@ -62,7 +62,7 @@
     <logger name="com.qin.catcat" level="INFO"/>
 
     <!-- Spring框架的日志级别 -->
-    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework" level="INFO"/>
 
     <!-- 根日志级别 -->
     <root level="INFO">

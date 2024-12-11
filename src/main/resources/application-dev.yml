@@ -177,9 +177,9 @@ knife4j:
 # 日志配置
 logging:
   level:
-    org.springframework.cache: DEBUG
-    root: DEBUG  # 根日志级别
-    com.qin.catcat: DEBUG  # 项目包的日志级别
+    org.springframework.cache: INFO
+    root: INFO  # 根日志级别
+    com.qin.catcat: INFO  # 项目包的日志级别
     org.springframework: INFO  # Spring框架的日志级别
 
 # 上传的图片存储的位置，部署时需要修改

@@ -1,3 +1,4 @@
 spring:
   profiles:
-    active: dev #prod  # 默认使用开发配置dev
+    # active: prod #prod  # 默认使用开发配置dev
+    active: dev
