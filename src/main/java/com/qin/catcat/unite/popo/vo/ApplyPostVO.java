@@ -24,13 +24,13 @@ import lombok.NoArgsConstructor;
 public class ApplyPostVO {
     //主键ID
     @TableId(value = "post_id",type = IdType.INPUT)
-    private Long postId;
+    private Integer postId;
     //标题
     private String title;
     //文章
     private String article;
     //作者ID
-    private Long authorId;
+    private Integer authorId;
     // 作者头像
     private String authorAvatar;
     //点赞数

@@ -25,7 +25,9 @@ import com.qin.catcat.unite.popo.entity.PostLike;
 import com.catcat.entity.UserFollow;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.ThreadLocalUtil;
 import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.exception.BusinessException;
 // import com.qin.catcat.unite.config.RabbitMQConfig;
 import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.PostPicsMapper;
@@ -47,7 +49,9 @@ import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
 
 import io.jsonwebtoken.lang.Collections;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
+import net.logstash.logback.encoder.com.lmax.disruptor.BusySpinWaitStrategy;
 
 @Service
 @Slf4j
@@ -87,7 +91,7 @@ public class PostServiceImpl implements PostService{
         // post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
         post.setTitle(postDto.getTitle()); // 设置标题
         post.setArticle(postDto.getArticle()); // 设置文章
-        post.setAuthorId(Long.parseLong(userId));//设置作者ID（即用户本ID）
+        post.setAuthorId(Integer.parseInt(userId));//设置作者ID（即用户本ID）
         post.setLikeCount(0);//设置点赞数 初始化0
         post.setCollectingCount(0); // 设置收藏数 初始化0
         post.setCommentCount(0);//设置评论数 初始化0
@@ -126,7 +130,7 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
-    * 根据帖子ID查询帖子全部图片
+    * 根据帖子ID查询帖子
     * @param 
     * @return 
     */
@@ -135,7 +139,7 @@ public class PostServiceImpl implements PostService{
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("id", postId);
         queryWrapper.eq("is_deleted", 0); // 查询未删除的帖子
-        queryWrapper.eq("is_adopted", 1); // 查询通过审核的帖子
+        // queryWrapper.eq("is_adopted", 1); // 查询通过审核的帖子
         Post post = postMapper.selectOne(queryWrapper);
         if (post == null) {
             return null; // 或者抛出一个异常，表示未找到对应的帖子
@@ -150,6 +154,17 @@ public class PostServiceImpl implements PostService{
         singlePostVO.setCommentCount(post.getCommentCount());
         singlePostVO.setSendTime(post.getSendTime());
         singlePostVO.setUpdateTime(post.getUpdateTime());
+        if (post.getIsAdopted() == 0) {
+            Integer authorId = post.getAuthorId();
+            // 如果作者ID和当前用户ID不一致，则抛出异常
+            if (!String.valueOf(authorId).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()))) {
+                throw new BusinessException("帖子未通过审核");
+            }
+            // 如果作者查看自己尚未通过审核的帖子，则抛出异常
+            else{
+                singlePostVO.setTitle(singlePostVO.getTitle() + "（帖子审核中）");
+            }
+        }
         // 根据作者ID查询作者昵称、作者头像
         User author = userMapper.selectById(post.getAuthorId());
         if (author != null) {
@@ -159,7 +174,7 @@ public class PostServiceImpl implements PostService{
             throw new RuntimeException("作者不存在");
         }
         // 根据帖子ID查询帖子的全部图片（post_pics表）
-        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Long.parseLong(postId));
+        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Integer.parseInt(postId));
         singlePostVO.setImages(postPicsList);
         // 当前用户已登录
         if (TokenHolder.getToken() != null) {
@@ -307,7 +322,14 @@ public class PostServiceImpl implements PostService{
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_deleted", 0)
                 .eq("is_adopted", 1);
+        // 查询全部帖子
         List<Post> allPosts = postMapper.selectList(queryWrapper);
+        // 清除总页数
+        ThreadLocalUtil.clearTotalPages();
+        // 计算总页数
+        Integer totalPages = allPosts.size() / 10 + 1;
+        // 设置总页数
+        ThreadLocalUtil.setTotalPages(totalPages);
         
         if (allPosts.isEmpty()) {
             return new ArrayList<>();
@@ -374,7 +396,7 @@ public class PostServiceImpl implements PostService{
     private List<PostWeight> rebuildWeightedPosts(List<String> cachedPostIds) {
         return cachedPostIds.stream()
             .map(id -> {
-                Post post = postMapper.selectById(Long.parseLong(id));
+                Post post = postMapper.selectById(Integer.parseInt(id));
                 return post != null ? new PostWeight(post, 1.0) : null;
             })
             .filter(pw -> pw != null)
@@ -492,9 +514,9 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
-    public Boolean passApprove(Long postId){
+    public Boolean passApprove(Integer postId){
         Post post = postMapper.selectById(postId);
-        Long userId = Long.parseLong(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+        Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
         post.setApproveUserId(userId);
         post.setIsAdopted(1);
         postMapper.updateById(post);
@@ -506,9 +528,9 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
-    public Boolean refuseApprove(Long postId){
+    public Boolean refuseApprove(Integer postId){
         Post post = postMapper.selectById(postId);
-        Long userId = Long.parseLong(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+        Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
         post.setApproveUserId(userId);
         post.setIsAdopted(2);
         postMapper.updateById(post);
@@ -584,17 +606,17 @@ public class PostServiceImpl implements PostService{
     */
     public Boolean delete(String postId){
         // 查询全部帖子关联的图片名称集合
-        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Long.parseLong(postId));
+        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Integer.parseInt(postId));
         List<String> imageFileNames = postPicsList.stream().map(PostPics::getPicture).collect(Collectors.toList());
         // 批量删除七牛云图片
         qiniuService.deleteFile(imageFileNames, "post_pics");
 
 
         // 删除帖子表
-        postMapper.deleteById(Long.parseLong(postId));
+        postMapper.deleteById(Integer.parseInt(postId));
 
         // 获取帖子图片关联ID集合
-        List<Long> postPicsIds = postPicsList.stream().map(PostPics::getId).collect(Collectors.toList());
+        List<Integer> postPicsIds = postPicsList.stream().map(PostPics::getId).collect(Collectors.toList());
         // 批量删除帖子图片关联表
         postPicsMapper.delete(new LambdaQueryWrapper<PostPics>().in(!Collections.isEmpty(postPicsIds),PostPics::getId, postPicsIds));
         return true;
@@ -616,7 +638,7 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     @Transactional
-    public int likePost(Long postId){
+    public int likePost(Integer postId){
         // 当前登录用户ID
         String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
         
@@ -641,7 +663,7 @@ public class PostServiceImpl implements PostService{
         
         // 如果不存在记录，创建新的点赞记录
         PostLike postLike = new PostLike();
-        postLike.setUserId(Long.parseLong(currentUserId));
+        postLike.setUserId(Integer.parseInt(currentUserId));
         postLike.setPostId(postId);
         postLike.setStatus(1);
         postLikeMapper.insert(postLike);
@@ -657,7 +679,7 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     @Transactional
-    public int unlikePost(Long postId){
+    public int unlikePost(Integer postId){
         // 当前登录用户ID
         String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
         
@@ -679,7 +701,7 @@ public class PostServiceImpl implements PostService{
     }
 
     // （Redis）辅助方法：更新点赞数
-    private void updateLikeCount(Long postId, boolean isIncrement) {
+    private void updateLikeCount(Integer postId, boolean isIncrement) {
         HashOperations<String,String,String> hashOps = RedisTemplate.opsForHash();
         String likeCount = hashOps.get(LIKE_KEY, String.valueOf(postId));
         
@@ -696,7 +718,7 @@ public class PostServiceImpl implements PostService{
     }
 
     // （Redis）辅助方法：获取当前点赞数
-    private int getLikeCount(Long postId) {
+    private int getLikeCount(Integer postId) {
         HashOperations<String,String,String> hashOps = RedisTemplate.opsForHash();
         String likeCount = hashOps.get(LIKE_KEY, String.valueOf(postId));
         return likeCount != null ? Integer.parseInt(likeCount) : 0;
@@ -707,7 +729,7 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
-    public int collectPost(Long postId){
+    public int collectPost(Integer postId){
         // 当前登录用户ID
         String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
         // 检查是否已经存在收藏记录
@@ -724,7 +746,7 @@ public class PostServiceImpl implements PostService{
         } else {
             // 如果不存在记录，创建新的收藏记录
             PostCollect postCollect = new PostCollect();
-            postCollect.setUserId(Long.parseLong(currentUserId));
+            postCollect.setUserId(Integer.parseInt(currentUserId));
             postCollect.setPostId(postId);
             postCollect.setStatus(1);
             postCollectMapper.insert(postCollect);
@@ -741,7 +763,7 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
-    public int unCollectPost(Long postId){
+    public int unCollectPost(Integer postId){
         // 当前登录用户ID
         String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
         // 查找现有的收藏记录

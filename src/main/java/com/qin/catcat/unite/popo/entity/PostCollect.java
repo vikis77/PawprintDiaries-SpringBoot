@@ -20,11 +20,11 @@ import lombok.Data;
 public class PostCollect {
     // 主键ID
     @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private Integer id;
     // 用户ID
-    private Long userId;
+    private Integer userId;
     // 帖子ID
-    private Long postId;
+    private Integer postId;
     // 收藏状态 1:收藏 0:取消收藏
     private Integer status;
     // 创建时间

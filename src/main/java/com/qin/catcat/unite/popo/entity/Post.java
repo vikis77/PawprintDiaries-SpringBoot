@@ -26,13 +26,13 @@ import lombok.NoArgsConstructor;
 public class Post {
     //主键ID
     @TableId(value = "id",type = IdType.AUTO)
-    private Long postId;
+    private Integer postId;
     //标题
     private String title;
     //文章
     private String article;
     //作者ID
-    private Long authorId;
+    private Integer authorId;
     //点赞数
     private Integer likeCount;
     // 收藏数
@@ -55,5 +55,5 @@ public class Post {
     // 审核状态：0待审核 1通过 2不通过
     private Integer isAdopted;
     // 审核人ID
-    private Long approveUserId;
+    private Integer approveUserId;
 }

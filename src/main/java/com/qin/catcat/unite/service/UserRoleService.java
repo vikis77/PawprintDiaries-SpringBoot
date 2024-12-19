@@ -3,6 +3,7 @@ package com.qin.catcat.unite.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.qin.catcat.unite.param.UpdateRoleParam;
 import com.qin.catcat.unite.popo.entity.UserRole;
 
 /**

@@ -28,7 +28,7 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
         
         // 批量保存新的角色关联
         List<UserRole> userRoles = roleIds.stream()
-                .map(roleId -> {
+                .map(roleId -> {    
                     UserRole userRole = new UserRole();
                     userRole.setUserId(userId);
                     userRole.setRoleId(roleId);

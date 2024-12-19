@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.qin.catcat.unite.common.result.Result;
+import com.qin.catcat.unite.param.AdoptParam;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.dto.CatDTO;
@@ -75,6 +76,19 @@ public class CatController {
     @PostMapping("/like/{catId}")
     public Result<Void> likeCat(@PathVariable Long catId) {
         catService.likeCat(catId);
+        return Result.success();
+    }
+
+    /**
+     * @Description 领养小猫（该接口尚未实现）
+     * @param catId 小猫ID
+     * @return 操作结果
+     */
+    @Operation(summary = "领养小猫")
+    @HasPermission("system:cat:adopt")
+    @PostMapping("/adopt/apply")
+    public Result<Void> adoptCat(@RequestBody AdoptParam adoptParam) {
+        // catService.adoptCat(adoptParam);
         return Result.success();
     }
 }

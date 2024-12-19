@@ -3,6 +3,7 @@ package com.qin.catcat.unite.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -51,17 +52,21 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateRole(UpdateRoleParam param) {
+        UserRole userRole = new UserRole();
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, param.getUserId());
         wrapper.eq(UserRole::getRoleId, param.getRole().equals("ADMIN") ? 3 : 2);
-        UserRole userRole = userRoleMapper.selectOne(wrapper);
-        if (userRole == null) {
-            return false;
+        userRole = userRoleMapper.selectOne(wrapper);
+        if (ObjectUtils.isEmpty(userRole)) {
+            userRole = new UserRole();
+            userRole.setUserId(param.getUserId());
         }
         userRole.setRoleId(param.getRole().equals("ADMIN") ? 2 : 3);
         Integer updateUserId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
         userRole.setUpdateUserId(updateUserId);
-        return userRoleMapper.updateById(userRole) > 0;
+        return ObjectUtils.isEmpty(userRole.getId()) ? 
+            userRoleMapper.insert(userRole) > 0 : 
+            userRoleMapper.updateById(userRole) > 0;
     }
     
     @Override

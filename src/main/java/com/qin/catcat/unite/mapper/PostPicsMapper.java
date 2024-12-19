@@ -16,5 +16,5 @@ public interface PostPicsMapper extends BaseMapper<PostPics>{
     * @return 
     */
     @Select("select * from post_pics where post_id = #{postId} order by pic_number desc")
-    List<PostPics> selectByPostId(Long postId);
+    List<PostPics> selectByPostId(Integer postId);
 }

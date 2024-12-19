@@ -31,12 +31,14 @@ import com.qin.catcat.unite.exception.UserNotExistException;
 import com.qin.catcat.unite.exception.updatePasswordFailedException;
 import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.UserMapper;
+import com.qin.catcat.unite.mapper.UserRoleMapper;
 import com.qin.catcat.unite.mapper.UserFollowMapper;
 import com.qin.catcat.unite.popo.dto.RegisterDTO;
 import com.qin.catcat.unite.popo.dto.UpdateProfileDTO;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.entity.UserRole;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
 import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
@@ -59,23 +61,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired GeneratorIdUtil generatorIdUtil;
     @Autowired
     private QiniuService qiniuService;
+    @Autowired
+    private UserRoleMapper userRoleMapper;
     /**
     * 登录
     * @param 
     * @return 1验证通过 2密码错误 3用户名不存在
     */
     public String loginUser(UserLoginDTO userLoginDTO){
-
-        int result = 0;
-        
         //1.查询用户是否存在且合法
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();// 使用QueryWrapper构建查询条件
         queryWrapper
-            .eq("username", userLoginDTO.getUsername())//用户名是否存在
+            .or().eq("email", userLoginDTO.getUsername())
+            .or().eq("phone_number", userLoginDTO.getUsername())
+            .or().eq("id", userLoginDTO.getUsername())
             .eq("status",1);//账号状态是否正常
-        // Long count = userMapper.selectCount(queryWrapper);
-        User user = userMapper.selectOne(queryWrapper);
-        // System.out.println(count);
+        User user = null;
+        try{
+            user = userMapper.selectOne(queryWrapper);
+        }catch(Exception e){
+            throw new BusinessException("用户不存在或账号状态不正常，请检查用户ID是否正确");
+        }
 
         if(user!=null){
             //2.用户如果存在，验证密码
@@ -93,13 +99,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 log.info("输入密码:"+enteredPassword);
                 boolean passwordMatches = passwordEncoder.matches(enteredPassword, storePassword);//密码加密比对,两个参数不能反，前面用户输入明文，后面数据库密文
                 if(passwordMatches){
-                    //密码验证通过
-                    result=1;
                     log.info("密码验证通过");
                     // 认证用户
 
                     // 生成 token
-                    String jwt = jwtTokenProvider.generateToken(userLoginDTO.getUsername(),user2.getUserId());
+                    String jwt = jwtTokenProvider.generateToken(user.getUsername(), user2.getUserId());
                     log.info("生成的token："+jwt);
                     // 返回 token
                     return jwt;
@@ -130,13 +134,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     */
     public Boolean registerUser(RegisterDTO registerDTO){
         QueryWrapper<User> wrapper = new QueryWrapper<>();//创建条件构造器
-        wrapper.eq("username", registerDTO.getUsername());//条件构造
+        // wrapper.eq("username", registerDTO.getUsername());//条件构造
         User storeUser = userMapper.selectOne(wrapper);//条件查询数据库
 
-        if(storeUser!=null){
-            //数据库已经存在此用户名，注册失败
-            throw new UserAlreadyExistsException("用户名已存在，注册失败");
-        }
+        // if(storeUser!=null){
+        //     //数据库已经存在此用户名，注册失败
+        //     throw new UserAlreadyExistsException("用户名已存在，注册失败");
+        // }
 
         //创建新用户
         User user = new User();
@@ -144,13 +148,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setEmail(registerDTO.getEmail());
         //使用BCryptPasswordEncoder 加密密码
         String encodedPassword = passwordEncoder.encode(registerDTO.getPassword());
-        String userId = generatorIdUtil.GeneratorRandomId();//生成ID
-
         user.setPassword(encodedPassword);
         user.setStatus(1);
-
         //保存用户到数据库
         int result = userMapper.insert(user);
+
+        // 设置用户角色
+        UserRole userRole = new UserRole();
+        userRole.setUserId(user.getUserId());
+        userRole.setRoleId(3);
+        userRoleMapper.insert(userRole);
         return true;
     }
 
@@ -192,8 +199,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 根据userId获取该用户的所有帖子信息
         QueryWrapper<Post> queryWrapperPost = new QueryWrapper<>();
         queryWrapperPost.eq("author_id", user.getUserId());
+        queryWrapperPost.eq("is_deleted", 0);
+        queryWrapperPost.eq("is_adopted", 1).or().eq("is_adopted", 0);
         List<Post> postsList = postMapper.selectList(queryWrapperPost);
-
+        // 处理帖子信息
+        for (Post post : postsList) {
+            if (post.getIsAdopted() == 0) {
+                post.setTitle(post.getTitle() + "（帖子审核中）");
+            }
+        }
         MyPageVO userInfo = new MyPageVO();
         BeanUtils.copyProperties(user, userInfo); // 把user属性拷贝到userInfo
         userInfo.setPostList(postsList);
@@ -203,25 +217,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     /**
     * 更新用户信息
-    * @param 
-    * @return 
+    * @param updateProfileDTO 更新的用户信息
+    * @return 更新是否成功
     */
     public boolean updateProfile(UpdateProfileDTO updateProfileDTO){
+        // 查询用户是否存在
         User user = userMapper.selectById(updateProfileDTO.getUserId());
         if(user==null){
             throw new UserNotExistException("用户不存在");
         }
-        // 头像发生变化
-        if (!user.getAvatar().equals(updateProfileDTO.getAvatar())){
+        // 头像发生变化时删除旧头像
+        if (updateProfileDTO.getAvatar() != null && !updateProfileDTO.getAvatar().equals(user.getAvatar())){
             // 删除七牛云上的头像
-            qiniuService.deleteFile(Arrays.asList(user.getAvatar()), "user_avatar");
+            if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                qiniuService.deleteFile(Arrays.asList(user.getAvatar()), "user_avatar");
+            }
         }
+        // 更新用户信息
         User updateUser = new User();
         BeanUtils.copyProperties(updateProfileDTO, updateUser);
-        QueryWrapper<User> updateWrapper = new QueryWrapper<>();
-        updateWrapper.eq("id", updateUser.getUserId());
-        update(updateUser, updateWrapper);
-        return true;
+        // 确保设置了用户ID
+        updateUser.setUserId(Integer.parseInt(updateProfileDTO.getUserId()));
+        try {
+            // 执行更新操作
+            int rows = userMapper.updateById(updateUser);
+            if(rows != 1){
+                log.error("更新用户信息失败，影响行数：" + rows + "，用户ID：" + updateProfileDTO.getUserId());
+                throw new BusinessException("更新用户信息失败");
+            }
+            return true;
+        } catch (Exception e) {
+            log.error("更新用户信息发生异常：" + e.getMessage(), e);
+            throw new BusinessException("更新用户信息失败：" + e.getMessage());
+        }
     }
 
     //根据ID获取昵称

@@ -12,5 +12,6 @@ import lombok.Data;
 @Data
 public class RefuseApproveParam {
     // 帖子ID
-    private Long postId;
+    private Integer postId;
 }
+

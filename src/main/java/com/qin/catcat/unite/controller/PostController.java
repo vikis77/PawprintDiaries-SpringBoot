@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.ThreadLocalUtil;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.param.PassApproveParam;
 import com.qin.catcat.unite.param.RefuseApproveParam;
@@ -147,7 +148,7 @@ public class PostController {
         //    最终分数 = 权重 * (0.8 + Random.nextDouble() * 0.4)
         
         List<HomePostVO> posts = postService.getRandomWeightedPosts(page, pageSize);
-        return Result.success(posts);
+        return Result.success(posts,ThreadLocalUtil.getTotalPages());
     }
 
     @Operation(summary = "时间衰减权重推送帖子")
@@ -292,7 +293,7 @@ public class PostController {
     @Operation(summary = "点赞帖子")
     @HasPermission("system:post:like")
     @PostMapping("/likePost")
-    public Result<String> likePost(@RequestParam Long postId){
+    public Result<String> likePost(@RequestParam Integer postId){
         postService.likePost(postId);
         return Result.success();
     }
@@ -305,7 +306,7 @@ public class PostController {
     @Operation(summary = "取消点赞")
     @HasPermission("system:post:like")
     @PostMapping("/unLikePost")
-    public Result<String> unlikePost(@RequestParam Long postId){
+    public Result<String> unlikePost(@RequestParam Integer postId){
         postService.unlikePost(postId);
         return Result.success();
     }
@@ -314,7 +315,7 @@ public class PostController {
     @Operation(summary = "收藏帖子")
     @HasPermission("system:post:collect")
     @PostMapping("/collectPost")
-    public Result<String> collectPost(@RequestParam Long postId){
+    public Result<String> collectPost(@RequestParam Integer postId){
         postService.collectPost(postId);
         return Result.success();
     }
@@ -323,7 +324,7 @@ public class PostController {
     @Operation(summary = "取消收藏帖子")
     @HasPermission("system:post:collect")
     @PostMapping("/unCollectPost")
-    public Result<String> unCollectPost(@RequestParam Long postId){
+    public Result<String> unCollectPost(@RequestParam Integer postId){
         postService.unCollectPost(postId);
         return Result.success();
     }

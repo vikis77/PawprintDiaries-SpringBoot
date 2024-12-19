@@ -20,10 +20,10 @@ import lombok.NoArgsConstructor;
 @TableName(value = "post_pics")
 public class PostPics {
     // 主键ID
-    @TableId(value = "id",type = IdType.INPUT)
-    private Long id;
+    @TableId(value = "id",type = IdType.AUTO)
+    private Integer id;
     // 帖子ID
-    private Long postId;
+    private Integer postId;
     // 图片地址
     private String picture;
     // 图片序号

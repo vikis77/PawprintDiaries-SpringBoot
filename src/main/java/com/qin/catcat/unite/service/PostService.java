@@ -71,14 +71,14 @@ public interface PostService {
     * @param 
     * @return 
     */
-    public Boolean passApprove(Long postId);
+    public Boolean passApprove(Integer postId);
 
     /**
     * 帖子审核拒绝通过
     * @param 
     * @return 
     */
-    public Boolean refuseApprove(Long postId);
+    public Boolean refuseApprove(Integer postId);
 
     /**
     * 根据点赞数分页查询前十条帖子
@@ -127,26 +127,26 @@ public interface PostService {
     * @param 
     * @return 
     */
-    public int likePost(Long postId);
+    public int likePost(Integer postId);
 
     /**
     * 根据帖子ID取消点赞
     * @param 
     * @return 
     */
-    public int unlikePost(Long postId);   
+    public int unlikePost(Integer postId);   
 
     /**
     * 收藏帖子
     * @param 
     * @return 
     */
-    public int collectPost(Long postId);
+    public int collectPost(Integer postId);
 
     /**
     * 取消收藏帖子
     * @param 
     * @return 
     */
-    public int unCollectPost(Long postId);
+    public int unCollectPost(Integer postId);
 }

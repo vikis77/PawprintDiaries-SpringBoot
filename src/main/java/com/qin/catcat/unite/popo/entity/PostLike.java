@@ -17,11 +17,11 @@ import lombok.Data;
 public class PostLike {
     //主键ID
     @TableId(value = "id",type = IdType.AUTO)
-    private Long id;
+    private Integer id;
     //用户ID
-    private Long userId;
+    private Integer userId;
     //帖子ID
-    private Long postId;
+    private Integer postId;
     // 点赞状态 1:点赞 0:取消点赞
     private Integer status;
     // 创建时间

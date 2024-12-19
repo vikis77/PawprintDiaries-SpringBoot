@@ -17,14 +17,14 @@ import java.sql.Timestamp;
 @Data
 public class SinglePostVO {
     //主键ID
-    @TableId(value = "post_id",type = IdType.INPUT)
-    private Long postId;
+    @TableId(value = "post_id",type = IdType.AUTO)
+    private Integer postId;
     //标题
     private String title;
     //文章
     private String article;
     //作者ID
-    private Long authorId;
+    private Integer authorId;
     //作者昵称
     private String authorNickname;
     //作者头像

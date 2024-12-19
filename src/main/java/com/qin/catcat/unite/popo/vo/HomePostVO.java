@@ -6,9 +6,9 @@ import lombok.Data;
 @Data
 public class HomePostVO {
     // 帖子ID
-    private Long postId;
+    private Integer postId;
     // 作者ID
-    private Long authorId;
+    private Integer authorId;
     // 作者昵称
     private String authorNickname;
     // 帖子作者头像

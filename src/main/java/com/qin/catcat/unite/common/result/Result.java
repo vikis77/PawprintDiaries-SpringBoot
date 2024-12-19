@@ -18,6 +18,7 @@ public class Result<T> implements Serializable {
 
     private String code; //编码：1成功，0和其它数字为失败
     private String msg; //信息
+    private Integer totalPages; //总页数
     private T data; //数据
 
     public static <T> Result<T> success() {
@@ -46,6 +47,14 @@ public class Result<T> implements Serializable {
         result.data = object;
         result.msg = msg;
         result.code = enumStatusCode.SUCSSESS.getCode();
+        return result;
+    }
+
+    public static <T> Result<T> success(T object,Integer totalPages) {
+        Result<T> result = new Result<T>();
+        result.data = object;
+        result.code = enumStatusCode.SUCSSESS.getCode();
+        result.totalPages = totalPages;
         return result;
     }
 

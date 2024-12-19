@@ -12,6 +12,13 @@ import com.qin.catcat.unite.service.UserRoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/**
+ * @Description 用户角色关联接口.
+ *
+ * @Author liuyun
+ * @Version 1.0
+ * @Since 2024-12-19 20:30
+ */
 @Tag(name = "用户角色关联接口")
 @RestController
 @RequestMapping("/api/user-role")
@@ -23,7 +30,7 @@ public class UserRoleController {
     @Operation(summary = "为用户分配角色")
     @HasPermission("system:user:role:assign")
     @PostMapping("/{userId}/roles")
-    public Result<Void> assignRoles(
+    public Result<Void> assignRoles(    
             @PathVariable Integer userId,
             @RequestBody List<Integer> roleIds) {
         if (userRoleService.assignRoles(userId, roleIds)) {
