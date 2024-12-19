@@ -2,10 +2,15 @@ package com.qin.catcat.unite.popo.entity;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +38,8 @@ public class Cat implements Serializable {
     //年龄 单位：月
     private Integer age;
     //生日
-    private Date brithday;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime birthday;
     //头像
     private String avatar;
     //食物
@@ -54,4 +60,20 @@ public class Cat implements Serializable {
     private String area;
     //撸猫指南
     private String catGuide;
+    //创建时间
+    @TableField(fill = FieldFill.INSERT)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+    //更新时间
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateTime;
+    // 是否删除
+    private Integer isDeleted;
+    // 热度
+    private Integer trending;
+    // 点赞数
+    private Integer likeCount;
+    // 是否已被领养
+    private Integer isAdopted;
 }

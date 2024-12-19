@@ -101,7 +101,7 @@
 # # logging:
 # #   config: classpath:logback-spring.xml
 
-# # 上传的图片存储的位置，部署时需要修改
+# # 上传的图片存储的位置，��署时需要修改
 # file:
 #   upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics
  
@@ -143,7 +143,7 @@ spring:
     username: guest
     password: guest
   elasticsearch:
-    uris: https://localhost:9200  # Elasticsearch的URL
+    uris: https://localhost:9200
     username: elastic
     password: 0cWka0jVBt4O0wEwFgts
 

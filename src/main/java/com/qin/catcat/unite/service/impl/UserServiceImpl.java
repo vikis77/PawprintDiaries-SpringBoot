@@ -1,5 +1,7 @@
 package com.qin.catcat.unite.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -17,35 +19,46 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.catcat.entity.UserFollow;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.exception.BusinessException;
 import com.qin.catcat.unite.exception.PasswordIncorrectException;
 import com.qin.catcat.unite.exception.UserAlreadyExistsException;
 import com.qin.catcat.unite.exception.UserNotExistException;
 import com.qin.catcat.unite.exception.updatePasswordFailedException;
 import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.UserMapper;
+import com.qin.catcat.unite.mapper.UserFollowMapper;
 import com.qin.catcat.unite.popo.dto.RegisterDTO;
+import com.qin.catcat.unite.popo.dto.UpdateProfileDTO;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
+import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
     private PostMapper postMapper;
     @Autowired
+    private UserFollowMapper userFollowMapper;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
     @Autowired GeneratorIdUtil generatorIdUtil;
+    @Autowired
+    private QiniuService qiniuService;
     /**
     * 登录
     * @param 
@@ -135,7 +148,6 @@ public class UserServiceImpl implements UserService{
 
         user.setPassword(encodedPassword);
         user.setStatus(1);
-        user.setUserId(userId);
 
         //保存用户到数据库
         int result = userMapper.insert(user);
@@ -175,12 +187,7 @@ public class UserServiceImpl implements UserService{
     */
     public MyPageVO getUserProfile(String userId){
         // 获取用户信息        
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper
-            //排除密码字段
-            .select("user_id","username","nick_name","email","phone_number","brithday","address","avatar","status","create_time","update_time","post_count","fans_count","follow_count","signature")
-            .eq("user_id", userId);
-        User user = userMapper.selectOne(queryWrapper);
+        User user = userMapper.selectById(userId);
 
         // 根据userId获取该用户的所有帖子信息
         QueryWrapper<Post> queryWrapperPost = new QueryWrapper<>();
@@ -192,6 +199,29 @@ public class UserServiceImpl implements UserService{
         userInfo.setPostList(postsList);
 
         return userInfo;
+    }
+    
+    /**
+    * 更新用户信息
+    * @param 
+    * @return 
+    */
+    public boolean updateProfile(UpdateProfileDTO updateProfileDTO){
+        User user = userMapper.selectById(updateProfileDTO.getUserId());
+        if(user==null){
+            throw new UserNotExistException("用户不存在");
+        }
+        // 头像发生变化
+        if (!user.getAvatar().equals(updateProfileDTO.getAvatar())){
+            // 删除七牛云上的头像
+            qiniuService.deleteFile(Arrays.asList(user.getAvatar()), "user_avatar");
+        }
+        User updateUser = new User();
+        BeanUtils.copyProperties(updateProfileDTO, updateUser);
+        QueryWrapper<User> updateWrapper = new QueryWrapper<>();
+        updateWrapper.eq("id", updateUser.getUserId());
+        update(updateUser, updateWrapper);
+        return true;
     }
 
     //根据ID获取昵称
@@ -206,6 +236,49 @@ public class UserServiceImpl implements UserService{
             String nickname = user.getNickName();
             return nickname;
         }
-        
+    }
+
+    /**
+     * 关注用户
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    public boolean followUser(Long userId){
+        String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+        // 查看是否已经关注
+        QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUserId).eq("followed_user_id", userId).eq("is_deleted", 0);
+        UserFollow userFollow = userFollowMapper.selectOne(queryWrapper);
+        if(userFollow!=null){
+            throw new BusinessException("已经关注");
+        }
+        // 获取当前登录用户ID
+        UserFollow newUserFollow = new UserFollow();
+        newUserFollow.setUserId(Long.parseLong(currentUserId));
+        newUserFollow.setFollowedUserId(userId);
+        newUserFollow.setCreateTime(LocalDateTime.now());
+        newUserFollow.setUpdateTime(LocalDateTime.now());
+        newUserFollow.setIsDeleted(0);
+        userFollowMapper.insert(newUserFollow);
+        return true;
+    }
+
+    /**
+     * 取消关注用户
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    public boolean unfollowUser(Long userId){
+        String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+        QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUserId).eq("followed_user_id", userId).eq("is_deleted", 0);
+        UserFollow userFollow = userFollowMapper.selectOne(queryWrapper);
+        if(userFollow==null){
+            throw new BusinessException("还没有关注，不能取关");
+        }
+        userFollow.setIsDeleted(1);
+        userFollow.setUpdateTime(LocalDateTime.now());
+        userFollowMapper.updateById(userFollow);
+        return true;
     }
 }

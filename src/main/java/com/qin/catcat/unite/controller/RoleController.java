@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.qin.catcat.unite.common.result.Result;
+import com.qin.catcat.unite.param.UpdateRoleParam;
 import com.qin.catcat.unite.popo.entity.Role;
+import com.qin.catcat.unite.popo.vo.RoleListVO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.RoleService;
 import com.qin.catcat.unite.service.RolePermissionService;
@@ -37,9 +39,9 @@ public class RoleController {
     
     @Operation(summary = "更新角色")
     @HasPermission("system:role:edit")
-    @PutMapping
-    public Result<Void> updateRole(@RequestBody Role role) {
-        if (roleService.updateRole(role)) {
+    @PostMapping("/update")
+    public Result<Void> updateRole(@RequestBody UpdateRoleParam param) {
+        if (roleService.updateRole(param)) {
             return Result.success();
         }
         return Result.fail("更新角色失败");
@@ -55,17 +57,18 @@ public class RoleController {
         return Result.fail("删除角色失败");
     }
     
-    @Operation(summary = "获取角色列表")
+    @Operation(summary = "分页获取角色列表（目前只支持获取管理员）")
     @HasPermission("system:role:view")
     @GetMapping("/list")
-    public Result<List<Role>> listRoles() {
-        return Result.success(roleService.list());
+    public Result<List<RoleListVO>> listRoles(@RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "10") int pageSize) {
+        return Result.success(roleService.list(page, pageSize));
     }
     
     @Operation(summary = "获取用户的角色列表")
     @HasPermission("system:role:view")
     @GetMapping("/user/{userId}")
-    public Result<List<Role>> getRolesByUserId(@PathVariable Long userId) {
+    public Result<List<Role>> getRolesByUserId(@PathVariable Integer userId) {
         return Result.success(roleService.getRolesByUserId(userId));
     }
     
@@ -93,5 +96,12 @@ public class RoleController {
     @GetMapping("/check/{roleCode}")
     public Result<Boolean> checkRoleCodeExists(@PathVariable String roleCode) {
         return Result.success(roleService.checkRoleCodeExists(roleCode));
+    }
+
+    @Operation(summary = "搜索用户及其角色（目前只支持搜索用户ID）")
+    @HasPermission("system:role:view")
+    @GetMapping("/search")
+    public Result<List<RoleListVO>> searchUsersAndRoles(@RequestParam String keyword) {
+        return Result.success(roleService.searchUsersAndRoles(keyword));
     }
 }

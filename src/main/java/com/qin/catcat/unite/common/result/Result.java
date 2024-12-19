@@ -23,6 +23,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success() {
         Result<T> result = new Result<T>();
         result.code = enumStatusCode.SUCSSESS.getCode();
+        result.msg = "操作成功";
         return result;
     }
 

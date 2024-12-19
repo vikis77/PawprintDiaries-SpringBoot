@@ -9,7 +9,7 @@ import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.UserLoginVO;
 
 @Mapper
-public interface UserMapper extends BaseMapper<User>{
+public interface UserMapper extends BaseMapper<User> {
 //     /**
 //     * 根据 name 检索一条记录
 //     * @param name

@@ -45,7 +45,7 @@ public class JwtTokenProvider {
     }
 
     //生成Token
-    public String generateToken(String username,String userId) {
+    public String generateToken(String username,Integer userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
@@ -54,7 +54,7 @@ public class JwtTokenProvider {
         log.info("JWT Expiration: {}", jwtExpirationInMs);
 
         return Jwts.builder()
-                .setId(userId)//设置 JWT 的唯一标识符（JTI）
+                .setId(String.valueOf(userId))//设置 JWT 的唯一标识符（JTI）
                 .setSubject(username)//设置 JWT 的主题（Subject）
                 .setIssuedAt(new Date())//设置 JWT 的签发时间
                 .setExpiration(expiryDate)// 设置 JWT 的过期时间 3600000 #生成时间+1小时

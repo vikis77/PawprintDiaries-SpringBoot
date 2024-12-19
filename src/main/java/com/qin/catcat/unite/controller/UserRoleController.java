@@ -24,8 +24,8 @@ public class UserRoleController {
     @HasPermission("system:user:role:assign")
     @PostMapping("/{userId}/roles")
     public Result<Void> assignRoles(
-            @PathVariable Long userId,
-            @RequestBody List<Long> roleIds) {
+            @PathVariable Integer userId,
+            @RequestBody List<Integer> roleIds) {
         if (userRoleService.assignRoles(userId, roleIds)) {
             return Result.success();
         }
@@ -36,8 +36,8 @@ public class UserRoleController {
     @HasPermission("system:user:role:remove")
     @DeleteMapping("/{userId}/role/{roleId}")
     public Result<Void> removeRole(
-            @PathVariable Long userId,
-            @PathVariable Long roleId) {
+            @PathVariable Integer userId,
+            @PathVariable Integer roleId) {
         if (userRoleService.removeRole(userId, roleId)) {
             return Result.success();
         }
@@ -47,7 +47,7 @@ public class UserRoleController {
     @Operation(summary = "获取用户的角色ID列表")
     @HasPermission("system:user:role:view")
     @GetMapping("/{userId}/roles")
-    public Result<List<Long>> getRoleIdsByUserId(@PathVariable Long userId) {
+    public Result<List<Integer>> getRoleIdsByUserId(@PathVariable Integer userId) {
         return Result.success(userRoleService.getRoleIdsByUserId(userId));
     }
     
@@ -55,8 +55,8 @@ public class UserRoleController {
     @HasPermission("system:user:role:view")
     @GetMapping("/{userId}/has-role/{roleId}")
     public Result<Boolean> hasRole(
-            @PathVariable Long userId,
-            @PathVariable Long roleId) {
+            @PathVariable Integer userId,
+            @PathVariable Integer roleId) {
         return Result.success(userRoleService.hasRole(userId, roleId));
     }
 } 

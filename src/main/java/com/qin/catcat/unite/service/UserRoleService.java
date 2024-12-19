@@ -16,7 +16,7 @@ public interface UserRoleService extends IService<UserRole> {
      * @param roleIds 角色ID列表
      * @return 是否分配成功
      */
-    boolean assignRoles(Long userId, List<Long> roleIds);
+    boolean assignRoles(Integer userId, List<Integer> roleIds);
     
     /**
      * 移除用户的角色
@@ -24,14 +24,14 @@ public interface UserRoleService extends IService<UserRole> {
      * @param roleId 角色ID
      * @return 是否移除成功
      */
-    boolean removeRole(Long userId, Long roleId);
+    boolean removeRole(Integer userId, Integer roleId);
     
     /**
      * 获取用户的角色ID列表
      * @param userId 用户ID
      * @return 角色ID列表
      */
-    List<Long> getRoleIdsByUserId(Long userId);
+    List<Integer> getRoleIdsByUserId(Integer userId);
     
     /**
      * 检查用户是否有指定角色
@@ -39,5 +39,5 @@ public interface UserRoleService extends IService<UserRole> {
      * @param roleId 角色ID
      * @return 是否有该角色
      */
-    boolean hasRole(Long userId, Long roleId);
+    boolean hasRole(Integer userId, Integer roleId);
 } 

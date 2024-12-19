@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
@@ -29,7 +30,9 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
     
     @Override
     public DataAnalysisVO analysis() {
-        List<Cat> cats = catMapper.findAll();
+        LambdaQueryWrapper<Cat> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Cat::getIsDeleted, 0);
+        List<Cat> cats = catMapper.selectList(queryWrapper);
         HashMap<String, Integer> ageDistribution = new HashMap<>();
         HashMap<String, Integer> healthStatus = new HashMap<>();
         HashMap<String, Integer> areaDistribution = new HashMap<>();

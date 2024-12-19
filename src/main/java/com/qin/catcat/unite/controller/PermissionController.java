@@ -61,14 +61,14 @@ public class PermissionController {
     @Operation(summary = "获取角色的权限列表")
     @HasPermission("system:permission:view")
     @GetMapping("/role/{roleId}")
-    public Result<List<Permission>> getPermissionsByRoleId(@PathVariable Long roleId) {
+    public Result<List<Permission>> getPermissionsByRoleId(@PathVariable Integer roleId) {
         return Result.success(permissionService.getPermissionsByRoleId(roleId));
     }
     
     @Operation(summary = "获取用户的权限列表")
     @HasPermission("system:permission:view")
     @GetMapping("/user/{userId}")
-    public Result<List<Permission>> getPermissionsByUserId(@PathVariable Long userId) {
+    public Result<List<Permission>> getPermissionsByUserId(@PathVariable Integer userId) {
         return Result.success(permissionService.getPermissionsByUserId(userId));
     }
     

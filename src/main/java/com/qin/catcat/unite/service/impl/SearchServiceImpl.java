@@ -42,7 +42,18 @@ public class SearchServiceImpl implements SearchService{
         List<EsPostIndex> postResults = esPostIndexRepository.findByTitleOrArticle(words, words);
         if (!postResults.isEmpty()) { // 如果存在ES帖子集合，尝试 MySQL 根据ES帖子ID查询帖子详细信息（分页第一页），返回搜索结果）
             log.info("ES搜索到 {} 个帖子", postResults.size());
-            List<Long> postIds = postResults.stream().map(esPostIndex -> Long.parseLong(esPostIndex.getPostId())).toList(); // String to Long
+            List<Long> postIds = postResults.stream()
+                .filter(esPostIndex -> esPostIndex.getPostId() != null)  // 过滤null值
+                .map(esPostIndex -> {
+                    try {
+                        return Long.parseLong(esPostIndex.getPostId());
+                    } catch (NumberFormatException e) {
+                        log.warn("无效的postId格式: {}", esPostIndex.getPostId());
+                        return null;
+                    }
+                })
+                .filter(id -> id != null)  // 过滤掉解析失败的结果
+                .toList();
             Page<Post> postsObj = new Page<>(page,size); // 创建分页对象
             IPage<HomePostVO> posts = postMapper.selectPostsByPostIdsOrderBySendtime(postsObj,postIds); // 前往MySQL分页查询结果
             searchVO.setPosts(posts); // 合并帖子结果

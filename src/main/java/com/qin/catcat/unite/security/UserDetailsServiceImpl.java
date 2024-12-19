@@ -44,7 +44,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         
         if (StringUtils.isBlank(username)) {
             // 如果用户不存在,设置为游客身份
-            user.setUserId("0");  // 游客ID设为0
+            user.setUserId(0);  // 游客ID设为0
             user.setUsername("guest");
             user.setPassword(""); // 游客无密码
             user.setStatus(1); // 设置状态为启用
@@ -60,7 +60,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         // 查询用户权限信息
-        List<Permission> permissions = permissionService.getPermissionsByUserId(Long.parseLong(user.getUserId()));
+        List<Permission> permissions = permissionService.getPermissionsByUserId(user.getUserId());
         List<String> permissionCodes = permissions.stream()
                 .map(Permission::getPermissionCode)
                 .collect(Collectors.toList());

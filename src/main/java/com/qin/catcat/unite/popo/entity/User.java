@@ -23,9 +23,9 @@ import lombok.NoArgsConstructor;
 @TableName(value = "user")//mp的注解 指定数据库对应的表名
 public class User {
 
-    @TableId(value = "user_id",type = IdType.INPUT)////mp的注解 指定主键
+    @TableId(value = "id",type = IdType.INPUT)////mp的注解 指定主键
     //用户ID 主键
-    private String userId;
+    private Integer userId;
     //用户名
     private String username;
     //密码
@@ -37,7 +37,7 @@ public class User {
     //手机号
     private String phoneNumber;
     //生日
-    private Date brithday;
+    private Date birthday;
     //地址
     private String address;
     //头像

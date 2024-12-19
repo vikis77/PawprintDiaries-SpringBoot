@@ -1,11 +1,13 @@
 package com.qin.catcat.unite.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.qin.catcat.unite.popo.dto.RegisterDTO;
+import com.qin.catcat.unite.popo.dto.UpdateProfileDTO;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
 
-public interface UserService {
+public interface UserService extends IService<User>{
     /**
     * 登录
     * @param 
@@ -34,6 +36,27 @@ public interface UserService {
     */
     public MyPageVO getUserProfile(String userId);
 
+    /**
+    * 更新用户信息
+    * @param 
+    * @return 
+    */
+    public boolean updateProfile(UpdateProfileDTO updateProfileDTO);
+
     //根据ID获取昵称
     public String getNicknameFromId(String id);
+
+    /**
+     * 关注用户
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    public boolean followUser(Long userId);
+
+    /**
+     * 取消关注用户
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    public boolean unfollowUser(Long userId);
 }

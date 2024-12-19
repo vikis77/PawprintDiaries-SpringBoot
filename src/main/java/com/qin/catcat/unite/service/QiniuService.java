@@ -5,8 +5,9 @@ import java.util.List;
 public interface QiniuService {
     /**
      * 删除七牛云上的文件
-     * @param fileUrl 文件URL或文件名
+     * @param fileNames 文件名列表
+     * @param type 文件类型: user_avatar, post_pics, post_video
      * @return 是否删除成功
      */
-    boolean deleteFile(List<String> fileNames);
+    boolean deleteFile(List<String> fileNames, String type);
 } 

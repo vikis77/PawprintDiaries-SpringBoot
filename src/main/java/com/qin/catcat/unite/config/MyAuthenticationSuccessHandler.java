@@ -27,13 +27,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * @Description Spring Security 认证成功后的处理.
+ *
+ * @Author liuyun
+ * @Version 1.0
+ * @Since 2024-12-18 14:35
+ */
 //认证成功后的处理
 @Slf4j
 @Component
 public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHandler{
 
-    // private JwtTokenProvider jwtTokenProvider = new JwtTokenProvider();
-    // private final JwtTokenProvider jwtTokenProvider;
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired UserMapper userMapper;
 
@@ -55,7 +60,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("user_id").eq("username", username);
         User user = userMapper.selectOne(queryWrapper);
-        String userId = user.getUserId();
+        Integer userId = user.getUserId();
 
 
         // 创建一个包含用户认证信息的 UsernamePasswordAuthenticationToken 对象
@@ -63,7 +68,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username,null,null);
 
         Map<String, String> details = new HashMap<>();
-        details.put("userId", userId);
+        details.put("userId", String.valueOf(userId));
         authenticationToken.setDetails(details);
 
         // 设置用户请求的额外的详细信息

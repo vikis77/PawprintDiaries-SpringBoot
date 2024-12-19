@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.CatService;
@@ -33,8 +34,8 @@ public class CatController {
     @Operation(summary = "获取猫咪列表")
     @HasPermission("system:cat:view")
     @GetMapping("/list")
-    public Result<List<Cat>> listCats() {
-        return Result.success(catService.list());
+    public Result<List<CatListVO>> listCats() {
+        return Result.success(catService.CatList());
     }
     
     @Operation(summary = "获取猫咪详情")
@@ -65,6 +66,15 @@ public class CatController {
     @DeleteMapping("/{catId}")
     public Result<Void> deleteCat(@PathVariable Long catId) {
         catService.delete(catId);
+        return Result.success();
+    }
+
+    // 点赞小猫
+    @Operation(summary = "点赞小猫")
+    @HasPermission("system:cat:like") 
+    @PostMapping("/like/{catId}")
+    public Result<Void> likeCat(@PathVariable Long catId) {
+        catService.likeCat(catId);
         return Result.success();
     }
 }

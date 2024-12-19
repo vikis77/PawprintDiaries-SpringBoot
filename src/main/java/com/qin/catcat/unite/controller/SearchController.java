@@ -34,9 +34,6 @@ public class SearchController {
 
     @GetMapping("/search")
     public Result<SearchVO> searchPostsOrCats(@RequestParam String words, @RequestParam(defaultValue = "1") int page, @RequestParam (defaultValue = "10") int size) {
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求搜索 {} {} {}",username,words,page,size);
-
         SearchVO resVo = searchSerivce.searchForEsAndMysql(words,page,size);
         return Result.success(resVo);
     }

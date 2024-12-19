@@ -36,14 +36,14 @@ public interface PermissionService extends IService<Permission> {
      * @param roleId 角色ID
      * @return 权限列表
      */
-    List<Permission> getPermissionsByRoleId(Long roleId);
+    List<Permission> getPermissionsByRoleId(Integer roleId);
     
     /**
      * 获取用户的所有权限
      * @param userId 用户ID
      * @return 权限列表
      */
-    List<Permission> getPermissionsByUserId(Long userId);
+    List<Permission> getPermissionsByUserId(Integer userId);
     
     /**
      * 检查权限编码是否已存在

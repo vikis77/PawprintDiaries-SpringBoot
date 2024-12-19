@@ -53,7 +53,7 @@ public class PermissionAspect {
         // 如果是游客
         if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
             // 查询游客全部角色直接权限，游客userId为0
-            List<Permission> permissions = permissionService.getPermissionsByUserId(0L);
+            List<Permission> permissions = permissionService.getPermissionsByUserId(0);
             permissionCodes = permissions.stream()
                     .map(Permission::getPermissionCode)
                     .collect(Collectors.toList());

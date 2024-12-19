@@ -44,4 +44,10 @@ public class SinglePostVO {
     private Timestamp updateTime;
     //帖子全部图片集合
     private List<PostPics> images;
+    //是否点赞
+    private boolean liked;
+    //是否收藏
+    private boolean collected;
+    //是否关注
+    private boolean followed;
 }

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.alibaba.fastjson.JSON;
@@ -13,8 +14,11 @@ import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.param.PassApproveParam;
+import com.qin.catcat.unite.param.RefuseApproveParam;
 import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.security.HasPermission;
@@ -44,8 +48,14 @@ public class PostController {
     @HasPermission("system:post:add")
     @PostMapping("/addpost")
     public Result<?> addPost(@RequestBody PostDTO postDTO) {
-        postService.add(postDTO);
-        return Result.success();
+        log.info("Received request to add post");
+        try {
+            postService.add(postDTO);
+            return Result.success();
+        } catch (Exception e) {
+            log.error("Error adding post: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -100,16 +110,8 @@ public class PostController {
      */
     @Operation(summary = "根据ID查询帖子")
     @HasPermission("system:post:view")
-    @GetMapping("/getPostByPostid")
-    public Result<SinglePostVO> getPostByPostid(@RequestParam String postId){
-        if (TokenHolder.getToken() == null) {
-            log.info("未登录用户请求根据帖子ID查询帖子");
-        }
-        else{
-            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-            log.info("用户{}请求根据帖子ID查询帖子{}",username,postId);
-        }
-
+    @GetMapping("/getPostByPostId")
+    public Result<SinglePostVO> getPostByPostId(@RequestParam String postId){
         SinglePostVO post = postService.getPostByPostId(postId);
         return Result.success(post);
     }
@@ -123,20 +125,92 @@ public class PostController {
     @Operation(summary = "分页查询帖子")
     @HasPermission("system:post:view")
     @GetMapping("/getPostBySendtimeForPage")
-    public Result<IPage<HomePostVO>> getPostBySendtime(
+    public Result<List<HomePostVO>> getPostBySendtime(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue="10") int pageSize){
-        if (TokenHolder.getToken() == null) {
-            log.info("未登录用户请求根据发布时间分页查询前十条帖子");
-        }
-        else{
-            String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-            log.info("用户{}请求根据发布时间分页查询前十条帖子,第{}页，每页{}条",username,page,pageSize);
-        }
-
-        IPage<HomePostVO> posts = postService.getPostBySendtime(page,pageSize);
+        List<HomePostVO> posts = postService.getPostBySendtime(page,pageSize);
         log.info("查询到的帖子：{}",JSON.toJSONString(posts));
         return Result.success(posts);
+    }
+
+    @Operation(summary = "权重随机推送帖子")
+    @HasPermission("system:post:view")
+    @GetMapping("/getRandomWeightedPosts")
+    public Result<List<HomePostVO>> getRandomWeightedPosts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        
+        // 实现思路：基础权重随机适合一般场景
+        // 1. 计算帖子权重分数：
+        //    权重 = 点赞数 * 0.4 + 收藏数 * 0.3 + 评论数 * 0.2 + 浏览量 * 0.1
+        // 2. 按权重排序后随机扰动
+        //    最终分数 = 权重 * (0.8 + Random.nextDouble() * 0.4)
+        
+        List<HomePostVO> posts = postService.getRandomWeightedPosts(page, pageSize);
+        return Result.success(posts);
+    }
+
+    @Operation(summary = "时间衰减权重推送帖子")
+    @HasPermission("system:post:view")
+    @GetMapping("/getTimeDecayWeightedPosts")
+    public Result<List<HomePostVO>> getTimeDecayWeightedPosts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        
+        // 实现思路：时间衰减权重适合新内容为主的场景
+        // 1. 计算时间衰减权重：
+        //    权重 = (基础分 + 互动分) * 时间衰减因子
+        //    时间衰减因子 = 1 / (1 + α * 发布时间距今天数)
+        //    α为衰减系数，可以根据需求调整
+        
+        List<HomePostVO> posts = postService.getTimeDecayWeightedPosts(page, pageSize);
+        return Result.success(posts);
+    }
+
+    @Operation(summary = "基于用户兴趣推送帖子")
+    @HasPermission("system:post:view")
+    @GetMapping("/getRecommendedPosts")
+    public Result<List<HomePostVO>> getRecommendedPosts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        
+        // 实现思路：协同过滤推荐适合个性化推荐场景
+        // 1. 分析用户历史行为（点赞、收藏、评论等）
+        // 2. 找到相似用户群体
+        // 3. 推荐相似用户喜欢的内容
+        // 4. 加入随机因素避免推荐单一
+        
+        List<HomePostVO> posts = postService.getRecommendedPosts(page, pageSize);
+        return Result.success(posts);
+    }
+
+    // 根据发布时间分页查询待审核帖子
+    @Operation(summary = "分页查询待审核帖子")
+    @HasPermission("system:post:view")
+    @GetMapping("/getApplyPostBySendtimeForPage")
+    public Result<List<ApplyPostVO>> getApplyPostBySendtimeForPage(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue="10") int pageSize){
+        List<ApplyPostVO> posts = postService.getApplyPostBySendtimeForPage(page,pageSize);
+        return Result.success(posts);
+    }
+
+    // 帖子通过审核
+    @Operation(summary = "帖子通过审核")
+    @HasPermission("system:post:audit")
+    @PostMapping("/passApprove")
+    public Result<String> passApprove(@RequestBody PassApproveParam passApproveParam){
+        postService.passApprove(passApproveParam.getPostId());
+        return Result.success();
+    }
+
+    // 帖子审核拒绝通过
+    @Operation(summary = "帖子审核拒绝通过")
+    @HasPermission("system:post:audit")
+    @PostMapping("/refuseApprove")
+    public Result<String> refuseApprove(@RequestBody RefuseApproveParam refuseApproveParam){
+        postService.refuseApprove(refuseApproveParam.getPostId());
+        return Result.success();
     }
 
     /**
@@ -149,14 +223,14 @@ public class PostController {
     @Operation(summary = "按点赞数查询帖子")
     @HasPermission("system:post:view")
     @GetMapping("/getPostByLikeForPage")
-    public Result<IPage<Post>> getPostByLikecount(
+    public Result<List<Post>> getPostByLikecount(
             @RequestHeader("Authorization") String Token,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue="10") int pageSize) {
         String username = jwtTokenProvider.getUsernameFromToken(Token);
         log.info("用户{}请求根据点赞数分页查询前十条帖子,第{}页，每页{}条",username,page,pageSize);
 
-        IPage<Post> posts = postService.getPostByLikecount(page,pageSize);
+        List<Post> posts = postService.getPostByLikecount(page,pageSize);
         return Result.success(posts);
     }
 
@@ -218,10 +292,7 @@ public class PostController {
     @Operation(summary = "点赞帖子")
     @HasPermission("system:post:like")
     @PostMapping("/likePost")
-    public Result<String> likePost(@RequestParam String postId){
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求点赞帖子{}",username,postId);
-
+    public Result<String> likePost(@RequestParam Long postId){
         postService.likePost(postId);
         return Result.success();
     }
@@ -233,12 +304,27 @@ public class PostController {
      */
     @Operation(summary = "取消点赞")
     @HasPermission("system:post:like")
-    @PostMapping("/unlikePost")
-    public Result<String> unlikePost(@RequestParam String postId){
-        String username = jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken());
-        log.info("用户{}请求取消点赞帖子{}",username,postId);
-
+    @PostMapping("/unLikePost")
+    public Result<String> unlikePost(@RequestParam Long postId){
         postService.unlikePost(postId);
+        return Result.success();
+    }
+
+    // 收藏帖子
+    @Operation(summary = "收藏帖子")
+    @HasPermission("system:post:collect")
+    @PostMapping("/collectPost")
+    public Result<String> collectPost(@RequestParam Long postId){
+        postService.collectPost(postId);
+        return Result.success();
+    }
+
+    // 取消收藏帖子
+    @Operation(summary = "取消收藏帖子")
+    @HasPermission("system:post:collect")
+    @PostMapping("/unCollectPost")
+    public Result<String> unCollectPost(@RequestParam Long postId){
+        postService.unCollectPost(postId);
         return Result.success();
     }
 }

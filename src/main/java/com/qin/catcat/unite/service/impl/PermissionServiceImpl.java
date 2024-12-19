@@ -67,7 +67,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
     }
     
     @Override
-    public List<Permission> getPermissionsByRoleId(Long roleId) {
+    public List<Permission> getPermissionsByRoleId(Integer roleId) {
         // 查询角色权限关联表
         LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RolePermission::getRoleId, roleId);
@@ -91,14 +91,14 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
      * @return 权限列表
      */
     @Override
-    public List<Permission> getPermissionsByUserId(Long userId) {
+    public List<Permission> getPermissionsByUserId(Integer userId) {
         // 查询用户角色关联表
         LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
         userRoleWrapper.eq(UserRole::getUserId, userId);
         List<UserRole> userRoles = userRoleMapper.selectList(userRoleWrapper);
         
         // 获取角色ID列表
-        List<Long> roleIds = userRoles.stream()
+        List<Integer> roleIds = userRoles.stream()
                                     .map(UserRole::getRoleId)
                                     .collect(Collectors.toList());
         

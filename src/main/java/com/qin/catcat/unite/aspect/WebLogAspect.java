@@ -6,12 +6,16 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -20,7 +24,11 @@ import java.util.stream.Collectors;
 @Component
 public class WebLogAspect {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     @Pointcut("execution(* com.qin.catcat.unite.controller..*.*(..))")
     public void webLog() {}
@@ -40,7 +48,11 @@ public class WebLogAspect {
         log.info("Class Method   : {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         log.info("IP            : {}", getIpAddress(request));
         log.info("Request Args   : {}", getRequestArgs(joinPoint.getArgs()));
-        
+        if(TokenHolder.getToken()!=null){
+            log.info("User Name      : {}", jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken()));
+            log.info("User ID        : {}", jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+        }
+
         // 执行目标方法
         Object result = joinPoint.proceed();
         

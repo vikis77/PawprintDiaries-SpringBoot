@@ -31,7 +31,7 @@ public class QiniuServiceImpl implements QiniuService {
      * @return 是否删除成功
      */
     @Override
-    public boolean deleteFile(List<String> fileNames) {
+    public boolean deleteFile(List<String> fileNames, String type) {
         if(fileNames != null && !fileNames.isEmpty()){
             try {
                 Configuration cfg = new Configuration(Region.autoRegion());
@@ -39,8 +39,15 @@ public class QiniuServiceImpl implements QiniuService {
                 BucketManager bucketManager = new BucketManager(auth, cfg);
                 for(String fileName : fileNames){
                     try {
+                        String key = "";
                         // 直接使用文件名作为key，添加目录前缀
-                        String key = "catcat/post_pics/" + fileName;
+                        if (type.equals("post_pics")){
+                            key = "catcat/post_pics/" + fileName;
+                        } else if (type.equals("user_avatar")){
+                            key = "catcat/user_avatar/" + fileName;
+                        } else if (type.equals("post_pics")){
+                            key = "catcat/post_pics/" + fileName;
+                        }
                         // 删除文件
                         bucketManager.delete(bucket, key);
                         log.info("成功删除七牛云文件: {}", key);

@@ -92,10 +92,11 @@ public class SecurityConfig {
             );
         
         // 配置 API 登录端点
+        // 作用：如果拦截到请求，且处于未登录状态，跳转到API登录端点。认证成功时，调用myAuthenticationSuccessHandler处理
         http.formLogin(form->form
                 .loginProcessingUrl("http://localhost:8080/login") // 使用 API 登录端点
                 .successHandler(myAuthenticationSuccessHandler) // 认证成功时的处理
-                .permitAll()
+                .permitAll() // 允许所有用户访问登录端点
             );
         
         // 禁用csrf，因为通常 API 不需要 CSRF 保护
@@ -107,7 +108,13 @@ public class SecurityConfig {
         // 配置 CORS，允许所有来源、方法和头部的跨域请求
 		http.cors(conf->conf.configurationSource(corsConfigurationSource()));
 
-        //添加 JwtAuthenticationTokenFilter 过滤器
+        //这里涉及到两个过滤器： JwtAuthenticationTokenFilter 和 UsernamePasswordAuthenticationFilter
+        //JwtAuthenticationTokenFilter 是自定义的过滤器，用于处理JWT认证；
+        //UsernamePasswordAuthenticationFilter 是Spring Security提供的内置的过滤器，用于处理表单登录；
+        //addFilterBefore 方法用于将自定义的过滤器添加到Spring Security的过滤器链中，
+        // 并指定在UsernamePasswordAuthenticationFilter过滤器之前执行。
+        // 因为 JWT 是无状态的认证方式，不需要走用户名密码认证。
+        // 如果 JWT 验证通过，就可以直接放行，不需要后续的表单认证。
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         // 禁用默认的登录页面，配置异常处理
@@ -115,11 +122,13 @@ public class SecurityConfig {
             .authenticationEntryPoint((request, response, authException) -> {
                 response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                // 提示：未授权
                 response.getWriter().write("{\"message\":\"Unauthorized\"}");
             })
             .accessDeniedHandler((request, response, accessDeniedException) -> {
                 response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 提示：访问被拒绝
                 response.getWriter().write("{\"message\":\"Access Denied\"}");
             })
         );

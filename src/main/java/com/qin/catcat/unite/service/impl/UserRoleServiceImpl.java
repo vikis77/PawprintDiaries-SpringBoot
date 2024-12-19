@@ -20,7 +20,7 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean assignRoles(Long userId, List<Long> roleIds) {
+    public boolean assignRoles(Integer userId, List<Integer> roleIds) {
         // 先删除用户原有的角色
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, userId);
@@ -41,7 +41,7 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean removeRole(Long userId, Long roleId) {
+    public boolean removeRole(Integer userId, Integer roleId) {
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, userId)
                .eq(UserRole::getRoleId, roleId);
@@ -49,16 +49,16 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
     }
     
     @Override
-    public List<Long> getRoleIdsByUserId(Long userId) {
+    public List<Integer> getRoleIdsByUserId(Integer userId) {
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, userId);
         return list(wrapper).stream()
                           .map(UserRole::getRoleId)
                           .collect(Collectors.toList());
     }
-    
+
     @Override
-    public boolean hasRole(Long userId, Long roleId) {
+    public boolean hasRole(Integer userId, Integer roleId) {
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, userId)
                .eq(UserRole::getRoleId, roleId);

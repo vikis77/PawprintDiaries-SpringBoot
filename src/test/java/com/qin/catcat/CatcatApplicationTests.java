@@ -41,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qin.catcat.unite.common.utils.ElasticsearchUtil;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
@@ -63,21 +64,39 @@ class CatcatApplicationTests {
 	@Autowired
 	CatMapper catMapper;
 	@Autowired
-    private EsPostIndexRepository EsPostIndexRepository;
+    private EsPostIndexRepository esPostIndexRepository;
+	@Autowired
+	private ElasticsearchUtil elasticsearchUtil;
+
+
+	// EsPostIndexRepository获取所有索引
+	@Test
+	public void getAllIndices() {
+		List<EsPostIndex> indices = esPostIndexRepository.findAll();
+		System.out.println(indices);
+	}
+
+
+	// 获取所有索引
+	// @Test
+	// public void getAllIndices() throws IOException {
+	// 	List<String> indices = elasticsearchUtil.getAllIndices();
+	// 	System.out.println(indices);
+	// }
 
 
 	// // 测试ES查询全部
-	// @Test
-    // public void getAllPosts() {
-	// 	List<EsPostIndex> EsPostIndexs = new ArrayList<>();
-	// 	EsPostIndexs = (List<EsPostIndex>) EsPostIndexRepository.findAll();
-	// 	// 断言返回的列表不为空
-	// 	assertNotNull(EsPostIndexs);
-	// 	assertFalse(EsPostIndexs.isEmpty());
-	// 	// // 打印数据
-	// 	log.info(EsPostIndexs.toString());
-	// 	System.out.println("111");
-    // }
+	@Test
+    public void getAllPosts() {
+		List<EsPostIndex> EsPostIndexs = new ArrayList<>();
+		EsPostIndexs = (List<EsPostIndex>) esPostIndexRepository.findAll();
+		// 断言返回的列表不为空
+		assertNotNull(EsPostIndexs);
+		assertFalse(EsPostIndexs.isEmpty());
+		// // 打印数据
+		log.info(EsPostIndexs.toString());
+		System.out.println("111");
+    }
 
 	// // 测试ES查询文章标题
     // public List<EsPostIndex> searchByTitle(String title) {

@@ -3,6 +3,7 @@ package com.qin.catcat.unite.service.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.catalina.util.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,9 +24,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-// import com.github.pagehelper.PageHelper;
-// import com.github.pagehelper.PageInfo;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
+import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CatPicsMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
@@ -33,11 +36,13 @@ import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
+import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 import com.qin.catcat.unite.service.CatService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
 
 @Service
 @Slf4j
@@ -46,31 +51,50 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     @Autowired CatPicsMapper catPicsMapper;
     @Autowired CoordinateMapper coordinateMapper;
     @Autowired GeneratorIdUtil generatorIdUtil;
+    @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired private RBloomFilter<String> likeBloomFilter;
 
-    // ================ 猫咪基本信息相关方法 ================
-    
     @Override
     public void createCat(CatDTO catDTO){
         Cat cat = new Cat();
-
         //属性拷贝DTO to entity
         BeanUtils.copyProperties(catDTO, cat);
-
-        //生成ID
-        Long ID = Long.parseLong(generatorIdUtil.GeneratorRandomId());
-        log.info("生成ID {}",ID);
-
-        cat.setCatId(ID);
+        // 根据年龄反推计算生日
+        cat.setBirthday(LocalDateTime.now().minusMonths(catDTO.getAge()));
         catMapper.insert(cat);
         log.info("新增完成");
     }
 
-    @Cacheable(value = "allCats")
+    // @Cacheable(value = "allCats")
     @Override
-    public List<Cat> list(){
-        List<Cat> cats = catMapper.findAll();
+    public List<CatListVO> CatList(){
         log.info("查找全部猫猫信息完成");
-        return cats;
+        QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("is_deleted", 0);
+        queryWrapper.orderByAsc("create_time");
+        List<Cat> cats = catMapper.selectList(queryWrapper);
+        log.info(TokenHolder.getToken());
+        // 如果用户未登录，则不检查点赞
+        if (StringUtils.isBlank(TokenHolder.getToken())) {
+            List<CatListVO> catListVOs = new ArrayList<>();
+            for(Cat cat : cats){
+                CatListVO catListVO = new CatListVO();
+                BeanUtils.copyProperties(cat, catListVO);
+                catListVOs.add(catListVO);
+            }
+            return catListVOs;
+        }
+        // 如果用户已登录，则检查点赞
+        String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+        List<CatListVO> catListVOs = new ArrayList<>();
+        for(Cat cat : cats){
+            CatListVO catListVO = new CatListVO();
+            BeanUtils.copyProperties(cat, catListVO);
+            // 检查是否已点赞
+            catListVO.setIsLikedToday(likeBloomFilter.contains(generateLikeKey(currentUserId, cat.getCatId())));
+            catListVOs.add(catListVO);
+        }
+        return catListVOs;
     }
 
     @Override
@@ -121,12 +145,40 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     }
 
     public void delete(Long ID){
-        int row = catMapper.deleteById(ID);
-        if(row<=0){
-            log.info("删除失败");
-            //TODO throw new 
-        }
+        // 逻辑删除
+        Cat cat = catMapper.selectById(ID);
+        cat.setIsDeleted(1);
+        catMapper.updateById(cat);
         log.info("根据猫猫ID删除信息完成");
+    }
+
+    @Override
+    public void likeCat(Long catId) {
+        // 当前用户已登录
+        if (StringUtils.isNotBlank(TokenHolder.getToken())) {
+            // 获取当前用户ID
+            String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+            // 生成当天的点赞key
+            String likeKey = generateLikeKey(currentUserId, catId);
+            // 检查是否已经点赞
+            if (likeBloomFilter.contains(likeKey)) {
+                log.info("用户 {} 今天已经给猫咪 {} 点过赞了", currentUserId, catId);
+                return;
+            }
+            // 添加到布隆过滤器
+            likeBloomFilter.add(likeKey);
+            // 更新猫咪的点赞数
+            Cat cat = catMapper.selectById(catId);
+            cat.setLikeCount(cat.getLikeCount() + 1);
+            catMapper.updateById(cat);
+            log.info("用户 {} 成功给猫咪 {} 点赞", currentUserId, catId);
+        } else {
+            log.warn("用户未登录，无法进行点赞操作");
+        }
+    }
+    // 生成点赞key
+    private String generateLikeKey(String userId, Long catId) {
+        return String.format("like:%s:%d:%s", userId, catId, LocalDateTime.now().format(DateTimeFormatter.ISO_DATE));
     }
 
     // ================ 猫咪照片相关方法 ================

@@ -11,6 +11,7 @@ import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
+import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 
@@ -18,7 +19,7 @@ public interface CatService {
     /**
      * 获取所有猫咪列表
      */
-    List<Cat> list();
+    List<CatListVO> CatList();
 
     /**
      * 根据ID获取猫咪信息
@@ -39,6 +40,11 @@ public interface CatService {
      * 删除猫咪
      */
     void delete(Long id);
+
+    /**
+     * 点赞小猫
+     */
+    void likeCat(Long catId);
 
     /**
      * 上传猫咪照片
