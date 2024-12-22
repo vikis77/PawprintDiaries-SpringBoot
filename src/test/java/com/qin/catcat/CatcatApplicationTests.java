@@ -72,8 +72,8 @@ class CatcatApplicationTests {
 	// EsPostIndexRepository获取所有索引
 	@Test
 	public void getAllIndices() {
-		List<EsPostIndex> indices = esPostIndexRepository.findAll();
-		System.out.println(indices);
+		// List<EsPostIndex> indices = esPostIndexRepository.findAll();
+		// System.out.println(indices);
 	}
 
 

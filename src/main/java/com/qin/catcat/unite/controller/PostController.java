@@ -25,6 +25,7 @@ import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.PostService;
 import com.qin.catcat.unite.service.UserService;
+import com.qin.catcat.unite.service.DataSyncService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +40,7 @@ public class PostController {
     @Autowired private JwtTokenProvider jwtTokenProvider;
     @Autowired private UserService userService;
     @Autowired private GeneratorIdUtil generatorIdUtil;
+    @Autowired private DataSyncService dataSyncService;
 
     /**
      * 新增帖子
@@ -134,12 +136,20 @@ public class PostController {
         return Result.success(posts);
     }
 
+    /**
+     * 权重随机推送帖子
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @param firstTime 是否是用户第一次请求：true-使用通用缓存，false-使用个性化缓存
+     * @return 帖子列表（分页）
+     */
     @Operation(summary = "权重随机推送帖子")
     @HasPermission("system:post:view")
     @GetMapping("/getRandomWeightedPosts")
     public Result<List<HomePostVO>> getRandomWeightedPosts(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "true") boolean firstTime) {
         
         // 实现思路：基础权重随机适合一般场景
         // 1. 计算帖子权重分数：
@@ -147,7 +157,7 @@ public class PostController {
         // 2. 按权重排序后随机扰动
         //    最终分数 = 权重 * (0.8 + Random.nextDouble() * 0.4)
         
-        List<HomePostVO> posts = postService.getRandomWeightedPosts(page, pageSize);
+        List<HomePostVO> posts = postService.getRandomWeightedPosts(page, pageSize, firstTime);
         return Result.success(posts,ThreadLocalUtil.getTotalPages());
     }
 
@@ -327,5 +337,20 @@ public class PostController {
     public Result<String> unCollectPost(@RequestParam Integer postId){
         postService.unCollectPost(postId);
         return Result.success();
+    }
+
+    /**
+     * 重新索引所有帖子数据到ES
+     */
+    @PostMapping("/reindex")
+    // @HasPermission("post:manage")  // 需要管理权限
+    public Result<String> reindexAllPosts() {
+        try {
+            dataSyncService.reindexAll();
+            return Result.success("重新索引成功");
+        } catch (Exception e) {
+            log.error("重新索引失败: ", e);
+            return Result.error("重新索引失败: " + e.getMessage());
+        }
     }
 }

@@ -88,12 +88,4 @@ public interface PostMapper extends BaseMapper<Post>{
     IPage<HomePostVO> selectPostsByPostIdsOrderBySendtime(Page<?> page, @Param("postIds") List<Long> postIds);
 
     
-    /**
-    * // 从MySQL中取出需要同步的数据
-    * @param 
-    * @return 
-    */
-    @Select("SELECT id,title,article FROM POST")
-    List<EsPostIndex> selectEsPostIndex();
-
 }

@@ -1,3 +1,32 @@
 spring:
+  application:
+    name: catcat
   profiles:
     active: prod
+  cache: # 缓存配置
+    type: redis
+    redis:
+      time-to-live: 3600000
+      cache-null-values: false
+    caffeine:
+      spec: maximumSize=1000,expireAfterAccess=300s
+
+# 缓存监控 Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        # include: health,info,metrics,prometheus,caches
+        include: "*" # 开放所有端点
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: catcat
+    cache:
+      instrument: true

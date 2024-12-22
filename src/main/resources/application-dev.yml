@@ -182,6 +182,26 @@ logging:
     com.qin.catcat: INFO  # 项目包的日志级别
     org.springframework: INFO  # Spring框架的日志级别
 
+# Actuator配置，作用：用来监控项目运行状态
+management:
+  endpoints:
+    web:
+      exposure:
+        # 暴露的监控端点，可以通过 HTTP 访问这些端点获取相关信息
+        include: health,info,metrics,prometheus,caches # 启用了5个监控端点
+  endpoint:
+    health:
+      show-details: always # 显示详细的健康检查信息
+    metrics:
+      enabled: true # 启用指标收集功能
+    prometheus:
+      enabled: true # 启用 Prometheus 监控支持
+  metrics:
+    tags:
+      application: catcat # 为所有指标添加应用名称标签
+    cache:
+      instrument: true # 启用缓存指标监控
+
 # 上传的图片存储的位置，部署时需要修改
 file:
   upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics

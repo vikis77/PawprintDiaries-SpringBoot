@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -75,6 +76,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             .or().eq("email", userLoginDTO.getUsername())
             .or().eq("phone_number", userLoginDTO.getUsername())
             .or().eq("id", userLoginDTO.getUsername())
+            .or().eq("username", userLoginDTO.getUsername())
             .eq("status",1);//账号状态是否正常
         User user = null;
         try{
@@ -132,15 +134,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     * @param 
     * @return 
     */
+    @Transactional(rollbackFor = Exception.class)
     public Boolean registerUser(RegisterDTO registerDTO){
         QueryWrapper<User> wrapper = new QueryWrapper<>();//创建条件构造器
-        // wrapper.eq("username", registerDTO.getUsername());//条件构造
+        wrapper.eq("username", registerDTO.getUsername()).or().eq("email", registerDTO.getEmail()).or();//条件构造
         User storeUser = userMapper.selectOne(wrapper);//条件查询数据库
 
-        // if(storeUser!=null){
-        //     //数据库已经存在此用户名，注册失败
-        //     throw new UserAlreadyExistsException("用户名已存在，注册失败");
-        // }
+        if(storeUser!=null){
+            //数据库已经存在此用户名，注册失败
+            throw new UserAlreadyExistsException("用户名或邮箱已存在，注册失败");
+        }
 
         //创建新用户
         User user = new User();
@@ -151,7 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPassword(encodedPassword);
         user.setStatus(1);
         //保存用户到数据库
-        int result = userMapper.insert(user);
+        userMapper.insert(user);
 
         // 设置用户角色
         UserRole userRole = new UserRole();
@@ -197,10 +200,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = userMapper.selectById(userId);
 
         // 根据userId获取该用户的所有帖子信息
+        // 查询条件:
+        // 1. 作者ID等于当前用户ID
+        // 2. 帖子未被删除(is_deleted=0)
+        // 3. 帖子已通过审核(is_adopted=1)或当前用户自己的未审核帖子(is_adopted=0)
         QueryWrapper<Post> queryWrapperPost = new QueryWrapper<>();
-        queryWrapperPost.eq("author_id", user.getUserId());
-        queryWrapperPost.eq("is_deleted", 0);
-        queryWrapperPost.eq("is_adopted", 1).or().eq("is_adopted", 0);
+        queryWrapperPost.eq("author_id", userId)
+                       .eq("is_deleted", 0)
+                       .eq("is_adopted", 1)
+                       .or()
+                       .eq("is_adopted", 0)
+                       .eq("author_id", userId);
         List<Post> postsList = postMapper.selectList(queryWrapperPost);
         // 处理帖子信息
         for (Post post : postsList) {
@@ -222,9 +232,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     */
     public boolean updateProfile(UpdateProfileDTO updateProfileDTO){
         // 查询用户是否存在
-        User user = userMapper.selectById(updateProfileDTO.getUserId());
-        if(user==null){
-            throw new UserNotExistException("用户不存在");
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("username", updateProfileDTO.getUsername());
+        User user = userMapper.selectOne(queryWrapper);
+        if (user.getUserId() != Integer.parseInt(updateProfileDTO.getUserId()) && user.getUsername() != updateProfileDTO.getUsername()) {
+            throw new BusinessException("用户名已存在");
         }
         // 头像发生变化时删除旧头像
         if (updateProfileDTO.getAvatar() != null && !updateProfileDTO.getAvatar().equals(user.getAvatar())){

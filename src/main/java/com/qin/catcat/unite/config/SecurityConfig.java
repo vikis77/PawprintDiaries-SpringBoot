@@ -67,7 +67,8 @@ public class SecurityConfig {
                     "/webjars/**",           // Webjars for Swagger UI
                     "/knife4j/**",            // Knife4j resources
                     // 游客可以访问的端点，*表示所有端点
-                    "/api/**"
+                    "/api/**",
+                    "/actuator/**" // 开放Actuator缓存监控端点
                     // "/api/user/login",       // 放行登录端点
                     // "/api/user/register",    // 放行注册端点
                     // "/api/upload/**",        // 放行上传端点

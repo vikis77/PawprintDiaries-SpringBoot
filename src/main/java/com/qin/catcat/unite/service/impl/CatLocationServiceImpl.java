@@ -15,6 +15,8 @@ import org.springframework.util.CollectionUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
@@ -41,14 +43,21 @@ public class CatLocationServiceImpl implements CatLocationService {
     @Autowired private CoordinateMapper coordinateMapper;
     @Autowired private CatMapper catMapper;
     @Autowired private GeneratorIdUtil generatorIdUtil;
+    @Autowired 
+    private CacheUtils cacheUtils;
     
+    /**
+     * 新增猫猫坐标
+     * @param uploadCoordinateParam 新增猫猫坐标参数
+     */
     @Override
     public void addCoordinate(UploadCoordinateParam uploadCoordinateParam) {
         Coordinate coordinate = new Coordinate();
         BeanUtils.copyProperties(uploadCoordinateParam, coordinate);
-        
-        coordinate.setUpdateTime(Timestamp.from(Instant.now()));
+        // 1、插入数据库
         coordinateMapper.insert(coordinate);
+        // 2、更新缓存
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_COORDINATE_LIST);
         log.info("新增猫猫坐标完成");
     }
 
@@ -74,11 +83,17 @@ public class CatLocationServiceImpl implements CatLocationService {
         log.info("更新猫猫坐标完成");
     }
 
+    /* 
+     * 获取所有猫咪最新位置
+     * 
+     * @return 所有猫咪最新位置集合
+     */
     @Override
+    @SuppressWarnings("unchecked")
     public List<CoordinateVO> selectCoordinate() {
-        List<CoordinateVO> coordinateVOs = coordinateMapper.getAllCatsWithLatestCoordinates();
-        log.info("查找猫猫坐标完成");
-        return coordinateVOs;
+        // 从缓存中获取数据，如果缓存中没有数据，则从数据库中查询
+        return cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_COORDINATE_LIST, List.class, 
+                () -> coordinateMapper.getAllCatsWithLatestCoordinates());
     }
 
     @Override

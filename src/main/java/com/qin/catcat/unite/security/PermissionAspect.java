@@ -19,6 +19,8 @@ import java.util.HashSet;
 import com.qin.catcat.unite.popo.entity.Permission;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.service.PermissionService;
+import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.utils.CacheUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +39,11 @@ public class PermissionAspect {
     @Autowired
     private PermissionService permissionService;
     
+    @Autowired
+    private CacheUtils cacheUtils;
+    
+    
+    
     @Around("@annotation(com.qin.catcat.unite.security.HasPermission)")
     public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
         // 获取方法上的权限注解
@@ -52,8 +59,12 @@ public class PermissionAspect {
         
         // 如果是游客
         if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
-            // 查询游客全部角色直接权限，游客userId为0
-            List<Permission> permissions = permissionService.getPermissionsByUserId(0);
+            // 从缓存中获取游客权限：查询游客全部角色"直接权限"，游客userId为0
+            String cacheKey = Constant.PERMISSION_KEY_PREFIX + "anonymous";
+            @SuppressWarnings("unchecked")
+            List<Permission> permissions = (List<Permission>) cacheUtils.getWithMultiLevel(cacheKey, List.class, 
+                () -> permissionService.getPermissionsByUserId(0));
+            
             permissionCodes = permissions.stream()
                     .map(Permission::getPermissionCode)
                     .collect(Collectors.toList());
@@ -68,11 +79,21 @@ public class PermissionAspect {
         // 根据权限编码获取用户所有权限(包括子权限)
         Set<String> userPermissions = new HashSet<>();
         for (String permission : permissionCodes) {
-            userPermissions.addAll(permissionService.getAllPermissionsByCode(permission));
+            // 从缓存中获取子权限
+            String subPermissionsCacheKey = Constant.SUB_PERMISSION_KEY_PREFIX + permission;
+            @SuppressWarnings("unchecked")
+            Set<String> subPermissions = (Set<String>) cacheUtils.getWithMultiLevel(subPermissionsCacheKey, HashSet.class,
+                () -> new HashSet<>(permissionService.getAllPermissionsByCode(permission)));
+                
+            if (subPermissions != null) {
+                userPermissions.addAll(subPermissions);
+            }
         }
+        
         // 打印用户权限
         log.info("用户所拥有的权限: {}", userPermissions);
         log.info("请求所需要权限: {}", requiredPermission);
+        
         if (userPermissions.contains(requiredPermission)) {
             return joinPoint.proceed();
         }

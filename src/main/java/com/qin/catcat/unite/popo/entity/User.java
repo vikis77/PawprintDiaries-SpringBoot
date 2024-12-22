@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @TableName(value = "user")//mp的注解 指定数据库对应的表名
 public class User {
 
-    @TableId(value = "id",type = IdType.INPUT)////mp的注解 指定主键
+    @TableId(value = "id",type = IdType.AUTO)//mp的注解 指定主键
     //用户ID 主键
     private Integer userId;
     //用户名

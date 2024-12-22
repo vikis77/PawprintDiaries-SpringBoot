@@ -2,7 +2,9 @@ package com.qin.catcat.unite.popo.entity;
 
 import java.sql.Timestamp;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -17,6 +19,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 @lombok.Builder
 public class Coordinate {
     /**
+     * 主键
+     */
+    @TableId(value = "id",type = IdType.AUTO)
+    private long id;
+    /**
      * 区域
      */
     private String area;
@@ -29,11 +36,6 @@ public class Coordinate {
      */
     private String description;
     /**
-     * 主键
-     */
-    @TableId(value = "id",type = IdType.AUTO)
-    private long id;
-    /**
      * 纬度
      */
     private Double latitude;
@@ -44,6 +46,7 @@ public class Coordinate {
     /**
      * 更新时间
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Timestamp updateTime;
     /* 
      * 上传者

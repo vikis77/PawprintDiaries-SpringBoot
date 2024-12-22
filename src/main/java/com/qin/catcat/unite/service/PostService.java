@@ -4,9 +4,11 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.popo.dto.PostDTO;
+import com.qin.catcat.unite.popo.entity.EsPostIndex;
 import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
+import com.qin.catcat.unite.popo.vo.PostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
 
 public interface PostService {
@@ -40,10 +42,12 @@ public interface PostService {
 
     /**
     * 权重随机推送帖子
-    * @param 
+    * @param page 页码
+    * @param pageSize 每页大小
+    * @param firstTime 是否是用户第一次请求：true-使用通用缓存，false-不使用个性化缓存
     * @return 
     */
-    public List<HomePostVO> getRandomWeightedPosts(int page,int pageSize);
+    public List<HomePostVO> getRandomWeightedPosts(int page,int pageSize,boolean firstTime);
 
     /**
     * 时间衰减权重推送帖子
@@ -149,4 +153,17 @@ public interface PostService {
     * @return 
     */
     public int unCollectPost(Integer postId);
+
+    /**
+    * 获取热门帖子
+    * @param pageNum 页码
+    * @param pageSize 每页大小
+    * @return 热门帖子列表
+    */
+    public List<PostVO> getHotPosts(int pageNum, int pageSize);
+
+    /**
+    * 分页获取同步ES的全部帖子数据
+    */
+    public List<EsPostIndex> selectEsPostIndexByPage(int page,int pageSize);
 }

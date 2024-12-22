@@ -24,9 +24,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CatPicsMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
@@ -52,8 +55,14 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     @Autowired CoordinateMapper coordinateMapper;
     @Autowired GeneratorIdUtil generatorIdUtil;
     @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired private RBloomFilter<String> likeBloomFilter;
+    @Autowired private RBloomFilter<String> likeBloomFilter; // 点赞布隆过滤器
+    @Autowired CacheUtils cacheUtils;
+    @Autowired CatManage catManage;
 
+    /**
+     * @Description 新增猫猫
+     * @param catDTO
+     */
     @Override
     public void createCat(CatDTO catDTO){
         Cat cat = new Cat();
@@ -62,17 +71,25 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         // 根据年龄反推计算生日
         cat.setBirthday(LocalDateTime.now().minusMonths(catDTO.getAge()));
         catMapper.insert(cat);
+        
+        // 更新缓存
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         log.info("新增完成");
     }
 
-    // @Cacheable(value = "allCats")
+    /**
+     * @Description 查询全部猫猫信息
+     * @return 
+     */
+    // @Cacheable(value = "Hot_FirstTime_CatList", cacheManager = "redisCacheManager")
     @Override
     public List<CatListVO> CatList(){
-        log.info("查找全部猫猫信息完成");
-        QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("is_deleted", 0);
-        queryWrapper.orderByAsc("create_time");
-        List<Cat> cats = catMapper.selectList(queryWrapper);
+        // 从缓存中获取数据
+        @SuppressWarnings("unchecked")
+        List<Cat> cats = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_LIST, List.class, () -> {
+            // 如果缓存中没有数据，则从数据库中查询
+            return catManage.getCatList();
+        });
         log.info(TokenHolder.getToken());
         // 如果用户未登录，则不检查点赞
         if (StringUtils.isBlank(TokenHolder.getToken())) {
@@ -135,12 +152,18 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         return cat;
     }
 
+    /**
+     * @Description 更新猫猫
+     * @param cat
+     */
     public void update(Cat cat){
         int rows = catMapper.updateById(cat);
         if(rows<=0){
             log.info("更新失败");
             //TODO throw new 
         }
+        // 更新缓存
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         log.info("更新{}猫信息完成",cat.getCatname());
     }
 

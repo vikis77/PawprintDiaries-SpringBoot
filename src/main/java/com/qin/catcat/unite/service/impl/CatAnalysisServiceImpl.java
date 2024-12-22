@@ -1,16 +1,23 @@
 package com.qin.catcat.unite.service.impl;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.utils.CacheUtils;
+import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 import com.qin.catcat.unite.service.CatAnalysisService;
+import com.qin.catcat.unite.service.CatService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,27 +34,62 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
 
     @Autowired
     private CatMapper catMapper;
-    
+    @Autowired
+    private CacheUtils cacheUtils;
+    @Autowired
+    private CatService catService;   
+    @Autowired
+    private CatManage catManage;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    /**
+     * 分析猫咪数据
+     * 
+     * @return 分析结果VO
+     */
     @Override
+    @SuppressWarnings("unchecked")
     public DataAnalysisVO analysis() {
-        LambdaQueryWrapper<Cat> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Cat::getIsDeleted, 0);
-        List<Cat> cats = catMapper.selectList(queryWrapper);
-        HashMap<String, Integer> ageDistribution = new HashMap<>();
-        HashMap<String, Integer> healthStatus = new HashMap<>();
-        HashMap<String, Integer> areaDistribution = new HashMap<>();
-        HashMap<String, Integer> genderRatio = new HashMap<>();
-        HashMap<String, Integer> sterilizationRatio = new HashMap<>();
-        HashMap<String, Integer> vaccinationRatio = new HashMap<>();
-        
-        initializeMaps(ageDistribution, healthStatus, areaDistribution, 
-                      genderRatio, sterilizationRatio, vaccinationRatio);
-                      
-        analyzeCats(cats, ageDistribution, healthStatus, areaDistribution,
-                   genderRatio, sterilizationRatio, vaccinationRatio);
-        
-        return buildAnalysisResult(ageDistribution, healthStatus, areaDistribution,
-                                 genderRatio, sterilizationRatio, vaccinationRatio);
+        try {
+            // 从缓存中获取数据
+            Object cachedData = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS, DataAnalysisVO.class, () -> {
+                // 查询全部猫猫数据
+                List<Cat> cats = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_LIST, List.class, () -> {
+                    // 如果缓存中没有数据，则从数据库中查询
+                    return catManage.getCatList();
+                });
+                
+                // 初始化分析结果
+                HashMap<String, Integer> ageDistribution = new HashMap<>();
+                HashMap<String, Integer> healthStatus = new HashMap<>();
+                HashMap<String, Integer> areaDistribution = new HashMap<>();
+                HashMap<String, Integer> genderRatio = new HashMap<>();
+                HashMap<String, Integer> sterilizationRatio = new HashMap<>();
+                HashMap<String, Integer> vaccinationRatio = new HashMap<>();
+                
+                initializeMaps(ageDistribution, healthStatus, areaDistribution, 
+                            genderRatio, sterilizationRatio, vaccinationRatio);
+                
+                analyzeCats(cats, ageDistribution, healthStatus, areaDistribution,
+                        genderRatio, sterilizationRatio, vaccinationRatio);
+                
+                return buildAnalysisResult(ageDistribution, healthStatus, areaDistribution,
+                                        genderRatio, sterilizationRatio, vaccinationRatio);
+            });
+
+            // 处理类型转换
+            if (cachedData instanceof java.util.LinkedHashMap) {
+                return objectMapper.convertValue(cachedData, DataAnalysisVO.class);
+            } else if (cachedData instanceof DataAnalysisVO) {
+                return (DataAnalysisVO) cachedData;
+            }
+            
+            return new DataAnalysisVO();
+        } catch (Exception e) {
+            log.error("分析猫咪数据失败: ", e);
+            return new DataAnalysisVO();
+        }
     }
     
     private void initializeMaps(

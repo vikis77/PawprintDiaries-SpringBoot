@@ -1,6 +1,7 @@
 package com.qin.catcat.unite.service.impl;
 
 import java.sql.Timestamp;
+import java.util.Date;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,12 +24,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.popo.entity.PostLike;
 import com.catcat.entity.UserFollow;
+import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.ThreadLocalUtil;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.exception.BusinessException;
-// import com.qin.catcat.unite.config.RabbitMQConfig;
+import com.qin.catcat.unite.manage.PostManage;
 import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.PostPicsMapper;
 import com.qin.catcat.unite.mapper.UserFollowMapper;
@@ -43,23 +46,23 @@ import com.qin.catcat.unite.popo.entity.PostWeight;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
+import com.qin.catcat.unite.popo.vo.PostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.service.PostService;
 import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
+import com.qin.catcat.unite.popo.entity.EsPostIndex;
+import com.qin.catcat.unite.repository.EsPostIndexRepository;
 
 import io.jsonwebtoken.lang.Collections;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.com.lmax.disruptor.BusySpinWaitStrategy;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @Slf4j
 public class PostServiceImpl implements PostService{
-
-    private static final String LIKE_KEY = "post_likes";
-    private static final String WEIGHTED_POSTS_KEY = "weighted_posts:";  // Redis中权重帖子的key前缀
-    private static final long CACHE_EXPIRE_SECONDS = 300;  // 缓存过期时间：5分钟
 
     @Autowired UserMapper userMapper;
     @Autowired PostMapper postMapper;
@@ -73,6 +76,11 @@ public class PostServiceImpl implements PostService{
     @Autowired UserFollowMapper userFollowMapper;
     @Autowired PostLikeMapper postLikeMapper;
     @Autowired PostCollectMapper postCollectMapper;
+    @Autowired CacheUtils cacheUtils;
+    @Autowired 
+    PostManage postManage;
+    @Autowired 
+    private EsPostIndexRepository esPostIndexRepository;
 
     /**
     * 新增帖子
@@ -203,11 +211,11 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
-    * 根据发布时间分页查询前十条帖子
+    * 根据发布时间分页查询前十条帖子（暂时不用）
     * @param 
     * @return 
     */
-    @Cacheable(value = "postForSendtime", key = "#page + '-' + #pageSize")
+    // @Cacheable(value = "postForSendtime", key = "#page + '-' + #pageSize", cacheManager = "redisCacheManager")
     public List<HomePostVO> getPostBySendtime(int page, int pageSize) {
         try {
             // 先查询Post数据
@@ -253,50 +261,68 @@ public class PostServiceImpl implements PostService{
     * 当请求第一页时，重新计算随机权重排序，保证推荐的新鲜度。
     * @param page 页码
     * @param pageSize 每页大小
+    * @param firstTime 是否是用户第一次请求：true-使用通用缓存，false-使用个性化缓存
     * @return 帖子列表
     */
-    public List<HomePostVO> getRandomWeightedPosts(int page, int pageSize) {
+    public List<HomePostVO> getRandomWeightedPosts(int page, int pageSize, boolean firstTime) {
         try {
-            // 获取当前用户ID，未登录则使用默认值
+            // “首次登录”和“未登录”都使用默认值，即为热点帖子数据的缓存KEY因素
             String currentUserId = "0";
-            try {
+            // 第一次请求，不管用户是否登录，都使用通用缓存（固定的热点数据），不使用用户ID
+            if (!firstTime && TokenHolder.getToken() != null) {
                 currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
-            } catch (Exception e) {
-                // 用户未登录，使用默认ID
             }
 
             List<PostWeight> weightedPosts;
             String cacheKey = "";
 
             if (page == 1) {
-                // 第一页：直接重新计算权重和随机排序
-                weightedPosts = calculateWeightedPosts();
-                if (weightedPosts.isEmpty()) {
-                    return new ArrayList<>();
-                }
-
-                // 将第一页的排序结果缓存，供后续翻页使用
-                cacheKey = WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();
-                cacheWeightedPosts(weightedPosts, cacheKey);
-            } else {
-                // 非第一页：尝试获取最近的一次缓存结果
-                String latestCacheKey = getLatestCacheKey(currentUserId);
-                if (latestCacheKey == null) {
-                    // 如果没有缓存，重新计算
-                    weightedPosts = calculateWeightedPosts();
+                if (!firstTime) {
+                    // 第一页且用户刷新：重新计算权重和随机排序
+                    weightedPosts = postManage.calculateWeightedPosts();
                     if (weightedPosts.isEmpty()) {
                         return new ArrayList<>();
                     }
-                    // 缓存计算结果
-                    cacheKey = WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();
-                    cacheWeightedPosts(weightedPosts, cacheKey);
-                } else {
-                    // 使用缓存的结果
+                    // 将第一页的排序结果缓存，供后续翻页使用
+                    cacheKey = Constant.WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();
+                    postManage.cacheWeightedPosts(weightedPosts, cacheKey);
+                } 
+                // 第一页且是用户首次打开：使用通用缓存
+                else {
+                    // 获取最近一次的缓存key
+                    String latestCacheKey = postManage.getLatestCacheKey(currentUserId);
+                    // 热点首页过期，则重新计算权重和随机排序
+                    if (latestCacheKey == null) {
+                        postManage.initOrUpdateRandomWeightedPosts();
+                        latestCacheKey = postManage.getLatestCacheKey(currentUserId);
+                    }
+                    // 获取缓存中的帖子ID列表
                     List<String> cachedPostIds = RedisTemplate.opsForList().range(latestCacheKey, 0, -1);
                     if (cachedPostIds == null || cachedPostIds.isEmpty()) {
                         return new ArrayList<>();
                     }
-                    weightedPosts = rebuildWeightedPosts(cachedPostIds);
+                    weightedPosts = postManage.rebuildWeightedPosts(cachedPostIds);
+                }
+            } else {
+                // 非第一页：尝试获取最近的一次缓存结果
+                String latestCacheKey = postManage.getLatestCacheKey(currentUserId);
+                if (latestCacheKey == null) {
+                    // 如果没有缓存，重新计算
+                    weightedPosts = postManage.calculateWeightedPosts();
+                    if (weightedPosts.isEmpty()) {
+                        return new ArrayList<>();
+                    }
+                    // 缓存计算结果
+                    cacheKey = Constant.WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();
+                    postManage.cacheWeightedPosts(weightedPosts, cacheKey);
+                } else {
+                    // 使用缓存的结果
+                    List<String> cachedPostIds = RedisTemplate.opsForList().range(latestCacheKey, 0, -1);
+                    log.info("从Redis缓存中获取数据，key: {}", latestCacheKey);
+                    if (cachedPostIds == null || cachedPostIds.isEmpty()) {
+                        return new ArrayList<>();
+                    }
+                    weightedPosts = postManage.rebuildWeightedPosts(cachedPostIds);
                 }
             }
 
@@ -315,93 +341,7 @@ public class PostServiceImpl implements PostService{
         }
     }
 
-    /**
-    * 计算带权重的帖子列表
-    */
-    private List<PostWeight> calculateWeightedPosts() {
-        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("is_deleted", 0)
-                .eq("is_adopted", 1);
-        // 查询全部帖子
-        List<Post> allPosts = postMapper.selectList(queryWrapper);
-        // 清除总页数
-        ThreadLocalUtil.clearTotalPages();
-        // 计算总页数
-        Integer totalPages = allPosts.size() / 10 + 1;
-        // 设置总页数
-        ThreadLocalUtil.setTotalPages(totalPages);
-        
-        if (allPosts.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        // 1. 先计算基础权重
-        List<PostWeight> weightedPosts = allPosts.stream()
-            .map(post -> {
-                double baseWeight = calculateWeight(post);
-                // 添加大范围的随机因子 (0.1 到 2.0 之间)
-                double randomFactor = 0.1 + Math.random() * 1.9;
-                // 时间衰减权重占30%，随机权重占70%
-                double finalWeight = baseWeight * 0.3 + randomFactor * 0.7;
-                return new PostWeight(post, finalWeight);
-            })
-            .collect(Collectors.toList());
-        
-        // 2. 随机打乱列表
-        java.util.Collections.shuffle(weightedPosts);
-        
-        // 3. 重新排序（但是由于随机因子的权重更大，排序结果会有很大的随机性）
-        return weightedPosts.stream()
-            .sorted((a, b) -> Double.compare(b.getWeight(), a.getWeight()))
-            .collect(Collectors.toList());
-    }
-
-    /**
-    * 缓存权重排序结果
-    */
-    private void cacheWeightedPosts(List<PostWeight> weightedPosts, String cacheKey) {
-        List<String> postIds = weightedPosts.stream()
-            .map(pw -> String.valueOf(pw.getPost().getPostId()))
-            .collect(Collectors.toList());
-        
-        if (!postIds.isEmpty()) {
-            // 存入新的排序结果
-            RedisTemplate.opsForList().rightPushAll(cacheKey, postIds);
-            RedisTemplate.expire(cacheKey, CACHE_EXPIRE_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
-        }
-    }
-
-    /**
-    * 获取最近的缓存key
-    */
-    private String getLatestCacheKey(String userId) {
-        String pattern = WEIGHTED_POSTS_KEY + userId + ":*";
-        Set<String> keys = RedisTemplate.keys(pattern);
-        if (keys == null || keys.isEmpty()) {
-            return null;
-        }
-        // 返回时间戳最大的key
-        return keys.stream()
-            .max((k1, k2) -> {
-                long t1 = Long.parseLong(k1.split(":")[2]);
-                long t2 = Long.parseLong(k2.split(":")[2]);
-                return Long.compare(t1, t2);
-            })
-            .orElse(null);
-    }
-
-    /**
-    * 根据缓存的ID列表重建权重帖子列表
-    */
-    private List<PostWeight> rebuildWeightedPosts(List<String> cachedPostIds) {
-        return cachedPostIds.stream()
-            .map(id -> {
-                Post post = postMapper.selectById(Integer.parseInt(id));
-                return post != null ? new PostWeight(post, 1.0) : null;
-            })
-            .filter(pw -> pw != null)
-            .collect(Collectors.toList());
-    }
+    
 
     /**
     * 转换为HomePostVO对象列表
@@ -426,31 +366,6 @@ public class PostServiceImpl implements PostService{
                 return vo;
             })
             .collect(Collectors.toList());
-    }
-
-    /**
-    * 计算帖子权重
-    * @param post 帖子对象
-    * @return 权重值
-    */
-    private double calculateWeight(Post post) {
-        double weight = 0;
-        
-        // 1. 基础权重：点赞、收藏、评论、浏览量的加权和
-        weight += post.getLikeCount() * 0.4;        // 点赞权重 40%
-        weight += post.getCollectingCount() * 0.3;  // 收藏权重 30%
-        weight += post.getCommentCount() * 0.2;     // 评论权重 20%
-        
-        // 2. 时间衰减因子：越新的帖子权重越高
-        long currentTime = System.currentTimeMillis();
-        long postTime = post.getSendTime().getTime();
-        double timeDecay = Math.exp(-0.0000001 * (currentTime - postTime)); // 指数衰减
-        
-        // 3. 最终权重 = 基础权重 * 时间衰减因子
-        weight = weight * timeDecay;
-        
-        // 4. 确保权重非负
-        return Math.max(weight, 0.0);
     }
 
     /**
@@ -514,12 +429,34 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
+    @Transactional // 确保数据操作的原子性，数据在三个存储层（MySQL、Redis、ES）保持一致性
     public Boolean passApprove(Integer postId){
+        // 1. 更新MySQL数据
         Post post = postMapper.selectById(postId);
         Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
         post.setApproveUserId(userId);
         post.setIsAdopted(1);
         postMapper.updateById(post);
+
+        // 2. 更新Redis缓存
+        // 清除相关的缓存
+        String cacheKey = Constant.ALL_POSTS;
+        cacheUtils.remove(cacheKey);
+        
+        // 3. 同步到ES
+        // 创建ES文档对象
+        EsPostIndex esPostIndex = new EsPostIndex();
+        // 复制所有相同的字段
+        BeanUtils.copyProperties(post, esPostIndex);
+        // 特殊处理postId字段（因为类型不同）
+        esPostIndex.setPostId(String.valueOf(post.getPostId()));
+        
+        // 保存到ES
+        List<EsPostIndex> indexList = new ArrayList<>();
+        indexList.add(esPostIndex);
+        esPostIndexRepository.saveAll(indexList);
+        
+        log.info("帖子{}审核通过，数据已同步到MySQL、Redis和ES", postId);
         return true;
     }
 
@@ -538,11 +475,11 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
-    * 根据点赞数分页查询前十条帖子
+    * 根据点赞数分页查询前十条帖子（暂时不用）
     * @param 
     * @return 
     */
-    @Cacheable(value = "postForLikecount")
+    // @Cacheable(value = "postForLikecount", cacheManager = "redisCacheManager")
     public List<Post> getPostByLikecount(int page,int pageSize){
         try {
             Page<Post> postObj = new Page<>(page, pageSize);
@@ -610,7 +547,6 @@ public class PostServiceImpl implements PostService{
         List<String> imageFileNames = postPicsList.stream().map(PostPics::getPicture).collect(Collectors.toList());
         // 批量删除七牛云图片
         qiniuService.deleteFile(imageFileNames, "post_pics");
-
 
         // 删除帖子表
         postMapper.deleteById(Integer.parseInt(postId));
@@ -703,7 +639,7 @@ public class PostServiceImpl implements PostService{
     // （Redis）辅助方法：更新点赞数
     private void updateLikeCount(Integer postId, boolean isIncrement) {
         HashOperations<String,String,String> hashOps = RedisTemplate.opsForHash();
-        String likeCount = hashOps.get(LIKE_KEY, String.valueOf(postId));
+        String likeCount = hashOps.get(Constant.LIKE_KEY, String.valueOf(postId));
         
         Post post = postMapper.selectById(postId);
         if (likeCount == null) {
@@ -711,7 +647,7 @@ public class PostServiceImpl implements PostService{
         }
         
         int newCount = Integer.parseInt(likeCount) + (isIncrement ? 1 : -1);
-        hashOps.put(LIKE_KEY, String.valueOf(postId), String.valueOf(newCount));
+        hashOps.put(Constant.LIKE_KEY, String.valueOf(postId), String.valueOf(newCount));
         
         post.setLikeCount(newCount);
         postMapper.updateById(post);
@@ -720,7 +656,7 @@ public class PostServiceImpl implements PostService{
     // （Redis）辅助方法：获取当前点赞数
     private int getLikeCount(Integer postId) {
         HashOperations<String,String,String> hashOps = RedisTemplate.opsForHash();
-        String likeCount = hashOps.get(LIKE_KEY, String.valueOf(postId));
+        String likeCount = hashOps.get(Constant.LIKE_KEY, String.valueOf(postId));
         return likeCount != null ? Integer.parseInt(likeCount) : 0;
     }
 
@@ -781,6 +717,131 @@ public class PostServiceImpl implements PostService{
         post.setCollectingCount(post.getCollectingCount() - 1);
         postMapper.updateById(post);
         return 1;
+    }
+
+    /**
+     * 获取热门帖子
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<PostVO> getHotPosts(int pageNum, int pageSize) {
+        String cacheKey = Constant.HOT_POSTS_CACHE_KEY + pageNum + ":" + pageSize;
+        
+        return (List<PostVO>) cacheUtils.getWithMultiLevel(cacheKey, List.class, () -> {
+            // 从数据库加载热门帖子
+            Page<Post> page = new Page<>(pageNum, pageSize);
+            QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+            queryWrapper.orderByDesc("like_count", "send_time");
+            
+            IPage<Post> postPage = postMapper.selectPage(page, queryWrapper);
+            return convertToPostVOList(postPage.getRecords());
+        });
+    }
+
+    /**
+     * 更新帖子点赞数
+     */
+    private void updatePostLikeCount(Integer postId, String likeCount, boolean isIncrement) {
+        // 更新Redis缓存
+        HashOperations<String,String,String> hashOps = RedisTemplate.opsForHash();
+        
+        Post post = postMapper.selectById(postId);
+        if (likeCount == null) {
+            likeCount = String.valueOf(post.getLikeCount());
+        }
+        
+        int newCount = Integer.parseInt(likeCount) + (isIncrement ? 1 : -1);
+        
+        // 使用多级缓存更新点赞数
+        String cacheKey = "post_like:" + postId;
+        cacheUtils.put(cacheKey, newCount);
+        
+        // 同时更新Redis的hash结构
+        hashOps.put(Constant.LIKE_KEY, String.valueOf(postId), String.valueOf(newCount));
+        
+        post.setLikeCount(newCount);
+        postMapper.updateById(post);
+        
+        // 清除相关的热门帖子缓存
+        cacheUtils.remove(Constant.HOT_POSTS_CACHE_KEY + "*");
+    }
+
+    private List<PostVO> convertToPostVOList(List<Post> posts) {
+        return posts.stream().map(post -> {
+            PostVO vo = new PostVO();
+            BeanUtils.copyProperties(post, vo);
+            
+            // 获取作者信息
+            User author = userMapper.selectById(post.getAuthorId());
+            if (author != null) {
+                vo.setUserName(author.getNickName());
+                vo.setUserAvatar(author.getAvatar());
+            }
+            
+            // 获取图片列表
+            List<PostPics> postPics = postPicsMapper.selectByPostId(post.getPostId());
+            vo.setPicUrls(postPics.stream()
+                .map(PostPics::getPicture)
+                .collect(Collectors.toList()));
+            
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+    * 获取同步ES的全部帖子数据 
+    */
+    @Override
+    public List<EsPostIndex> selectEsPostIndexByPage(int pageNum, int pageSize) {
+        // 构建查询条件
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("is_deleted", 0)  // 只同步未删除的帖子
+                  .eq("is_adopted", 1)   // 只同步已审核的帖子
+                  .orderByAsc("id");     // 按ID升序排序，确保分页顺序一致
+        
+        // 分页查询
+        Page<Post> page = new Page<>(pageNum + 1, pageSize); // pageNum从0开始，所以这里要+1
+        IPage<Post> postPage = postMapper.selectPage(page, queryWrapper);
+        List<Post> posts = postPage.getRecords();
+        
+        log.info("查询到待同步数据 - 当前页：{}，每页大小：{}，本页数据量：{}，总数据量：{}", 
+                pageNum + 1, pageSize, posts.size(), postPage.getTotal());
+        
+        // 转换并返回结果
+        List<EsPostIndex> esPostIndexList = posts.stream().map(post -> {
+            EsPostIndex esPostIndex = new EsPostIndex();
+            // 复制所有相同的字段
+            BeanUtils.copyProperties(post, esPostIndex);
+            // 特殊处理postId字段（因为类型不同）
+            esPostIndex.setPostId(String.valueOf(post.getPostId()));
+            // 设置ES文档ID，避免重复
+            esPostIndex.setId(String.valueOf(post.getPostId())); 
+            
+            log.debug("转换帖子数据 - postId: {}, title: {}", post.getPostId(), post.getTitle());
+            return esPostIndex;
+        }).collect(Collectors.toList());
+
+        log.info("完成数据转换，转换后数据量：{}", esPostIndexList.size());
+        return esPostIndexList;
+    }
+
+    private EsPostIndex convertToEsPostIndex(Post post) {
+        if (post == null) {
+            return null;
+        }
+        EsPostIndex esPostIndex = new EsPostIndex();
+        BeanUtils.copyProperties(post, esPostIndex);
+        // 设置ID
+        esPostIndex.setId(post.getPostId().toString());
+        esPostIndex.setPostId(post.getPostId().toString());
+        // 转换日期
+        if (post.getSendTime() != null) {
+            esPostIndex.setSendTime(new Date(post.getSendTime().getTime()));
+        }
+        if (post.getUpdateTime() != null) {
+            esPostIndex.setUpdateTime(new Date(post.getUpdateTime().getTime()));
+        }
+        return esPostIndex;
     }
 
 }
