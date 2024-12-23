@@ -57,7 +57,7 @@ public class WebLogAspect {
         Object result = joinPoint.proceed();
         
         // 记录响应信息
-        // log.info("Response       : {}", result instanceof byte[] ? "byte array" : objectMapper.writeValueAsString(result));
+        log.info("Response       : {}", result instanceof byte[] ? "byte array" : objectMapper.writeValueAsString(result));
         log.info("Time-Consuming : {} ms", System.currentTimeMillis() - startTime);
         log.info("=========================================== End ===========================================");
         

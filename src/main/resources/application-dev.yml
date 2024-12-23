@@ -157,7 +157,7 @@ pagehelper:
 # JWT 配置
 jwt:
   secret: XnpcgH6NWZRJ+77sEAXst0B0BDnOCbF97M08ZdX/OAE=
-  expiration: 3600000 # 1小时
+  expiration: 10800000 # 3小时
 
 # Tomcat 配置
 server:

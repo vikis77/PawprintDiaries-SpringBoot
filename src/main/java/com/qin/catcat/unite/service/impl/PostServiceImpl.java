@@ -182,7 +182,10 @@ public class PostServiceImpl implements PostService{
             throw new RuntimeException("作者不存在");
         }
         // 根据帖子ID查询帖子的全部图片（post_pics表）
-        List<PostPics> postPicsList = postPicsMapper.selectByPostId(Integer.parseInt(postId));
+        QueryWrapper<PostPics> queryPostPicListWrapper = new QueryWrapper<>();
+        queryPostPicListWrapper.eq("post_id", postId);
+        queryPostPicListWrapper.orderByAsc("id");
+        List<PostPics> postPicsList = postPicsMapper.selectList(queryPostPicListWrapper);
         singlePostVO.setImages(postPicsList);
         // 当前用户已登录
         if (TokenHolder.getToken() != null) {

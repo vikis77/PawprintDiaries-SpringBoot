@@ -53,6 +53,19 @@ public class PostManage {
         String currentUserId = "0";
         // 重新计算权重和随机排序
         List<PostWeight> weightedPosts = calculateWeightedPosts();
+
+        // -------------------
+        // TODO （临时方案）超级置顶，把pistId为26的帖子放在第一位
+        for (PostWeight pw : weightedPosts) {
+            if (pw.getPost().getPostId() == 26) {
+                weightedPosts.remove(pw);
+                weightedPosts.add(0, pw);
+                break;
+            }
+        }
+        // -------------------
+
+        log.info("重新计算权重和随机排序完成:{}",weightedPosts);
         // 构建缓存key
         String cacheKey = Constant.WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();
         // 缓存权重排序结果

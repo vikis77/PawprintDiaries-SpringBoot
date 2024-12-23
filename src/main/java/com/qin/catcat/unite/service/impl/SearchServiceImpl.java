@@ -1,6 +1,10 @@
 package com.qin.catcat.unite.service.impl;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +18,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.exception.BusinessException;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.PostMapper;
+import com.qin.catcat.unite.mapper.UserMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.EsPostIndex;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.SearchVO;
 import com.qin.catcat.unite.repository.EsPostIndexRepository;
@@ -33,6 +39,8 @@ public class SearchServiceImpl implements SearchService{
     private PostMapper postMapper;
     @Autowired
     private CatMapper catMapper;
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * ES 和 MySQL 联合搜索（帖子或猫猫）
@@ -80,10 +88,19 @@ public class SearchServiceImpl implements SearchService{
                     
                     log.info("从MySQL获取到 {} 条帖子详情", postList.size());
                     
+                    // 查询作者信息
+                    List<Integer> authorIdList = postList.stream()
+                        .map(Post::getAuthorId)
+                        .toList();
+                    List<User> userList = userMapper.selectBatchIds(authorIdList);
+                    Map<Integer,User> userMap = userList.stream()
+                        .collect(Collectors.toMap(User::getUserId, Function.identity()));
                     List<HomePostVO> postVOList = postList.stream()
                         .map(post -> {
                             HomePostVO homePostVO = new HomePostVO();
                             BeanUtils.copyProperties(post, homePostVO);
+                            homePostVO.setAuthorAvatar(userMap.get(post.getAuthorId()).getAvatar());
+                            homePostVO.setAuthorNickname(userMap.get(post.getAuthorId()).getNickName());
                             return homePostVO;
                         })
                         .toList();

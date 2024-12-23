@@ -86,8 +86,7 @@ public class DataInitializationService {
                         esPostIndexRepository.deleteAll();
                         log.info("删除ES索引完成\n");
                         log.info("开始保存新的ES索引 - 保存新的ES索引"); // 这里不需要保存，定时任务会自己保存
-
-
+                        
                         initialized = true;
                         initLock.notifyAll(); // 通知等待的线程初始化已完成
                     } catch (Exception e) {
