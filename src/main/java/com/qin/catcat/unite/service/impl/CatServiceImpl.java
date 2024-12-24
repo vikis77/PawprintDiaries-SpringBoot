@@ -194,6 +194,8 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
             Cat cat = catMapper.selectById(catId);
             cat.setLikeCount(cat.getLikeCount() + 1);
             catMapper.updateById(cat);
+            // 更新缓存
+            cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
             log.info("用户 {} 成功给猫咪 {} 点赞", currentUserId, catId);
         } else {
             log.warn("用户未登录，无法进行点赞操作");

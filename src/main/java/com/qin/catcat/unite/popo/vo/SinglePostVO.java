@@ -1,7 +1,10 @@
 package com.qin.catcat.unite.popo.vo;
 
 import java.util.List;
+
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,6 +13,7 @@ import com.qin.catcat.unite.popo.entity.PostPics;
 import lombok.Data;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /* 
  * 响应给前端的单个帖子的全部信息
@@ -37,11 +41,14 @@ public class SinglePostVO {
     private Integer commentCount;
     //发帖时间
     @JsonProperty("send_time")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss.SSS")
-    private Timestamp sendTime;
+    @TableField(fill = FieldFill.INSERT)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime sendTime;
     //更新时间
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss.SSS")
-    private Timestamp updateTime;
+    @JsonProperty("update_time")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime updateTime;
     //帖子全部图片集合
     private List<PostPics> images;
     //是否点赞

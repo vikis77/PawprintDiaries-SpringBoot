@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.entity.EsPostIndex;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.vo.AddPostVO;
 import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.PostVO;
@@ -17,7 +18,7 @@ public interface PostService {
     * @param 
     * @return 
     */
-    public Boolean add(PostDTO post);
+    public AddPostVO add(PostDTO post);
 
     /**
     * 查询全部帖子

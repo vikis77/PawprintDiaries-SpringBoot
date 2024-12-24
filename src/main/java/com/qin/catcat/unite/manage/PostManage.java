@@ -156,7 +156,7 @@ public class PostManage {
         
         // 2. 时间衰减因子：越新的帖子权重越高
         long currentTime = System.currentTimeMillis();
-        long postTime = post.getSendTime().getTime();
+        long postTime = post.getSendTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
         double timeDecay = Math.exp(-0.0000001 * (currentTime - postTime)); // 指数衰减
         
         // 3. 最终权重 = 基础权重 * 时间衰减因子

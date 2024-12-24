@@ -19,6 +19,7 @@ import com.qin.catcat.unite.param.PassApproveParam;
 import com.qin.catcat.unite.param.RefuseApproveParam;
 import com.qin.catcat.unite.popo.dto.PostDTO;
 import com.qin.catcat.unite.popo.entity.Post;
+import com.qin.catcat.unite.popo.vo.AddPostVO;
 import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.SinglePostVO;
@@ -50,11 +51,11 @@ public class PostController {
     @Operation(summary = "新增帖子")
     @HasPermission("system:post:add")
     @PostMapping("/addpost")
-    public Result<?> addPost(@RequestBody PostDTO postDTO) {
+    public Result<AddPostVO> addPost(@RequestBody PostDTO postDTO) {
         log.info("Received request to add post");
         try {
-            postService.add(postDTO);
-            return Result.success();
+            AddPostVO addPostVO = postService.add(postDTO);
+            return Result.success(addPostVO);
         } catch (Exception e) {
             log.error("Error adding post: {}", e.getMessage(), e);
             throw e;

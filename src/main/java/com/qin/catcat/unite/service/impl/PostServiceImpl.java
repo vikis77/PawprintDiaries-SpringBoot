@@ -2,9 +2,12 @@ package com.qin.catcat.unite.service.impl;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,6 +47,7 @@ import com.qin.catcat.unite.popo.entity.PostCollect;
 import com.qin.catcat.unite.popo.entity.PostPics;
 import com.qin.catcat.unite.popo.entity.PostWeight;
 import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.vo.AddPostVO;
 import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.PostVO;
@@ -87,25 +91,26 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
-    public Boolean add(PostDTO postDto){
+    public AddPostVO add(PostDTO postDto){
         log.info("Creating new post with title: {}", postDto.getTitle());
+        Map<String, String> fileNameConvertMap = new HashMap<>();
+        // 遍历图片列表，将图片名转换为新的文件名
+        for(String imageName:postDto.getPictrueList()){
+            String newFileName = generatorIdUtil.GeneratorRandomId();
+            fileNameConvertMap.put(imageName, newFileName);
+        }
         Post post = new Post();
-        // BeanUtils.copyProperties(postDto, post);//属性拷贝DTO to entity
-
         String userId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
-        // String userNickname = userService.getNicknameFromId(userId); //根据用户ID查询用户昵称
-
         // 插入帖子基本信息
-        // post.setPostId(Long.parseLong(generatorIdUtil.GeneratorRandomId()));//设置帖子ID
         post.setTitle(postDto.getTitle()); // 设置标题
         post.setArticle(postDto.getArticle()); // 设置文章
         post.setAuthorId(Integer.parseInt(userId));//设置作者ID（即用户本ID）
         post.setLikeCount(0);//设置点赞数 初始化0
         post.setCollectingCount(0); // 设置收藏数 初始化0
         post.setCommentCount(0);//设置评论数 初始化0
-        post.setSendTime(Timestamp.from(Instant.now()));//设置发帖时间
-        post.setUpdateTime(Timestamp.from(Instant.now()));//设置更新时间
-        post.setCoverPicture(postDto.getPictrueList().get(0));//设置封面(默认为第一张图片)
+        post.setSendTime(LocalDateTime.now());//设置发帖时间
+        post.setUpdateTime(LocalDateTime.now());//设置更新时间
+        post.setCoverPicture(fileNameConvertMap.get(postDto.getPictrueList().get(0)));//设置封面(默认为第一张图片)
         post.setIsDeleted(0); // 设置是否删除 初始化0
         post.setIsAdopted(0); // 设置是否通过审核 初始化0
         postMapper.insert(post);
@@ -115,12 +120,13 @@ public class PostServiceImpl implements PostService{
         for(String imageName:postDto.getPictrueList()){
             PostPics postPics = new PostPics();
             postPics.setPostId(post.getPostId());
-            postPics.setPicture(imageName);
+            postPics.setPicture(fileNameConvertMap.get(imageName));
             postPics.setPicNumber(signal++);
             postPicsMapper.insert(postPics);
         }
-        
-        return true;
+        AddPostVO addPostVO = new AddPostVO();
+        addPostVO.setFileNameConvertMap(fileNameConvertMap);
+        return addPostVO;
     }
 
     /**
@@ -453,6 +459,14 @@ public class PostServiceImpl implements PostService{
         BeanUtils.copyProperties(post, esPostIndex);
         // 特殊处理postId字段（因为类型不同）
         esPostIndex.setPostId(String.valueOf(post.getPostId()));
+        
+        // 转换日期
+        if (post.getSendTime() != null) {
+            esPostIndex.setSendTime(java.sql.Timestamp.valueOf(post.getSendTime()));
+        }
+        if (post.getUpdateTime() != null) {
+            esPostIndex.setUpdateTime(java.sql.Timestamp.valueOf(post.getUpdateTime()));
+        }
         
         // 保存到ES
         List<EsPostIndex> indexList = new ArrayList<>();
@@ -839,10 +853,10 @@ public class PostServiceImpl implements PostService{
         esPostIndex.setPostId(post.getPostId().toString());
         // 转换日期
         if (post.getSendTime() != null) {
-            esPostIndex.setSendTime(new Date(post.getSendTime().getTime()));
+            esPostIndex.setSendTime(java.sql.Timestamp.valueOf(post.getSendTime()));
         }
         if (post.getUpdateTime() != null) {
-            esPostIndex.setUpdateTime(new Date(post.getUpdateTime().getTime()));
+            esPostIndex.setUpdateTime(java.sql.Timestamp.valueOf(post.getUpdateTime()));
         }
         return esPostIndex;
     }
