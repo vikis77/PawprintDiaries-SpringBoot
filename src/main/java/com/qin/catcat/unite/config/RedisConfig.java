@@ -45,12 +45,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
  */
 @Configuration
 public class RedisConfig {
-    // Reids 连接配置（host、port、password）
-    @Value("${spring.redis.host:localhost}")
+    // Redis 连接配置（host、port、password）
+    @Value("${spring.data.redis.host:localhost}")
     private String host;
-    @Value("${spring.redis.port:6379}")
-    private String port;
-    @Value("${spring.redis.password:}")
+    @Value("${spring.data.redis.port:6379}")
+    private int port;
+    @Value("${spring.data.redis.password:}")
     private String password;
 
     // Redission 客户端
@@ -58,7 +58,7 @@ public class RedisConfig {
     public RedissonClient redissonClient() {
         Config config = new Config();
         // 设置Redis连接地址
-        String address = String.format("redis://%s:%s", host, port);
+        String address = String.format("redis://%s:%d", host, port);
         config.useSingleServer()
                 .setAddress(address)
                 .setPassword(password.isEmpty() ? null : password);

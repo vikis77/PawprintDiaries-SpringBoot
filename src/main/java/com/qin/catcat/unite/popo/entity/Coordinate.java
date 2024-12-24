@@ -22,7 +22,7 @@ public class Coordinate {
      * 主键
      */
     @TableId(value = "id",type = IdType.AUTO)
-    private long id;
+    private Long id;
     /**
      * 区域
      */
