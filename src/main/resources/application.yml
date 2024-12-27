@@ -6,10 +6,10 @@ spring:
   cache: # 缓存配置
     type: redis
     redis:
-      time-to-live: 3600000
+      time-to-live: 3600000 # 缓存过期时间 1小时
       cache-null-values: false
     caffeine:
-      spec: maximumSize=1000,expireAfterAccess=300s
+      spec: maximumSize=1000,expireAfterAccess=300s # 缓存最大容量 1000,缓存过期时间 300秒
 
 # 缓存监控 Actuator 配置
 management:

@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.qin.catcat.unite.param.AddCatTimelineParam;
+import com.qin.catcat.unite.param.UpdateCatTimelineParam;
 import com.qin.catcat.unite.param.UploadCoordinateParam;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
@@ -12,6 +14,7 @@ import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
 import com.qin.catcat.unite.popo.vo.CatListVO;
+import com.qin.catcat.unite.popo.vo.CatTimelineVO;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 
@@ -120,4 +123,24 @@ public interface CatService {
      * 分页获取猫咪照片
      */
     List<CatPics> selectPhotoById(String catId, int page, int size);
+
+    /**
+     * 获取猫咪时间线
+     */
+    List<CatTimelineVO> getCatTimeline(Long catId);
+
+    /**
+     * 新增猫咪时间线
+     */
+    void addCatTimeline(AddCatTimelineParam param);
+
+    /**
+     * 更新猫咪时间线
+     */
+    void updateCatTimeline(UpdateCatTimelineParam param);
+
+    /**
+     * 删除猫咪时间线
+     */
+    void deleteCatTimeline(Integer id);
 }

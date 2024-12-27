@@ -74,8 +74,12 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
                 analyzeCats(cats, ageDistribution, healthStatus, areaDistribution,
                         genderRatio, sterilizationRatio, vaccinationRatio);
                 
-                return buildAnalysisResult(ageDistribution, healthStatus, areaDistribution,
-                                        genderRatio, sterilizationRatio, vaccinationRatio);
+                DataAnalysisVO dataAnalysisVO = buildAnalysisResult(ageDistribution, healthStatus, areaDistribution,
+                        genderRatio, sterilizationRatio, vaccinationRatio);
+                // 计算已领养数量
+                Integer adoptionCount = (int) cats.stream().filter(cat -> cat.getIsAdopted() == 1).count();
+                dataAnalysisVO.setAdoptionCount(adoptionCount);
+                return dataAnalysisVO;
             });
 
             // 处理类型转换

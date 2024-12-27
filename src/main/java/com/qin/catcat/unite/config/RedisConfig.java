@@ -61,7 +61,8 @@ public class RedisConfig {
         String address = String.format("redis://%s:%d", host, port);
         config.useSingleServer()
                 .setAddress(address)
-                .setPassword(password.isEmpty() ? null : password);
+                .setPassword(password.isEmpty() ? null : password)
+                .setDnsMonitoringInterval(60000); // 每 1 分钟检查一次 DNS
         return Redisson.create(config);
     }
 

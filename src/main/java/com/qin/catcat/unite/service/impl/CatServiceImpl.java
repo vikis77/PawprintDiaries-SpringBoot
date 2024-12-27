@@ -1,7 +1,10 @@
 package com.qin.catcat.unite.service.impl;
 
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -32,14 +35,19 @@ import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CatPicsMapper;
+import com.qin.catcat.unite.mapper.CatTimeLineEventMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
+import com.qin.catcat.unite.param.AddCatTimelineParam;
+import com.qin.catcat.unite.param.UpdateCatTimelineParam;
 import com.qin.catcat.unite.param.UploadCoordinateParam;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
+import com.qin.catcat.unite.popo.entity.CatTimeLineEvent;
 import com.qin.catcat.unite.popo.entity.Coordinate;
 import com.qin.catcat.unite.popo.vo.CatListVO;
+import com.qin.catcat.unite.popo.vo.CatTimelineVO;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
 import com.qin.catcat.unite.service.CatService;
@@ -58,6 +66,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     @Autowired private RBloomFilter<String> likeBloomFilter; // 点赞布隆过滤器
     @Autowired CacheUtils cacheUtils;
     @Autowired CatManage catManage;
+    @Autowired CatTimeLineEventMapper catTimeLineEventMapper;
 
     /**
      * @Description 新增猫猫
@@ -487,5 +496,72 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         dataAnalysisVO.setVaccinationRatio(vaccinationRatio);
             
         return dataAnalysisVO;
+    }
+
+    /**
+     * @Description 获取猫咪时间线
+     * @param catId 猫咪ID
+     * @return 猫咪时间线VO列表
+     */
+    @Override
+    public List<CatTimelineVO> getCatTimeline(Long catId) {
+        List<CatTimelineVO> catTimelineVOs = new ArrayList<>();
+        QueryWrapper<CatTimeLineEvent> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("cat_id", catId);
+        queryWrapper.orderByDesc("date");
+        queryWrapper.eq("is_deleted", 0);
+        queryWrapper.last("limit 10");
+        List<CatTimeLineEvent> catTimeLineEvents = catTimeLineEventMapper.selectList(queryWrapper);
+        for(CatTimeLineEvent catTimeLineEvent : catTimeLineEvents){
+            CatTimelineVO catTimelineVO = new CatTimelineVO();
+            BeanUtils.copyProperties(catTimeLineEvent, catTimelineVO);
+            // 将Date类型转换为字符串格式,使用SimpleDateFormat避免解析错误
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            catTimelineVO.setDate(sdf.format(catTimeLineEvent.getDate()));
+            catTimelineVOs.add(catTimelineVO);
+        }
+        return catTimelineVOs;
+    }
+
+    /**
+     * @Description 新增猫咪时间线
+     * @param param 新增猫咪时间线参数
+     */
+    @Override
+    public void addCatTimeline(AddCatTimelineParam param) {
+        // 获取当前用户ID
+        Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+        CatTimeLineEvent catTimeLineEvent = new CatTimeLineEvent();
+        BeanUtils.copyProperties(param, catTimeLineEvent);
+        catTimeLineEvent.setCreateUserId(userId);
+        catTimeLineEvent.setIsDeleted(0);
+        catTimeLineEvent.setDate(Date.valueOf(param.getDate()));
+        catTimeLineEventMapper.insert(catTimeLineEvent);
+    }
+
+    /**
+     * @Description 更新猫咪时间线
+     * @param param 更新猫咪时间线参数
+     */
+    @Override
+    public void updateCatTimeline(UpdateCatTimelineParam param) {
+        // 获取当前用户ID
+        Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+        CatTimeLineEvent catTimeLineEvent = new CatTimeLineEvent();
+        BeanUtils.copyProperties(param, catTimeLineEvent);
+        catTimeLineEvent.setCreateUserId(userId);
+        catTimeLineEventMapper.updateById(catTimeLineEvent);
+    }
+
+    /**
+     * @Description 删除猫咪时间线
+     * @param id 时间线ID
+     */
+    @Override
+    public void deleteCatTimeline(Integer id) {
+        CatTimeLineEvent catTimeLineEvent = new CatTimeLineEvent();
+        catTimeLineEvent.setId(id);
+        catTimeLineEvent.setIsDeleted(1);
+        catTimeLineEventMapper.updateById(catTimeLineEvent);
     }
 }

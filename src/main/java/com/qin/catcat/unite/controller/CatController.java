@@ -6,9 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.qin.catcat.unite.common.result.Result;
+import com.qin.catcat.unite.param.AddCatTimelineParam;
 import com.qin.catcat.unite.param.AdoptParam;
+import com.qin.catcat.unite.param.UpdateCatTimelineParam;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.vo.CatListVO;
+import com.qin.catcat.unite.popo.vo.CatTimelineVO;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.CatService;
@@ -89,6 +92,51 @@ public class CatController {
     @PostMapping("/adopt/apply")
     public Result<Void> adoptCat(@RequestBody AdoptParam adoptParam) {
         // catService.adoptCat(adoptParam);
+        return Result.success();
+    }
+
+    /**
+     * 获取猫咪的时间线信息
+     * @param catId 猫咪ID
+     * @return 包含猫咪时间线信息的结果
+     */
+    @Operation(summary = "获取猫咪时间线")
+    @GetMapping("/timeline/{catId}")
+    @HasPermission("system:cat:timeline:view")
+    public Result<List<CatTimelineVO>> getCatTimeline(@PathVariable Long catId) {
+        return Result.success(catService.getCatTimeline(catId));
+    }
+
+    /**
+     * 新增猫咪时间线
+     */
+    @Operation(summary = "新增猫咪时间线")
+    @HasPermission("system:cat:timeline:add")
+    @PostMapping("/timeline/add")
+    public Result<Void> addCatTimeline(@RequestBody AddCatTimelineParam param) {
+        catService.addCatTimeline(param);
+        return Result.success();
+    }
+
+    /**
+     * 更新猫咪时间线
+     */
+    @Operation(summary = "更新猫咪时间线")
+    @HasPermission("system:cat:timeline:edit")
+    @PutMapping("/timeline/update")
+    public Result<Void> updateCatTimeline(@RequestBody UpdateCatTimelineParam param) {
+        catService.updateCatTimeline(param);
+        return Result.success();
+    }
+
+    /**
+     * 删除猫咪时间线
+     */
+    @Operation(summary = "删除猫咪时间线")
+    @HasPermission("system:cat:timeline:delete")
+    @DeleteMapping("/timeline/delete/{id}")
+    public Result<Void> deleteCatTimeline(@PathVariable Integer id) {
+        catService.deleteCatTimeline(id);
         return Result.success();
     }
 }

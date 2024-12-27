@@ -24,4 +24,6 @@ public class DataAnalysisVO {
 
     // 接种比例 接种 未接种
     private Object VaccinationRatio;
+    // 已领养数量
+    private Integer adoptionCount;
 }
