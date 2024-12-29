@@ -124,6 +124,7 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
         areaDistribution.put("凤翔", 0);
         areaDistribution.put("厚德楼", 0);
         areaDistribution.put("香晖苑", 0);
+        areaDistribution.put("未知", 0);
         
         // 初始化性别比例
         genderRatio.put("公猫", 0);
@@ -168,7 +169,13 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
             healthStatus.put(cat.getHealthStatus(), healthStatus.get(cat.getHealthStatus()) + 1);
 
             // 分析区域分布
-            areaDistribution.put(cat.getArea(), areaDistribution.get(cat.getArea()) + 1);
+            String area = cat.getArea();
+            if (area != null && areaDistribution.containsKey(area)) {
+                areaDistribution.put(area, areaDistribution.get(area) + 1);
+            } else {
+                areaDistribution.put("未知", areaDistribution.get("未知") + 1);
+                log.warn("发现未知区域: {}", area);
+            }
 
             // 分析性别比例
             if (cat.getGender().equals(1)) {

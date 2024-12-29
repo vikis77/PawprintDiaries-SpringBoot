@@ -75,6 +75,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> fail() {
         Result<T> result = new Result<T>();
         result.code = enumStatusCode.UNKNOWNERROR.getCode();
+        result.msg = "操作失败";
         return result;
     }
 

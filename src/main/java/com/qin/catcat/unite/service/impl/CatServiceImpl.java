@@ -85,6 +85,10 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         // 将图片名转换为新的文件名
         String newFileName = generatorIdUtil.GeneratorRandomId() + catDTO.getAvatar().substring(catDTO.getAvatar().lastIndexOf("."));
         cat.setAvatar(newFileName);
+        cat.setIsAdopted(0);
+        cat.setIsDeleted(0);
+        cat.setTrending(0);
+        cat.setLikeCount(0);
         catMapper.insert(cat);
         
         // 更新缓存
@@ -177,16 +181,18 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
      * @param cat
      */
     public UpdateCatVO update(Cat cat){
-        // 将图片名转换为新的文件名
-        String newFileName = generatorIdUtil.GeneratorRandomId() + cat.getAvatar().substring(cat.getAvatar().lastIndexOf("."));
-        cat.setAvatar(newFileName);
+        UpdateCatVO updateCatVO = new UpdateCatVO();
+        Map<String, String> fileNameConvertMap = new HashMap<>();
+        if (cat.getAvatar() != null && !cat.getAvatar().isEmpty()) {
+            // 将图片名转换为新的文件名
+            String newFileName = generatorIdUtil.GeneratorRandomId() + cat.getAvatar().substring(cat.getAvatar().lastIndexOf("."));
+            cat.setAvatar(newFileName);
+            fileNameConvertMap.put(cat.getAvatar(), newFileName);
+        }
         catMapper.updateById(cat);
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         log.info("更新{}猫信息完成",cat.getCatname());
-        UpdateCatVO updateCatVO = new UpdateCatVO();
-        Map<String, String> fileNameConvertMap = new HashMap<>();
-        fileNameConvertMap.put(cat.getAvatar(), newFileName);
         updateCatVO.setFileNameConvertMap(fileNameConvertMap);
         return updateCatVO;
     }

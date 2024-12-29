@@ -66,7 +66,7 @@ logging:
     org.springframework: WARN
 # 上传的图片存储的位置，部署时需要修改
 file:
-#   upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics
+  upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics
 # 七牛云的配置
 qiniu:
   access-key: FvZbXvCH0RyNyxE_8glWs0AJMTos7IvQoXeaWglA
