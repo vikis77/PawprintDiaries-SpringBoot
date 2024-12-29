@@ -31,6 +31,9 @@ public class CatWebSocketHandler extends TextWebSocketHandler{
     // 订阅列表，用于存储已订阅 轨迹更新服务 的会话
     private final Set<WebSocketSession> subscribedSessions = new HashSet<>();
 
+    // 添加最大连接数限制
+    private static final int MAX_SESSIONS = 500;
+
     // 构造器注入
     public CatWebSocketHandler(@Lazy CatLocationTask catLocationTask){
         this.catLocationTask = catLocationTask;
@@ -43,6 +46,11 @@ public class CatWebSocketHandler extends TextWebSocketHandler{
         // 解析消息，如果是订阅了轨迹更新消息，将会话加入订阅列表
         
         if (payload.contains("\"action\": \"subscribe\"") && payload.contains("\"type\": \"track\"")){
+            // 添加连接时检查
+            if (subscribedSessions.size() >= MAX_SESSIONS) {
+                session.close();
+                return;
+            }
             subscribedSessions.add(session);
             log.info("Session {} subscribed to track updates", session.getId());
             // 检查并启动定时任务，每5秒执行一次

@@ -9,7 +9,7 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.qin.catcat.unite.common.rabbitMq.LikeMessageListener;
+// import com.qin.catcat.unite.common.rabbitMq.LikeMessageListener;
 
 /**
  * RabbitMQ配置

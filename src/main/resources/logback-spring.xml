@@ -3,7 +3,7 @@
     <!-- 定义日志文件的存储地址 -->
     <property name="LOG_HOME" value="logs"/>
     <!-- 日志输出格式 -->
-    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] [%X{requestId}] %logger{50} [%line] - %msg%n"/>
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] [%X{requestId}] %logger{50}.%M\(%F:%L\) - %msg%n"/>
 
     <!-- 控制台输出 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

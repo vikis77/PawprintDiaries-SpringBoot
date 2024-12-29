@@ -10,8 +10,10 @@ import com.qin.catcat.unite.param.AddCatTimelineParam;
 import com.qin.catcat.unite.param.AdoptParam;
 import com.qin.catcat.unite.param.UpdateCatTimelineParam;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.vo.AddCatVO;
 import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.vo.CatTimelineVO;
+import com.qin.catcat.unite.popo.vo.UpdateCatVO;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.CatService;
@@ -52,17 +54,15 @@ public class CatController {
     @Operation(summary = "新增猫咪")
     @HasPermission("system:cat:add")
     @PostMapping
-    public Result<Void> createCat(@RequestBody CatDTO catDTO) {
-        catService.createCat(catDTO);
-        return Result.success();
+    public Result<AddCatVO> createCat(@RequestBody CatDTO catDTO) {
+        return Result.success(catService.createCat(catDTO));
     }
     
     @Operation(summary = "更新猫咪信息")
     @HasPermission("system:cat:edit")
     @PutMapping
-    public Result<Void> updateCat(@RequestBody Cat cat) {
-        catService.update(cat);
-        return Result.success();
+    public Result<UpdateCatVO> updateCat(@RequestBody Cat cat) {
+        return Result.success(catService.update(cat));
     }
     
     @Operation(summary = "删除猫咪")

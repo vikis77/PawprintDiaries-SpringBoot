@@ -57,7 +57,7 @@ public class JwtTokenProvider {
                 .setId(String.valueOf(userId))//设置 JWT 的唯一标识符（JTI）
                 .setSubject(username)//设置 JWT 的主题（Subject）
                 .setIssuedAt(new Date())//设置 JWT 的签发时间
-                .setExpiration(expiryDate)// 设置 JWT 的过期时间 3600000 #生成时间+1小时
+                .setExpiration(expiryDate)// 设置 JWT 的过期时间 3h
                 // .claim("role","admin")//设置自定义信息
                 .signWith(key)//设置签名算法和密钥，用于对 JWT 进行签名
                 .compact();

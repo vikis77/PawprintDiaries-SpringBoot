@@ -13,10 +13,12 @@ import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.Coordinate;
+import com.qin.catcat.unite.popo.vo.AddCatVO;
 import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.vo.CatTimelineVO;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
+import com.qin.catcat.unite.popo.vo.UpdateCatVO;
 
 public interface CatService {
     /**
@@ -32,12 +34,12 @@ public interface CatService {
     /**
      * 创建新猫咪
      */
-    void createCat(CatDTO catDTO);
+    AddCatVO createCat(CatDTO catDTO);
 
     /**
      * 更新猫咪信息
      */
-    void update(Cat cat);
+    UpdateCatVO update(Cat cat);
 
     /**
      * 删除猫咪

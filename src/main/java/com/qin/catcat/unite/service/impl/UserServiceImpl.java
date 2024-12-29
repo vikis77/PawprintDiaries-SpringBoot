@@ -2,7 +2,9 @@ package com.qin.catcat.unite.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,7 @@ import com.qin.catcat.unite.popo.entity.Post;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.entity.UserRole;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
+import com.qin.catcat.unite.popo.vo.UpdateProfileVO;
 import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
 
@@ -230,7 +233,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     * @param updateProfileDTO 更新的用户信息
     * @return 更新是否成功
     */
-    public boolean updateProfile(UpdateProfileDTO updateProfileDTO){
+    public UpdateProfileVO updateProfile(UpdateProfileDTO updateProfileDTO){
         // 查询用户是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", updateProfileDTO.getUsername());
@@ -248,8 +251,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 更新用户信息
         User updateUser = new User();
         BeanUtils.copyProperties(updateProfileDTO, updateUser);
-        // 确保设置了用户ID
         updateUser.setUserId(Integer.parseInt(updateProfileDTO.getUserId()));
+        // 将图片名转换为新的文件名
+        String newFileName = generatorIdUtil.GeneratorRandomId() + updateProfileDTO.getAvatar().substring(updateProfileDTO.getAvatar().lastIndexOf("."));
+        updateUser.setAvatar(newFileName);
+        userMapper.updateById(updateUser);
         try {
             // 执行更新操作
             int rows = userMapper.updateById(updateUser);
@@ -257,7 +263,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 log.error("更新用户信息失败，影响行数：" + rows + "，用户ID：" + updateProfileDTO.getUserId());
                 throw new BusinessException("更新用户信息失败");
             }
-            return true;
+            UpdateProfileVO updateProfileVO = new UpdateProfileVO();
+            Map<String, String> fileNameConvertMap = new HashMap<>();
+            fileNameConvertMap.put(updateProfileDTO.getAvatar(), newFileName);
+            updateProfileVO.setFileNameConvertMap(fileNameConvertMap);
+            return updateProfileVO;
         } catch (Exception e) {
             log.error("更新用户信息发生异常：" + e.getMessage(), e);
             throw new BusinessException("更新用户信息失败：" + e.getMessage());

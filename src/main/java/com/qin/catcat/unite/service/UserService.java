@@ -6,6 +6,7 @@ import com.qin.catcat.unite.popo.dto.UpdateProfileDTO;
 import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
+import com.qin.catcat.unite.popo.vo.UpdateProfileVO;
 
 public interface UserService extends IService<User>{
     /**
@@ -41,7 +42,7 @@ public interface UserService extends IService<User>{
     * @param 
     * @return 
     */
-    public boolean updateProfile(UpdateProfileDTO updateProfileDTO);
+    public UpdateProfileVO updateProfile(UpdateProfileDTO updateProfileDTO);
 
     //根据ID获取昵称
     public String getNicknameFromId(String id);

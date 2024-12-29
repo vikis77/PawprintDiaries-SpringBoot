@@ -6,6 +6,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * 定时任务配置
+ * 针对2核4G服务器优化的线程池配置
  * @author qin
  * @date 2024/9/4
  * @version 1.0
@@ -18,10 +19,13 @@ public class SchedulerConfig {
     public ThreadPoolTaskScheduler taskScheduler(){
         // 定时任务线程池
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
-        taskScheduler.setPoolSize(10); // 设置线程池大小
-        taskScheduler.setThreadNamePrefix("IurThread-");// 设置线程名前缀
-        taskScheduler.setWaitForTasksToCompleteOnShutdown(true);// 设置线程池关闭时等待任务完成，保证所有任务都执行完
-        taskScheduler.setAwaitTerminationSeconds(60);// 设置线程池关闭时等待时间，超时后线程池会自动销毁
+        // 2核CPU，设置线程池大小为CPU核心数+1
+        taskScheduler.setPoolSize(3);
+        taskScheduler.setThreadNamePrefix("CatCat-Thread-");
+        // 设置线程池关闭时等待任务完成
+        taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
+        // 由于资源有限，缩短等待时间为30秒
+        taskScheduler.setAwaitTerminationSeconds(30);
         return taskScheduler;
     }
 }

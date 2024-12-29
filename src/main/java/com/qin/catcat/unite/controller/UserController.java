@@ -15,6 +15,7 @@ import com.qin.catcat.unite.popo.dto.UserLoginDTO;
 import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
 import com.qin.catcat.unite.popo.vo.MyPageVO;
+import com.qin.catcat.unite.popo.vo.UpdateProfileVO;
 import com.qin.catcat.unite.popo.vo.UserLoginVO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.UserService;
@@ -105,12 +106,11 @@ public class UserController {
 
     // 更新个人信息
     @PostMapping("/updateProfile")
-    public Result<?> updateProfile(@RequestBody UpdateProfileParam updateProfileParam) {
+    public Result<UpdateProfileVO> updateProfile(@RequestBody UpdateProfileParam updateProfileParam) {
         log.info("更新个人信息：{}", updateProfileParam);
         UpdateProfileDTO updateProfileDTO = new UpdateProfileDTO();
         BeanUtils.copyProperties(updateProfileParam, updateProfileDTO);
-        userService.updateProfile(updateProfileDTO);
-        return Result.success("个人信息更新成功");
+        return Result.success(userService.updateProfile(updateProfileDTO));
     }
 
     /**

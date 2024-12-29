@@ -6,24 +6,43 @@ spring:
   cache: # 缓存配置
     type: redis
     redis:
-      time-to-live: 3600000 # 缓存过期时间 1小时
+      time-to-live: 1800000  # 缓存过期时间缩短到30分钟，减少内存占用
       cache-null-values: false
     caffeine:
-      spec: maximumSize=1000,expireAfterAccess=300s # 缓存最大容量 1000,缓存过期时间 300秒
+      maximum-size: 500 # 缓存最大容量 500
+      spec: 3 # 缓存过期时间 3分钟
+    # rabbitmq:
+    #   host: localhost
+    #   port: 5672
+    #   username: guest
+    #   password: guest
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      password: 
+      # Redis连接池配置
+      lettuce:
+        pool:
+          max-active: 4  # 最大连接数
+          max-idle: 2    # 最大空闲连接数
+          min-idle: 1    # 最小空闲连接数
+          max-wait: 1000 # 连接等待时间
+      # 其他优化配置
+      timeout: 1000     # 连接超时时间
+      client-type: lettuce  # 使用lettuce客户端，性能更好
 
-# 缓存监控 Actuator 配置
+# 缓存监控配置
 management:
   endpoints:
     web:
       exposure:
-        # include: health,info,metrics,prometheus,caches
-        include: "*" # 开放所有端点
+        include: "health,info,metrics"  # 只开放必要的监控端点
   endpoint:
     health:
-      show-details: always
+      show-details: WHEN_AUTHORIZED
     metrics:
-      enabled: true
-    prometheus:
       enabled: true
   metrics:
     tags:

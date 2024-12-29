@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,10 +47,12 @@ import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.CatTimeLineEvent;
 import com.qin.catcat.unite.popo.entity.Coordinate;
+import com.qin.catcat.unite.popo.vo.AddCatVO;
 import com.qin.catcat.unite.popo.vo.CatListVO;
 import com.qin.catcat.unite.popo.vo.CatTimelineVO;
 import com.qin.catcat.unite.popo.vo.CoordinateVO;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
+import com.qin.catcat.unite.popo.vo.UpdateCatVO;
 import com.qin.catcat.unite.service.CatService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -73,17 +76,25 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
      * @param catDTO
      */
     @Override
-    public void createCat(CatDTO catDTO){
+    public AddCatVO createCat(CatDTO catDTO){
         Cat cat = new Cat();
         //属性拷贝DTO to entity
         BeanUtils.copyProperties(catDTO, cat);
         // 根据年龄反推计算生日
         cat.setBirthday(LocalDateTime.now().minusMonths(catDTO.getAge()));
+        // 将图片名转换为新的文件名
+        String newFileName = generatorIdUtil.GeneratorRandomId() + catDTO.getAvatar().substring(catDTO.getAvatar().lastIndexOf("."));
+        cat.setAvatar(newFileName);
         catMapper.insert(cat);
         
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         log.info("新增完成");
+        AddCatVO addCatVO = new AddCatVO();
+        Map<String, String> fileNameConvertMap = new HashMap<>();
+        fileNameConvertMap.put(catDTO.getAvatar(), newFileName);
+        addCatVO.setFileNameConvertMap(fileNameConvertMap);
+        return addCatVO;
     }
 
     /**
@@ -165,15 +176,19 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
      * @Description 更新猫猫
      * @param cat
      */
-    public void update(Cat cat){
-        int rows = catMapper.updateById(cat);
-        if(rows<=0){
-            log.info("更新失败");
-            //TODO throw new 
-        }
+    public UpdateCatVO update(Cat cat){
+        // 将图片名转换为新的文件名
+        String newFileName = generatorIdUtil.GeneratorRandomId() + cat.getAvatar().substring(cat.getAvatar().lastIndexOf("."));
+        cat.setAvatar(newFileName);
+        catMapper.updateById(cat);
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         log.info("更新{}猫信息完成",cat.getCatname());
+        UpdateCatVO updateCatVO = new UpdateCatVO();
+        Map<String, String> fileNameConvertMap = new HashMap<>();
+        fileNameConvertMap.put(cat.getAvatar(), newFileName);
+        updateCatVO.setFileNameConvertMap(fileNameConvertMap);
+        return updateCatVO;
     }
 
     public void delete(Long ID){

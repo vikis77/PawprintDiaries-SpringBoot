@@ -3,6 +3,7 @@ package com.qin.catcat.unite.common.utils;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,14 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class CacheUtils {
+    // 缓存过期时间 5分钟
+    @Value("${spring.cache.caffeine.spec}")
+    private int caffeineSpec; 
+    // 缓存最大容量 1000
+    @Value("${spring.cache.caffeine.maximum-size}")
+    private int cacheMaxSize; 
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     // Caffeine本地缓存
     private final Cache<String, Object> localCache = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES) // 设置缓存过期时间
-            .maximumSize(1000) // 设置缓存最大容量
+            .expireAfterWrite(caffeineSpec, TimeUnit.SECONDS) // 设置缓存过期时间
+            .maximumSize(cacheMaxSize) // 设置缓存最大容量
             .build();
 
     /**

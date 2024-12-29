@@ -19,6 +19,7 @@ import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -68,6 +69,18 @@ class CatcatApplicationTests {
 	@Autowired
 	private ElasticsearchUtil elasticsearchUtil;
 
+    // 缓存过期时间 5分钟
+    @Value("${spring.cache.caffeine.spec}")
+    private int caffeineSpec; 
+    // 缓存最大容量 1000
+    @Value("${spring.cache.caffeine.maximum-size}")
+    private int cacheMaxSize; 
+
+    @Test
+    public void testCache() {
+        System.out.println("缓存过期时间: " + caffeineSpec);
+        System.out.println("缓存最大容量: " + cacheMaxSize);
+    }
 
 	// EsPostIndexRepository获取所有索引
 	@Test

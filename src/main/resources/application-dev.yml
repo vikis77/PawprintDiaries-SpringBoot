@@ -1,115 +1,4 @@
-# # swagger相关配置
-# springdoc:
-#     group-configs:
-#     - group: 接口文档
-#       packages-to-scan: com.qin.catcat.unite.controller
-# knife4j:
-#     enable: true
-#     setting:
-#         language: zh_cn
-
-# #mysql配置
-# spring:
-#   datasource:
-#     driver-class-name: com.mysql.cj.jdbc.Driver
-#     url: jdbc:mysql://localhost:3306/catcat?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&allowPublicKeyRetrieval=true
-#     # 开发账号密码
-#     # username: root
-#     # password:
-#     # 部署测试账号密码
-#     username: qin
-#     password: 7d3aa8d353b7848d
-#     type: com.zaxxer.hikari.HikariDataSource
-#     hikari:
-#       mmaximum-pool-size: 15
-#       minimum-idle: 5
-#       idle-timeout: 30000
-#   thymeleaf:
-#     cache: false # 开发时关闭缓存，不然看不到实时页面
-#   servlet:
-#     multipart: #配置 Spring Boot 的上传文件大小限制
-#       max-file-size: 10MB
-#       max-request-size: 10MB
-
-# #mybatis 分页插件
-# pagehelper:
-#   helperDialect: mysql
-#   reasonable: true
-#   supportMethodsArguments: true
-#   params: count=countSql
-
-# jwt:
-#   secret: XnpcgH6NWZRJ+77sEAXst0B0BDnOCbF97M08ZdX/OAE=
-#   expiration: 3600000 #1小时
-
-
-# # 配置 Tomcat 
-# server:
-#   tomcat:
-#     max-http-form-post-size: 10485760  # 设置最大上传大小为10MB
-
-# spring:
-#   application:
-#     name: catcat
-#   mvc:
-#     pathmatch:
-#       matching-strategy: ANT_PATH_MATCHER
-#   data:
-#     redis:
-#       host: localhost
-#       port: 6379
-#       database: 0
-#       password: 
-#   cache:
-#     type: redis
-#   rabbitmq:
-#     host: localhost
-#     port: 5672
-#     username: guest
-#     password: guest
-
-# knife4j:
-#   enable: true
-
-# # jwt 配置
-# # jwt:
-# #   secret: your_secret_key_here
-# #   expiration: 86400000 # Token 过期时间，单位为毫秒，这里设置为一天
-
-# # spring:
-# #   security:
-# #     user:
-# #       name: user
-# #       password: aaaa
-# #       password: $2a$10$/rY06jfwvcFq1KQcVbb8Ce76bSQ0bmMY3XzvFzxs6GVVDjHH7vS8u
-
-# pagehelper:
-#   propertyName: propertyValue
-#   reasonable: false
-#   defaultCount: true
-
-# # 启用缓存调试日志
-# logging:
-#   level:
-#     org.springframework.cache: DEBUG
-
-# # 开发时关闭缓存，不然看不到实时页面
-# # thymeleaf:
-# #   cache: false
-
-# # elk 日志
-# # logging:
-# #   config: classpath:logback-spring.xml
-
-# # 上传的图片存储的位置，��署时需要修改
-# file:
-#   upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics
- 
-#-----------------------------------------------------------------------------
-
 spring:
-  application:
-    name: catcat
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
@@ -120,23 +9,17 @@ spring:
     password: 
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      maximum-pool-size: 15
-      minimum-idle: 5
-      idle-timeout: 30000
+      maximum-pool-size: 6 # 最大连接数
+      minimum-idle: 2 # 最小空闲连接数
+      idle-timeout: 60000 # 空闲连接超时时间 60秒
+      connection-timeout: 5000 # 5秒内未获取到连接则报错
+      max-lifetime: 1800000 # 连接最大存活时间为 30 分钟
   thymeleaf:
     cache: false # 开发时关闭缓存，不然看不到实时页面
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0
-      password: 
-  cache:
-    type: redis
   rabbitmq:
     host: localhost
     port: 5672
@@ -182,25 +65,6 @@ logging:
     com.qin.catcat: INFO  # 项目包的日志级别
     org.springframework: INFO  # Spring框架的日志级别
 
-# Actuator配置，作用：用来监控项目运行状态
-management:
-  endpoints:
-    web:
-      exposure:
-        # 暴露的监控端点，可以通过 HTTP 访问这些端点获取相关信息
-        include: health,info,metrics,prometheus,caches # 启用了5个监控端点
-  endpoint:
-    health:
-      show-details: always # 显示详细的健康检查信息
-    metrics:
-      enabled: true # 启用指标收集功能
-    prometheus:
-      enabled: true # 启用 Prometheus 监控支持
-  metrics:
-    tags:
-      application: catcat # 为所有指标添加应用名称标签
-    cache:
-      instrument: true # 启用缓存指标监控
 
 # 上传的图片存储的位置，部署时需要修改
 file:

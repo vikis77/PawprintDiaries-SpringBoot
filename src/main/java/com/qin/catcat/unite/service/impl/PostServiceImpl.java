@@ -96,7 +96,7 @@ public class PostServiceImpl implements PostService{
         Map<String, String> fileNameConvertMap = new HashMap<>();
         // 遍历图片列表，将图片名转换为新的文件名
         for(String imageName:postDto.getPictrueList()){
-            String newFileName = generatorIdUtil.GeneratorRandomId();
+            String newFileName = generatorIdUtil.GeneratorRandomId() + imageName.substring(imageName.lastIndexOf("."));
             fileNameConvertMap.put(imageName, newFileName);
         }
         Post post = new Post();
