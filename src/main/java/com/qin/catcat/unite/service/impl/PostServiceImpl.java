@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qin.catcat.unite.popo.entity.PostLike;
 import com.catcat.entity.UserFollow;
 import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.enumclass.CatcatEnumClass;
 import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
@@ -172,7 +173,7 @@ public class PostServiceImpl implements PostService{
             Integer authorId = post.getAuthorId();
             // 如果作者ID和当前用户ID不一致，则抛出异常
             if (!String.valueOf(authorId).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()))) {
-                throw new BusinessException("帖子未通过审核");
+                throw new BusinessException(CatcatEnumClass.StatusCode.POST_NOT_APPROVED.getCode(), CatcatEnumClass.StatusCode.POST_NOT_APPROVED.getMessage());
             }
             // 如果作者查看自己尚未通过审核的帖子，则抛出异常
             else{
@@ -737,7 +738,7 @@ public class PostServiceImpl implements PostService{
     }
 
     /**
-     * 获取热门帖子
+     * 获取热门帖子（方法暂时没用到）
      */
     @Override
     @SuppressWarnings("unchecked")

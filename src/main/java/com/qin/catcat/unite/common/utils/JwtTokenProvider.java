@@ -92,11 +92,16 @@ public class JwtTokenProvider {
 
     // 从 token 中解析出 UserDetails
     public UserDetails getUserDetailsFromToken(String token) {
-        // 1. 从token中获取用户名
-        String username = getUsernameFromToken(token);
-        // 2. 使用 UserDetailsService 根据用户名获取用户的详细信息
+        String username;
+        if (token == null) {
+            username = null; // 传入null表示游客
+        } else {
+            // 从token中获取用户名
+            username = getUsernameFromToken(token);
+        }
+        // 使用 UserDetailsService 根据用户名获取用户的详细信息
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        // 3. 返回用户详情
+        // 返回用户详情
         return userDetails;
     }
 

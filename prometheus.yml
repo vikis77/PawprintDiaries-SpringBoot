@@ -1,0 +1,11 @@
+# 作用：监控Spring Boot应用程序的性能指标
+
+# global:
+#   scrape_interval: 15s
+#   evaluation_interval: 15s
+
+# scrape_configs:
+#   - job_name: 'spring-actuator'
+#     metrics_path: '/actuator/prometheus'
+#     static_configs:
+#       - targets: ['localhost:8080'] 

@@ -24,6 +24,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.catcat.entity.UserFollow;
+import com.qin.catcat.unite.common.enumclass.CatcatEnumClass;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
@@ -85,7 +86,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         try{
             user = userMapper.selectOne(queryWrapper);
         }catch(Exception e){
-            throw new BusinessException("用户不存在或账号状态不正常，请检查用户ID是否正确");
+            throw new BusinessException(CatcatEnumClass.StatusCode.USER_NOT_FOUND.getCode(), CatcatEnumClass.StatusCode.USER_NOT_FOUND.getMessage());
         }
 
         if(user!=null){
@@ -115,18 +116,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 }else{
                     //密码验证失败 
                     log.info("密码验证失败");
-                    throw new PasswordIncorrectException("密码错误");
+                    throw new BusinessException(CatcatEnumClass.StatusCode.PASSWORD_INCORRECT.getCode(), CatcatEnumClass.StatusCode.PASSWORD_INCORRECT.getMessage());
                 }
             }else{
                 //没有找到对应的用户记录
                 //TODO 冗余操作
                 log.info("用户不存在");
-                throw new UserNotExistException("用户不存在");
+                throw new BusinessException(CatcatEnumClass.StatusCode.USER_NOT_FOUND.getCode(), CatcatEnumClass.StatusCode.USER_NOT_FOUND.getMessage());
             }
         }else{
             //用户不存在或账号状态不正常
             log.info("用户不存在或账号状态不正常");
-            throw new UserNotExistException("用户不存在或账号状态不正常");
+            throw new BusinessException(CatcatEnumClass.StatusCode.USER_NOT_FOUND_OR_ACCOUNT_STATUS_NOT_NORMAL.getCode(), CatcatEnumClass.StatusCode.USER_NOT_FOUND_OR_ACCOUNT_STATUS_NOT_NORMAL.getMessage());
 
         }
         // 返回查询结果
@@ -234,12 +235,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     * @return 更新是否成功
     */
     public UpdateProfileVO updateProfile(UpdateProfileDTO updateProfileDTO){
-        // 查询用户是否存在
+        // 1、查询用户是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", updateProfileDTO.getUsername());
         User user = userMapper.selectOne(queryWrapper);
         if (user.getUserId() != Integer.parseInt(updateProfileDTO.getUserId()) && user.getUsername() != updateProfileDTO.getUsername()) {
-            throw new BusinessException("用户名已存在");
+            throw new BusinessException(CatcatEnumClass.StatusCode.USER_ALREADY_EXISTS.getCode(), CatcatEnumClass.StatusCode.USER_ALREADY_EXISTS.getMessage());
         }
         // 头像发生变化时删除旧头像
         if (updateProfileDTO.getAvatar() != null && !updateProfileDTO.getAvatar().equals(user.getAvatar())){
@@ -261,7 +262,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             int rows = userMapper.updateById(updateUser);
             if(rows != 1){
                 log.error("更新用户信息失败，影响行数：" + rows + "，用户ID：" + updateProfileDTO.getUserId());
-                throw new BusinessException("更新用户信息失败");
+                throw new BusinessException(CatcatEnumClass.StatusCode.UPDATE_PROFILE_FAILURE.getCode(), CatcatEnumClass.StatusCode.UPDATE_PROFILE_FAILURE.getMessage());
             }
             UpdateProfileVO updateProfileVO = new UpdateProfileVO();
             Map<String, String> fileNameConvertMap = new HashMap<>();
@@ -270,7 +271,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return updateProfileVO;
         } catch (Exception e) {
             log.error("更新用户信息发生异常：" + e.getMessage(), e);
-            throw new BusinessException("更新用户信息失败：" + e.getMessage());
+            throw new BusinessException(CatcatEnumClass.StatusCode.UPDATE_PROFILE_FAILURE.getCode(), CatcatEnumClass.StatusCode.UPDATE_PROFILE_FAILURE.getMessage());
         }
     }
 
@@ -300,7 +301,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq("user_id", currentUserId).eq("followed_user_id", userId).eq("is_deleted", 0);
         UserFollow userFollow = userFollowMapper.selectOne(queryWrapper);
         if(userFollow!=null){
-            throw new BusinessException("已经关注");
+            throw new BusinessException(CatcatEnumClass.StatusCode.USER_ALREADY_FOLLOWED.getCode(), CatcatEnumClass.StatusCode.USER_ALREADY_FOLLOWED.getMessage());
         }
         // 获取当前登录用户ID
         UserFollow newUserFollow = new UserFollow();
@@ -324,7 +325,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq("user_id", currentUserId).eq("followed_user_id", userId).eq("is_deleted", 0);
         UserFollow userFollow = userFollowMapper.selectOne(queryWrapper);
         if(userFollow==null){
-            throw new BusinessException("还没有关注，不能取关");
+            throw new BusinessException(CatcatEnumClass.StatusCode.USER_NOT_FOLLOWED.getCode(), CatcatEnumClass.StatusCode.USER_NOT_FOLLOWED.getMessage());
         }
         userFollow.setIsDeleted(1);
         userFollow.setUpdateTime(LocalDateTime.now());

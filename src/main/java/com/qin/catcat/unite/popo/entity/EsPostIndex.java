@@ -17,7 +17,7 @@ import lombok.Data;
  */
 @Data
 @Document(indexName = "cat_post_user_index", createIndex = true)
-@Setting(shards = 1, replicas = 0)
+@Setting(shards = 1, replicas = 0) // 设置分片和副本
 public class EsPostIndex {
 
     @Id

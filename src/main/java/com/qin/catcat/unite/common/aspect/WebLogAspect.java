@@ -1,4 +1,4 @@
-package com.qin.catcat.unite.aspect;
+package com.qin.catcat.unite.common.aspect;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class WebLogAspect {
         log.info("HTTP Method    : {}", request.getMethod());
         log.info("Class Method   : {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         log.info("IP            : {}", getIpAddress(request));
-        log.info("Request Args   : {}", getRequestArgs(joinPoint.getArgs()));
+        // log.info("Request Args   : {}", getRequestArgs(joinPoint.getArgs()));
         if(TokenHolder.getToken()!=null){
             log.info("User Name      : {}", jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken()));
             log.info("User ID        : {}", jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));

@@ -61,5 +61,6 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
             .withConnectTimeout(Duration.ofSeconds(5))
             .withSocketTimeout(Duration.ofSeconds(3))
             .build();
+        
     }
 } 

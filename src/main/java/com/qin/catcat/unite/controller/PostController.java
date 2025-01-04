@@ -3,6 +3,7 @@ package com.qin.catcat.unite.controller;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.qin.catcat.unite.common.annotation.RedisRateLimit;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
@@ -198,7 +200,7 @@ public class PostController {
 
     // 根据发布时间分页查询待审核帖子
     @Operation(summary = "分页查询待审核帖子")
-    @HasPermission("system:post:view")
+    @HasPermission("system:post:audit:view")
     @GetMapping("/getApplyPostBySendtimeForPage")
     public Result<List<ApplyPostVO>> getApplyPostBySendtimeForPage(
             @RequestParam(defaultValue = "1") int page,
@@ -209,7 +211,7 @@ public class PostController {
 
     // 帖子通过审核
     @Operation(summary = "帖子通过审核")
-    @HasPermission("system:post:audit")
+    @HasPermission("system:post:audit:pass")
     @PostMapping("/passApprove")
     public Result<String> passApprove(@RequestBody PassApproveParam passApproveParam){
         postService.passApprove(passApproveParam.getPostId());
@@ -218,7 +220,7 @@ public class PostController {
 
     // 帖子审核拒绝通过
     @Operation(summary = "帖子审核拒绝通过")
-    @HasPermission("system:post:audit")
+    @HasPermission("system:post:audit:refuse")
     @PostMapping("/refuseApprove")
     public Result<String> refuseApprove(@RequestBody RefuseApproveParam refuseApproveParam){
         postService.refuseApprove(refuseApproveParam.getPostId());
@@ -354,4 +356,10 @@ public class PostController {
             return Result.error("重新索引失败: " + e.getMessage());
         }
     }
+
+    // @PostMapping("/create")
+    // @RedisRateLimit(time = 60, count = 5, message = "发帖太频繁，请稍后再试", timeUnit = TimeUnit.SECONDS)
+    // public ResponseEntity<?> createPost(@RequestBody PostDTO postDTO) {
+    //     // ... existing code ...
+    // }
 }

@@ -30,7 +30,6 @@ public class DataSyncService {
     
     @Autowired
     private DataInitializationService dataInitializationService; // 数据初始化服务
-
     @Autowired
     private ElasticsearchUtil elasticsearchUtil; // ES工具类
 
@@ -84,6 +83,8 @@ public class DataSyncService {
         // 等待数据预热完成
         dataInitializationService.waitForInitialization();
         // 数据预热完成后执行同步
+        log.info("当前主线程信息：ID = {}, Name = {}, Priority = {}", 
+                    Thread.currentThread().getId(), Thread.currentThread().getName(), Thread.currentThread().getPriority());
         syncDataFromMySQLToES();
     }
 
@@ -99,7 +100,7 @@ public class DataSyncService {
         try {
             // 打印当前执行的线程信息
             Thread currentThread = Thread.currentThread();
-            log.info("执行数据同步到ES - 当前执行的线程信息：ID = {}, Name = {}, Priority = {}", 
+            log.info("开始执行MySQL帖子数据同步到ES - 执行当前同步任务的线程信息：ID = {}, Name = {}, Priority = {}", 
                     currentThread.getId(), currentThread.getName(), currentThread.getPriority());
 
             // 执行同步操作
@@ -113,7 +114,7 @@ public class DataSyncService {
     private void doSyncData() {
         try {
             // 分页查询，避免一次性加载过多数据
-            int pageSize = 300; // 减小每页数据量，避免数据量太大
+            int pageSize = 100; // 减小每页数据量，避免数据量太大
             int currentPage = 0;
             long total = 0;
             List<EsPostIndex> esPostIndexs;

@@ -38,11 +38,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info,metrics"  # 只开放必要的监控端点
+        include: health,info,prometheus,metrics
   endpoint:
     health:
-      show-details: WHEN_AUTHORIZED
+      show-details: always
     metrics:
+      enabled: true
+    prometheus:
       enabled: true
   metrics:
     tags:

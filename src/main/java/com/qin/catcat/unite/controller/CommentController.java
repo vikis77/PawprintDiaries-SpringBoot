@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -156,7 +157,7 @@ public class CommentController {
      * @return 待审核评论列表（分页）
      */
     @Operation(summary = "按时间分页查询待审核评论")
-    @HasPermission("system:comment:view")
+    @HasPermission("system:comment:audit:view")
     @GetMapping("/getAuditCommentByDescTime")
     public Result<AuditCommentVO> getAuditCommentByDescTime(@RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int pageSize,

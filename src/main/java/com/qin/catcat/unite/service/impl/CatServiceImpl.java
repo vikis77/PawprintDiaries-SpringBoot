@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import org.apache.catalina.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -32,6 +33,7 @@ import com.qin.catcat.unite.common.constant.Constant;
 import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.ObjectPoolUtil;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.mapper.CatMapper;
@@ -70,6 +72,8 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     @Autowired CacheUtils cacheUtils;
     @Autowired CatManage catManage;
     @Autowired CatTimeLineEventMapper catTimeLineEventMapper;
+    @Autowired ObjectPoolUtil objectPoolUtil; // 对象池工具类
+
 
     /**
      * @Description 新增猫猫
@@ -112,12 +116,13 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         @SuppressWarnings("unchecked")
         List<Cat> cats = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_LIST, List.class, () -> {
             // 如果缓存中没有数据，则从数据库中查询
+            log.info("缓存中没有数据，从数据库中查询");
             return catManage.getCatList();
         });
         log.info(TokenHolder.getToken());
+        List<CatListVO> catListVOs = new ArrayList<>();
         // 如果用户未登录，则不检查点赞
         if (StringUtils.isBlank(TokenHolder.getToken())) {
-            List<CatListVO> catListVOs = new ArrayList<>();
             for(Cat cat : cats){
                 CatListVO catListVO = new CatListVO();
                 BeanUtils.copyProperties(cat, catListVO);
@@ -127,7 +132,6 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         }
         // 如果用户已登录，则检查点赞
         String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
-        List<CatListVO> catListVOs = new ArrayList<>();
         for(Cat cat : cats){
             CatListVO catListVO = new CatListVO();
             BeanUtils.copyProperties(cat, catListVO);

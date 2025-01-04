@@ -32,7 +32,7 @@ public class CatWebSocketHandler extends TextWebSocketHandler{
     private final Set<WebSocketSession> subscribedSessions = new HashSet<>();
 
     // 添加最大连接数限制
-    private static final int MAX_SESSIONS = 500;
+    private static final int MAX_SESSIONS = 100;
 
     // 构造器注入
     public CatWebSocketHandler(@Lazy CatLocationTask catLocationTask){

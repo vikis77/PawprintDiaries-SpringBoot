@@ -1,4 +1,4 @@
-package com.qin.catcat.unite.aspect;
+package com.qin.catcat.unite.common.aspect;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

@@ -1,17 +1,26 @@
 package com.qin.catcat.unite.exception;
 
-// 自定义业务异常类
-public class BusinessException extends RuntimeException{
+import com.qin.catcat.unite.common.enumclass.CatcatEnumClass.StatusCode;
+import lombok.Getter;
 
-    private String message;
-
-    public BusinessException(String message) {
+/**
+ * 业务异常类
+ */
+// @Getter
+public class BusinessException extends RuntimeException {
+    private final Integer statusCode;
+    
+    public BusinessException(Integer statusCode, String message) {
         super(message);
-        this.message = message;
+        this.statusCode = statusCode;
     }
 
     @Override
     public String getMessage() {
-        return message;
+        return super.getMessage();
+    }
+
+    public Integer getStatusCode() {
+        return statusCode;
     }
 }

@@ -18,6 +18,8 @@ import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.CatService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -36,12 +38,25 @@ public class CatController {
     
     @Autowired
     private CatService catService;
+    // @Autowired
+    // private MeterRegistry registry; // 监控指标
     
     @Operation(summary = "获取猫咪列表")
     @HasPermission("system:cat:view")
     @GetMapping("/list")
     public Result<List<CatListVO>> listCats() {
-        return Result.success(catService.CatList());
+        // 开始计时
+        // Timer.Sample sample = Timer.start(registry);
+        // try {
+            List<CatListVO> catListVOs = catService.CatList();
+            return Result.success(catListVOs);
+        // } finally {
+            // 停止计时
+            // sample.stop(registry.timer("api.response.time"));
+            // 增加API调用次数
+            // registry.counter("api.calls.total").increment();
+        // }
+        
     }
     
     @Operation(summary = "获取猫咪详情")

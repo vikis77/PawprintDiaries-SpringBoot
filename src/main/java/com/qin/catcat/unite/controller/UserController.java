@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.qin.catcat.unite.common.annotation.RedisRateLimit;
 import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.rmi.registry.Registry;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +60,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
+    @HasPermission("system:user:login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         log.info("用户登录：{}", userLoginDTO.getUsername());
         // 查询数据库,登录成功返回jwt Token
@@ -77,6 +80,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/register")
+    @HasPermission("system:user:register")
     public Result<UserLoginVO> register(@RequestBody RegisterDTO registerDTO) {
         log.info("用户注册：{}", registerDTO.getUsername());
         // 1.查询数据库，是否存在用户 true注册成功，false注册失败（用户已存在）

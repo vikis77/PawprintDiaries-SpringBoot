@@ -9,6 +9,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.security.web.context.SecurityContextRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 import java.util.Set;
@@ -17,10 +22,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import com.qin.catcat.unite.popo.entity.Permission;
-import com.qin.catcat.unite.popo.entity.User;
 import com.qin.catcat.unite.service.PermissionService;
 import com.qin.catcat.unite.common.constant.Constant;
+import com.qin.catcat.unite.common.enumclass.CatcatEnumClass;
 import com.qin.catcat.unite.common.utils.CacheUtils;
+import com.qin.catcat.unite.exception.BusinessException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,23 +42,30 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PermissionAspect {
     
-    @Autowired
-    private PermissionService permissionService;
-    
-    @Autowired
-    private CacheUtils cacheUtils;
-    
-    
+    @Autowired private PermissionService permissionService;
+    @Autowired private CacheUtils cacheUtils;
     
     @Around("@annotation(com.qin.catcat.unite.security.HasPermission)")
     public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
+        log.info("进入权限切面");
+        log.info("当前处理切面线程：{}", Thread.currentThread().getName());
+        
+        // 获取当前请求
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            throw new BusinessException(CatcatEnumClass.StatusCode.UNAUTHORIZED.getCode(), "无法获取请求上下文");
+        }
+
+        // 尝试从SecurityContext中获取认证信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("权限切面中的认证信息：{}", authentication);
+        log.info("认证信息类型：{}", authentication != null ? authentication.getClass().getName() : "null");
+        log.info("SecurityContext哈希值：{}", SecurityContextHolder.getContext().hashCode());
+        
         // 获取方法上的权限注解
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         HasPermission hasPermission = signature.getMethod().getAnnotation(HasPermission.class);
         String requiredPermission = hasPermission.value();
-        
-        // 获取当前用户的权限信息
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         // 权限编码列表
         List<String> permissionCodes = new ArrayList<>();
@@ -68,12 +81,14 @@ public class PermissionAspect {
             permissionCodes = permissions.stream()
                     .map(Permission::getPermissionCode)
                     .collect(Collectors.toList());
+            log.info("当前请求为游客权限");
         } 
         // 普通用户、管理员、超级管理员
         else {
             // 获取当前用户权限
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
             permissionCodes = loginUser.getPermissions();
+            log.info("当前用户角色基类权限: {}", permissionCodes);
         }
 
         // 根据权限编码获取用户所有权限(包括子权限)
@@ -98,6 +113,6 @@ public class PermissionAspect {
             return joinPoint.proceed();
         }
             
-        throw new RuntimeException("没有操作权限");
+        throw new BusinessException(CatcatEnumClass.StatusCode.UNAUTHORIZED.getCode(), CatcatEnumClass.StatusCode.UNAUTHORIZED.getMessage());
     }
 } 

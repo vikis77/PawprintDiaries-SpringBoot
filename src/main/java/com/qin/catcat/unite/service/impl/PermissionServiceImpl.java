@@ -92,6 +92,15 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
      */
     @Override
     public List<Permission> getPermissionsByUserId(Integer userId) {
+        // 如果是游客（userId = 0），返回游客基本权限
+        // if (userId == 0) {
+        //     LambdaQueryWrapper<Permission> wrapper = new LambdaQueryWrapper<>();
+        //     wrapper.eq(Permission::getPermissionCode, "system:user:login")
+        //           .or()
+        //           .eq(Permission::getPermissionCode, "system:user:register");
+        //     return list(wrapper);
+        // }
+
         // 查询用户角色关联表
         LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
         userRoleWrapper.eq(UserRole::getUserId, userId);
