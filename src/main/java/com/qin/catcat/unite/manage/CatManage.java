@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.vo.CatListVO;
+import com.qin.catcat.unite.popo.vo.FundCalculateVO;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,16 +25,24 @@ import lombok.extern.slf4j.Slf4j;
 public class CatManage {
     @Autowired
     CatMapper catMapper;
-    
+
     /**
      * @Description 查询全部猫猫信息.
+     * @return 猫猫列表
      */
     public List<Cat> getCatList(){
         QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_deleted", 0);
-        queryWrapper.orderByAsc("create_time");
-        List<Cat> result = catMapper.selectList(queryWrapper);
-        log.info("MySQL查询全部猫猫信息完成，共查询到 {} 条数据", result.size());
+        return catMapper.selectList(queryWrapper);
+    }
+    
+    /**
+     * @Description 查询全部猫猫信息,并连表查询每只猫的评论数量.
+     * @return 猫咪列表VO,包含评论数量
+     */
+    public List<CatListVO> getCatListForCatClaw(){
+        List<CatListVO> result = catMapper.selectCatList();
+        log.info("MySQL查询全部猫猫信息及评论数完成，共查询到 {} 条数据", result.size());
         return result;
     }
 }

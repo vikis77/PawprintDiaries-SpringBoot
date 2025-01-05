@@ -41,12 +41,14 @@ public class MyPageVO {
     private Timestamp createTime;
     //更新时间
     private Timestamp updateTime;
-    //发帖数
+    //发帖数（笔记）
     private Integer postCount;
     //粉丝数
     private Integer fansCount;
     //关注数
     private Integer followCount;
+    // 获赞数
+    private Integer postLikedCount;
     //个性签名
     private String signature;
 

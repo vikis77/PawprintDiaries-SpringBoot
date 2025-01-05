@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qin.catcat.unite.mapper.CatMapper">
+    <!-- 查询猫咪列表及其评论数量 -->
+    <select id="selectCatList">
+        SELECT c.*, COUNT(cc.id) as comment_count
+        FROM cat c
+        LEFT JOIN cat_comment cc ON c.cat_id = cc.cat_id AND cc.is_deleted = 0 AND cc.status = 20
+        WHERE c.is_deleted = 0
+        GROUP BY c.cat_id
+        ORDER BY c.create_time ASC
+    </select>
+</mapper>

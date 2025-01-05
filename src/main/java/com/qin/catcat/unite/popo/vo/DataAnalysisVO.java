@@ -1,5 +1,7 @@
 package com.qin.catcat.unite.popo.vo;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 @Data
@@ -24,6 +26,19 @@ public class DataAnalysisVO {
 
     // 接种比例 接种 未接种
     private Object VaccinationRatio;
+
     // 已领养数量
     private Integer adoptionCount;
+
+    // 本月新增数量
+    private Integer monthlyNewCount;
+
+    // 资金余额 
+    private BigDecimal fundBalance;
+
+    // 本月支出
+    private BigDecimal monthExpense; 
+
+    // 本月收入
+    private BigDecimal monthIncome;
 }

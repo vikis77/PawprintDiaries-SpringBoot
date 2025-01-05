@@ -47,6 +47,8 @@ public class CatListVO{
     private String badRecord;
     //区域
     private String area;
+    //品种
+    private String breed;
     //撸猫指南
     private String catGuide;
     //创建时间
@@ -67,4 +69,6 @@ public class CatListVO{
     private Integer isAdopted;
     // 今日是否点过赞
     private Boolean isLikedToday;
+    // 评论数
+    private Integer commentCount;
 }

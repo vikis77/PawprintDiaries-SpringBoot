@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 
 @Component
@@ -46,7 +48,9 @@ public class JwtTokenProvider {
 
     //生成Token
     public String generateToken(String username,Integer userId) {
-        Date now = new Date();
+        // 使用中国时区
+        TimeZone chinaTimeZone = TimeZone.getTimeZone("Asia/Shanghai");
+        Date now = Calendar.getInstance(chinaTimeZone).getTime();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
         log.info("Generating token for username: {}", username);
@@ -56,7 +60,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setId(String.valueOf(userId))//设置 JWT 的唯一标识符（JTI）
                 .setSubject(username)//设置 JWT 的主题（Subject）
-                .setIssuedAt(new Date())//设置 JWT 的签发时间
+                .setIssuedAt(now)//设置 JWT 的签发时间
                 .setExpiration(expiryDate)// 设置 JWT 的过期时间 3h
                 // .claim("role","admin")//设置自定义信息
                 .signWith(key)//设置签名算法和密钥，用于对 JWT 进行签名

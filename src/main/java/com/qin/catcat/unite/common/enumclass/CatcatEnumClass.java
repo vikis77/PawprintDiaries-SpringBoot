@@ -68,6 +68,7 @@ public class CatcatEnumClass {
         POST_UPDATE_FAILURE(30002,"帖子更新失败"),
         POST_DELETE_FAILURE(30003,"帖子删除失败"),
         POST_NOT_APPROVED(30004,"帖子未通过审核"),
+        POST_NOT_AUTHOR(30005,"无权删除帖子"),
         // 猫猫状态码
         CAT_NOT_FOUND(40001,"猫猫不存在"),
         CAT_UPDATE_FAILURE(40002,"猫猫更新失败"),

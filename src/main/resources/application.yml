@@ -33,6 +33,15 @@ spring:
       timeout: 1000     # 连接超时时间
       client-type: lettuce  # 使用lettuce客户端，性能更好
 
+# 布隆过滤器配置
+bloom:
+  filter:
+    cat-like:
+      capacity: 10000    # 预计元素数量
+      error-rate: 0.01   # 误判率
+      name: "cat:like:bloom"  # 过滤器名称
+      reset-cron: "59 59 * * * ?"  # 重置时间
+
 # 缓存监控配置
 management:
   endpoints:

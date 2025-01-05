@@ -73,19 +73,21 @@ public class PostController {
     @HasPermission("system:post:delete")
     @DeleteMapping("/deletepost")
     public Result<?> deletePost(@RequestParam String postId){
-        // 鉴权：当前用户ID必须等于帖子发布者ID
-        if (postService.isLegalDelete(postId)) {
-            Boolean signal = postService.delete(postId);
-            if(!signal){
-                log.info("删除帖子失败");
-                return Result.error("删除帖子失败");
-            }
-            log.info("删除帖子成功");
-            return Result.success();
-        } else {
-            log.info("无权删除帖子");
-            return Result.error("无权删除帖子");
-        }
+        postService.delete(postId);
+        return Result.success();
+        // // 鉴权：当前用户ID必须等于帖子发布者ID
+        // if (postService.isLegalDelete(postId)) {
+            
+        //     if(!signal){
+        //         log.info("删除帖子失败");
+        //         return Result.error("删除帖子失败");
+        //     }
+        //     log.info("删除帖子成功");
+        //     return Result.success();
+        // } else {
+        //     log.info("无权删除帖子");
+        //     return Result.error("无权删除帖子");
+        // }
     }
 
     /**

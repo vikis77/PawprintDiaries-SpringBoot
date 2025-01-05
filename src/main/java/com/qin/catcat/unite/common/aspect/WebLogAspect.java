@@ -47,7 +47,7 @@ public class WebLogAspect {
         log.info("HTTP Method    : {}", request.getMethod());
         log.info("Class Method   : {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         log.info("IP            : {}", getIpAddress(request));
-        // log.info("Request Args   : {}", getRequestArgs(joinPoint.getArgs()));
+        log.info("Request Args   : {}", getRequestArgs(joinPoint.getArgs()));
         if(TokenHolder.getToken()!=null){
             log.info("User Name      : {}", jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken()));
             log.info("User ID        : {}", jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
@@ -74,6 +74,13 @@ public class WebLogAspect {
                     if (arg instanceof MultipartFile) {
                         MultipartFile file = (MultipartFile) arg;
                         return "MultipartFile: " + file.getOriginalFilename();
+                    }
+                    // 对异常对象进行特殊处理
+                    if (arg instanceof Throwable) {
+                        Throwable throwable = (Throwable) arg;
+                        return String.format("Exception(%s): %s", 
+                            throwable.getClass().getSimpleName(), 
+                            throwable.getMessage());
                     }
                     try {
                         return objectMapper.writeValueAsString(arg);

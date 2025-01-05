@@ -38,5 +38,6 @@ public class CatDTO{
     private String area;
     //撸猫指南
     private String catGuide;
-
+    //品种
+    private String breed;
 }

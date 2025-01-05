@@ -125,6 +125,12 @@ public class PostServiceImpl implements PostService{
             postPics.setPicNumber(signal++);
             postPicsMapper.insert(postPics);
         }
+
+        // 更新用户发帖数
+        User user = userMapper.selectById(userId);
+        user.setPostCount(user.getPostCount() + 1);
+        userMapper.updateById(user);
+
         AddPostVO addPostVO = new AddPostVO();
         addPostVO.setFileNameConvertMap(fileNameConvertMap);
         return addPostVO;
@@ -560,6 +566,14 @@ public class PostServiceImpl implements PostService{
     * @return 
     */
     public Boolean delete(String postId){
+        // 鉴权：当前用户ID必须等于帖子发布者ID
+        String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+        Post post = postMapper.selectById(postId);
+        if(!String.valueOf(post.getAuthorId()).equals(currentUserId)){
+            // 当前用户无权删除该帖子
+            throw new BusinessException(CatcatEnumClass.StatusCode.POST_NOT_AUTHOR.getCode(), CatcatEnumClass.StatusCode.POST_NOT_AUTHOR.getMessage());
+        }
+
         // 查询全部帖子关联的图片名称集合
         List<PostPics> postPicsList = postPicsMapper.selectByPostId(Integer.parseInt(postId));
         List<String> imageFileNames = postPicsList.stream().map(PostPics::getPicture).collect(Collectors.toList());
@@ -573,6 +587,12 @@ public class PostServiceImpl implements PostService{
         List<Integer> postPicsIds = postPicsList.stream().map(PostPics::getId).collect(Collectors.toList());
         // 批量删除帖子图片关联表
         postPicsMapper.delete(new LambdaQueryWrapper<PostPics>().in(!Collections.isEmpty(postPicsIds),PostPics::getId, postPicsIds));
+
+        // 更新用户发帖数
+        User user = userMapper.selectById(post.getAuthorId());
+        user.setPostCount(user.getPostCount() - 1);
+        userMapper.updateById(user);
+
         return true;
     }
 
@@ -607,7 +627,7 @@ public class PostServiceImpl implements PostService{
             if (existingLike.getStatus() == 0) {
                 existingLike.setStatus(1);
                 postLikeMapper.updateById(existingLike);
-                // 更新点赞数
+                // redis更新点赞数
                 updateLikeCount(postId, true);
                 return getLikeCount(postId);
             }

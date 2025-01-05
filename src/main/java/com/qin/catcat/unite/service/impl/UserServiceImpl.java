@@ -157,6 +157,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String encodedPassword = passwordEncoder.encode(registerDTO.getPassword());
         user.setPassword(encodedPassword);
         user.setStatus(1);
+        user.setFollowCount(0);
+        user.setFansCount(0);
+        user.setPostCount(0);
+        user.setIsDeleted(0);
+        user.setSignature("这家伙很懒，什么都没留下"); // 默认个性签名
+        user.setAvatar("PawprintDiariesLogo.jpg"); // 默认头像
+        user.setNickName("换一个闪亮的名字吧"); // 默认昵称
         //保存用户到数据库
         userMapper.insert(user);
 
@@ -204,28 +211,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = userMapper.selectById(userId);
 
         // 根据userId获取该用户的所有帖子信息
-        // 查询条件:
-        // 1. 作者ID等于当前用户ID
-        // 2. 帖子未被删除(is_deleted=0)
-        // 3. 帖子已通过审核(is_adopted=1)或当前用户自己的未审核帖子(is_adopted=0)
         QueryWrapper<Post> queryWrapperPost = new QueryWrapper<>();
         queryWrapperPost.eq("author_id", userId)
                        .eq("is_deleted", 0)
-                       .eq("is_adopted", 1)
+                       .eq("is_adopted", 1) // 通过审核
                        .or()
-                       .eq("is_adopted", 0)
+                       .eq("is_adopted", 0) // 未通过审核的帖子
                        .eq("author_id", userId);
         List<Post> postsList = postMapper.selectList(queryWrapperPost);
+        Integer postLikedCount = 0;
         // 处理帖子信息
         for (Post post : postsList) {
             if (post.getIsAdopted() == 0) {
                 post.setTitle(post.getTitle() + "（帖子审核中）");
             }
+            postLikedCount += post.getLikeCount();
         }
+        // 查询用户关注数
+        QueryWrapper<UserFollow> queryWrapperFollow = new QueryWrapper<>();
+        queryWrapperFollow.eq("user_id", userId).eq("is_deleted", 0);
+        Long followCount = userFollowMapper.selectCount(queryWrapperFollow);
+        // 查询用户粉丝数
+        QueryWrapper<UserFollow> queryWrapperFans = new QueryWrapper<>();
+        queryWrapperFans.eq("followed_user_id", userId).eq("is_deleted", 0);
+        Long fansCount = userFollowMapper.selectCount(queryWrapperFans);
         MyPageVO userInfo = new MyPageVO();
         BeanUtils.copyProperties(user, userInfo); // 把user属性拷贝到userInfo
         userInfo.setPostList(postsList);
-
+        userInfo.setPostLikedCount(postLikedCount);
+        userInfo.setPostCount(postsList.size());
+        userInfo.setFollowCount(followCount.intValue());
+        userInfo.setFansCount(fansCount.intValue());
         return userInfo;
     }
     

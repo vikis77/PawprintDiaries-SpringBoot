@@ -1,21 +1,37 @@
 package com.qin.catcat.unite.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.sql.Date;
+import java.math.BigDecimal;
+import java.util.TreeMap;
 
 import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qin.catcat.unite.common.constant.Constant;
 import com.qin.catcat.unite.common.utils.CacheUtils;
+import com.qin.catcat.unite.common.utils.JwtTokenProvider;
+import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.mapper.CatMapper;
+import com.qin.catcat.unite.mapper.FundRecordMapper;
+import com.qin.catcat.unite.popo.dto.AddFundRecordDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.FundRecord;
 import com.qin.catcat.unite.popo.vo.DataAnalysisVO;
+import com.qin.catcat.unite.popo.vo.FundCalculateVO;
+import com.qin.catcat.unite.popo.vo.FundRecordVO;
 import com.qin.catcat.unite.service.CatAnalysisService;
 import com.qin.catcat.unite.service.CatService;
 
@@ -42,6 +58,10 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
     private CatManage catManage;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private FundRecordMapper fundRecordMapper;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     /**
      * 分析猫咪数据
@@ -61,24 +81,81 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
                 });
                 
                 // 初始化分析结果
-                HashMap<String, Integer> ageDistribution = new HashMap<>();
-                HashMap<String, Integer> healthStatus = new HashMap<>();
-                HashMap<String, Integer> areaDistribution = new HashMap<>();
-                HashMap<String, Integer> genderRatio = new HashMap<>();
-                HashMap<String, Integer> sterilizationRatio = new HashMap<>();
-                HashMap<String, Integer> vaccinationRatio = new HashMap<>();
+                HashMap<String, Integer> ageDistribution = new HashMap<>(); // 年龄分布
+                HashMap<String, Integer> healthStatus = new HashMap<>(); // 健康状态
+                HashMap<String, Integer> areaDistribution = new HashMap<>(); // 区域分布
+                HashMap<String, Integer> genderRatio = new HashMap<>(); // 性别比例
+                HashMap<String, Integer> sterilizationRatio = new HashMap<>(); // 绝育比例
+                HashMap<String, Integer> vaccinationRatio = new HashMap<>(); // 疫苗接种比例
+                Integer monthlyNewCount = 0; // 本月新增数量
+                BigDecimal fundBalance = BigDecimal.ZERO; // 资金余额
+                BigDecimal monthExpense = BigDecimal.ZERO; // 本月支出
+                BigDecimal monthIncome = BigDecimal.ZERO; // 本月收入
                 
+                // 初始化数据分析结果的Map
                 initializeMaps(ageDistribution, healthStatus, areaDistribution, 
-                            genderRatio, sterilizationRatio, vaccinationRatio);
+                            genderRatio, sterilizationRatio, vaccinationRatio,
+                            monthlyNewCount, fundBalance, monthExpense, monthIncome);
                 
+                // 分析猫咪数据
                 analyzeCats(cats, ageDistribution, healthStatus, areaDistribution,
                         genderRatio, sterilizationRatio, vaccinationRatio);
                 
+                // 构建数据分析VO
                 DataAnalysisVO dataAnalysisVO = buildAnalysisResult(ageDistribution, healthStatus, areaDistribution,
                         genderRatio, sterilizationRatio, vaccinationRatio);
+                
                 // 计算已领养数量
                 Integer adoptionCount = (int) cats.stream().filter(cat -> cat.getIsAdopted() == 1).count();
                 dataAnalysisVO.setAdoptionCount(adoptionCount);
+
+                // 获取本月的起始时间和结束时间
+                LocalDate now = LocalDate.now();
+                LocalDate firstDayOfMonth = now.withDayOfMonth(1);
+                LocalDate lastDayOfMonth = now.withDayOfMonth(now.lengthOfMonth());
+
+                // 计算本月新增数量
+                QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("is_adopted", 0);
+                queryWrapper.eq("is_deleted", 0);
+                queryWrapper.between("create_time", Date.valueOf(firstDayOfMonth), Date.valueOf(lastDayOfMonth));
+                monthlyNewCount = Math.toIntExact(catMapper.selectCount(queryWrapper));
+
+                // 计算本月资金余额
+                QueryWrapper<FundRecord> fundQueryWrapper = new QueryWrapper<>();
+                fundQueryWrapper.eq("type", 1)
+                            .eq("is_deleted", 0)
+                            .between("date", Date.valueOf(firstDayOfMonth), Date.valueOf(lastDayOfMonth));
+                fundBalance = fundRecordMapper.selectList(fundQueryWrapper).stream()
+                        .map(FundRecord::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);  
+                
+                // 计算本月支出
+                QueryWrapper<FundRecord> expenseQueryWrapper = new QueryWrapper<>();
+                expenseQueryWrapper.eq("type", 2)
+                                .eq("is_deleted", 0)
+                                .between("date", Date.valueOf(firstDayOfMonth), Date.valueOf(lastDayOfMonth));
+                monthExpense = fundRecordMapper.selectList(expenseQueryWrapper).stream()
+                        .map(FundRecord::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                // 计算本月收入
+                QueryWrapper<FundRecord> incomeQueryWrapper = new QueryWrapper<>();
+                incomeQueryWrapper.eq("type", 1)
+                                .eq("is_deleted", 0)
+                                .between("date", Date.valueOf(firstDayOfMonth), Date.valueOf(lastDayOfMonth));
+                monthIncome = fundRecordMapper.selectList(incomeQueryWrapper).stream()
+                        .map(FundRecord::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);  
+                
+                log.info("本月新增数量: {}", monthlyNewCount);
+                log.info("本月资金余额: {}", fundBalance);
+                log.info("本月支出: {}", monthExpense);
+                log.info("本月收入: {}", monthIncome);
+                dataAnalysisVO.setMonthlyNewCount(monthlyNewCount);
+                dataAnalysisVO.setFundBalance(fundBalance);
+                dataAnalysisVO.setMonthExpense(monthExpense);
+                dataAnalysisVO.setMonthIncome(monthIncome);
                 return dataAnalysisVO;
             });
 
@@ -96,13 +173,20 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
         }
     }
     
+    /**
+     * 初始化数据分析结果的Map
+     */
     private void initializeMaps(
             HashMap<String, Integer> ageDistribution,
             HashMap<String, Integer> healthStatus,
             HashMap<String, Integer> areaDistribution,
             HashMap<String, Integer> genderRatio,
             HashMap<String, Integer> sterilizationRatio,
-            HashMap<String, Integer> vaccinationRatio) {
+            HashMap<String, Integer> vaccinationRatio,
+            Integer monthlyNewCount,
+            BigDecimal fundBalance,
+            BigDecimal monthExpense,
+            BigDecimal monthIncome) {
         
         // 初始化年龄分布
         ageDistribution.put("3个月以内", 0);
@@ -137,8 +221,19 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
         // 初始化疫苗接种比例
         vaccinationRatio.put("已接种", 0);
         vaccinationRatio.put("未接种", 0);
+
+        // 初始化本月新增数量
+        monthlyNewCount = 0;
+
+        // 初始化资金余额
+        fundBalance = BigDecimal.ZERO;
+        monthExpense = BigDecimal.ZERO;
+        monthIncome = BigDecimal.ZERO;
     }
     
+    /**
+     * 分析猫咪数据
+     */
     private void analyzeCats(
             List<Cat> cats,
             HashMap<String, Integer> ageDistribution,
@@ -194,6 +289,9 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
         }
     }
     
+    /**
+     * 构建数据分析VO
+     */
     private DataAnalysisVO buildAnalysisResult(
             HashMap<String, Integer> ageDistribution,
             HashMap<String, Integer> healthStatus,
@@ -209,7 +307,136 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
         dataAnalysisVO.setGenderRatio(genderRatio);
         dataAnalysisVO.setSterilizationRatio(sterilizationRatio);
         dataAnalysisVO.setVaccinationRatio(vaccinationRatio);
-        
         return dataAnalysisVO;
+    }
+
+    /**
+     * @Description 添加或更新资金记录
+     */
+    @Override
+    public void addOrUpdateFundRecord(AddFundRecordDTO addFundRecordDTO) {
+        // 获取当前用户ID
+        Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+        FundRecord fundRecord = new FundRecord();
+        BeanUtils.copyProperties(addFundRecordDTO, fundRecord);
+        fundRecord.setCreateUserId(userId);
+        fundRecord.setType(addFundRecordDTO.getType());
+        fundRecord.setIsDeleted(0);
+        fundRecordMapper.insertOrUpdate(fundRecord);
+    }
+
+    /**
+     * 获取资金记录
+     */
+    @Override
+    public List<FundRecordVO> getFundRecord(Integer type) {
+        LambdaQueryWrapper<FundRecord> queryWrapper = new LambdaQueryWrapper<>();
+        // 如果type为空或为0，则查询"收入和支出"的全部记录
+        queryWrapper.eq(type != null && type != 0, FundRecord::getType, type);
+        queryWrapper.eq(FundRecord::getIsDeleted, 0);
+        // 先按记录日期降序排序,再按更新时间降序排序
+        queryWrapper.orderByDesc(FundRecord::getDate)
+                   .orderByDesc(FundRecord::getUpdateTime);
+        List<FundRecord> fundRecords = fundRecordMapper.selectList(queryWrapper);
+        return fundRecords.stream().map(FundRecordVO::new).collect(Collectors.toList());
+    }
+
+    /**
+     * 删除资金记录
+     */
+    @Override
+    public void deleteFundRecord(Integer id) {
+        fundRecordMapper.deleteById(id);
+    }
+
+    /**
+     * 计算资金统计数据
+     * 根据传入的类型计算近6个月的资金数据
+     * @param type 资金类型：救助资金剩余、资金支出、资金收入
+     * @return 近6个月的资金统计数据列表
+     */
+    @Override
+    public List<FundCalculateVO> calculateFund(String type) {
+        // 获取当前日期
+        LocalDate currentDate = LocalDate.now();
+        // 获取6个月前的日期
+        LocalDate sixMonthsAgo = currentDate.minusMonths(6);
+        
+        // 创建查询条件
+        QueryWrapper<FundRecord> queryWrapper = new QueryWrapper<>();
+        // 设置时间范围条件
+        queryWrapper.ge("date", Date.valueOf(sixMonthsAgo))
+                   .le("date", Date.valueOf(currentDate))
+                   .eq("is_deleted", 0);
+
+        // 初始化最近6个月的数据
+        Map<Integer, FundCalculateVO> monthlyData = new TreeMap<>();
+        for (int i = 0; i < 6; i++) {
+            LocalDate date = currentDate.minusMonths(i);
+            int month = date.getMonthValue();
+            FundCalculateVO vo = new FundCalculateVO();
+            vo.setMonth(month);
+            vo.setRemainingFund(BigDecimal.ZERO);
+            vo.setTotalExpenses(BigDecimal.ZERO);
+            vo.setTotalIncome(BigDecimal.ZERO);
+            monthlyData.put(month, vo);
+        }
+        
+        switch (type) {
+            case "救助资金剩余":
+                // 计算近6个月救助资金剩余数据
+                List<FundRecord> allRecords = fundRecordMapper.selectList(queryWrapper);
+                
+                // 按月份分组计算收入和支出
+                for (FundRecord record : allRecords) {
+                    int month = record.getDate().toLocalDate().getMonthValue();
+                    if (monthlyData.containsKey(month)) {
+                        FundCalculateVO vo = monthlyData.get(month);
+                        // 收入加上金额，支出减去金额
+                        BigDecimal currentBalance = vo.getRemainingFund();
+                        BigDecimal amount = record.getType() == 1 ? record.getAmount() : record.getAmount().negate();
+                        vo.setRemainingFund(currentBalance.add(amount));
+                    }
+                }
+                break;
+                
+            case "资金支出":
+                // 计算近6个月资金支出数据
+                queryWrapper.eq("type", 2); // 2表示支出
+                List<FundRecord> expenseRecords = fundRecordMapper.selectList(queryWrapper);
+                
+                // 按月份分组计算
+                for (FundRecord record : expenseRecords) {
+                    int month = record.getDate().toLocalDate().getMonthValue();
+                    if (monthlyData.containsKey(month)) {
+                        FundCalculateVO vo = monthlyData.get(month);
+                        BigDecimal currentExpenses = vo.getTotalExpenses();
+                        vo.setTotalExpenses(currentExpenses.add(record.getAmount()));
+                    }
+                }
+                break;
+                
+            case "资金收入":
+                // 计算近6个月资金收入数据
+                queryWrapper.eq("type", 1); // 1表示收入
+                List<FundRecord> incomeRecords = fundRecordMapper.selectList(queryWrapper);
+                
+                // 按月份分组计算
+                for (FundRecord record : incomeRecords) {
+                    int month = record.getDate().toLocalDate().getMonthValue();
+                    if (monthlyData.containsKey(month)) {
+                        FundCalculateVO vo = monthlyData.get(month);
+                        BigDecimal currentIncome = vo.getTotalIncome();
+                        vo.setTotalIncome(currentIncome.add(record.getAmount()));
+                    }
+                }
+                break;
+                
+            default:
+                break;
+        }
+        
+        // 将Map转换为List并返回
+        return new ArrayList<>(monthlyData.values());
     }
 } 

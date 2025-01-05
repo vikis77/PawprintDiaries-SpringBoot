@@ -16,7 +16,8 @@ public class Constant {
      */
     public static final String ALL_POSTS = "All_Posts"; // 全部帖子
     public static final String HOT_FIRST_TIME_POST_LIST = "Hot_FirstTime_PostList"; // 热点首次打开展示的帖子
-    public static final String HOT_FIRST_TIME_CAT_LIST = "Hot_FirstTime_CatList"; // 热点首次打开展示的猫猫
+    public static final String HOT_FIRST_TIME_CAT_LIST = "CatList_Entity"; // 热点首次打开展示的猫猫（实体类）
+    public static final String CAT_LIST_FOR_CATCLAW = "Cat_List_For_CatClaw"; // 热点首次打开展示的猫猫（VO）
     public static final String HOT_FIRST_TIME_COORDINATE_LIST = "Hot_FirstTime_CoordinateList"; // 热点首次打开展示的坐标
     public static final String HOT_FIRST_TIME_CAT_DATA_ANALYSIS = "Hot_FirstTime_Cat_Data_Analysis"; // 热点首次打开小猫数据分析
     public static final String PENDING_POST_LIST = "Pending_PostList"; // 待审核的帖子

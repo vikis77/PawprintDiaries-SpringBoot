@@ -58,6 +58,8 @@ public class Cat implements Serializable {
     private String badRecord;
     //区域
     private String area;
+    //品种
+    private String breed;
     //撸猫指南
     private String catGuide;
     //创建时间

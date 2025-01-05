@@ -63,38 +63,48 @@ import org.redisson.api.RBloomFilter;
 @Service
 @Slf4j
 public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatService {
-    @Autowired CatMapper catMapper;
-    @Autowired CatPicsMapper catPicsMapper;
-    @Autowired CoordinateMapper coordinateMapper;
-    @Autowired GeneratorIdUtil generatorIdUtil;
-    @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired private RBloomFilter<String> likeBloomFilter; // 点赞布隆过滤器
-    @Autowired CacheUtils cacheUtils;
-    @Autowired CatManage catManage;
-    @Autowired CatTimeLineEventMapper catTimeLineEventMapper;
-    @Autowired ObjectPoolUtil objectPoolUtil; // 对象池工具类
-
+    @Autowired
+    CatMapper catMapper;
+    @Autowired
+    CatPicsMapper catPicsMapper;
+    @Autowired
+    CoordinateMapper coordinateMapper;
+    @Autowired
+    GeneratorIdUtil generatorIdUtil;
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private RBloomFilter<String> likeBloomFilter; // 点赞布隆过滤器
+    @Autowired
+    CacheUtils cacheUtils;
+    @Autowired
+    CatManage catManage;
+    @Autowired
+    CatTimeLineEventMapper catTimeLineEventMapper;
+    @Autowired
+    ObjectPoolUtil objectPoolUtil; // 对象池工具类
 
     /**
      * @Description 新增猫猫
      * @param catDTO
      */
     @Override
-    public AddCatVO createCat(CatDTO catDTO){
+    public AddCatVO createCat(CatDTO catDTO) {
         Cat cat = new Cat();
-        //属性拷贝DTO to entity
+        // 属性拷贝DTO to entity
         BeanUtils.copyProperties(catDTO, cat);
         // 根据年龄反推计算生日
         cat.setBirthday(LocalDateTime.now().minusMonths(catDTO.getAge()));
         // 将图片名转换为新的文件名
-        String newFileName = generatorIdUtil.GeneratorRandomId() + catDTO.getAvatar().substring(catDTO.getAvatar().lastIndexOf("."));
+        String newFileName = generatorIdUtil.GeneratorRandomId()
+                + catDTO.getAvatar().substring(catDTO.getAvatar().lastIndexOf("."));
         cat.setAvatar(newFileName);
         cat.setIsAdopted(0);
         cat.setIsDeleted(0);
         cat.setTrending(0);
         cat.setLikeCount(0);
         catMapper.insert(cat);
-        
+
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         log.info("新增完成");
@@ -107,44 +117,41 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
 
     /**
      * @Description 查询全部猫猫信息
-     * @return 
+     * @return
      */
-    // @Cacheable(value = "Hot_FirstTime_CatList", cacheManager = "redisCacheManager")
+    // @Cacheable(value = "Hot_FirstTime_CatList", cacheManager =
+    // "redisCacheManager")
     @Override
-    public List<CatListVO> CatList(){
+    public List<CatListVO> CatList() {
         // 从缓存中获取数据
         @SuppressWarnings("unchecked")
-        List<Cat> cats = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_LIST, List.class, () -> {
+        List<CatListVO> cats = cacheUtils.getWithMultiLevel(Constant.CAT_LIST_FOR_CATCLAW, List.class, () -> {
             // 如果缓存中没有数据，则从数据库中查询
             log.info("缓存中没有数据，从数据库中查询");
-            return catManage.getCatList();
+            return catManage.getCatListForCatClaw();
         });
         log.info(TokenHolder.getToken());
         List<CatListVO> catListVOs = new ArrayList<>();
         // 如果用户未登录，则不检查点赞
         if (StringUtils.isBlank(TokenHolder.getToken())) {
-            for(Cat cat : cats){
-                CatListVO catListVO = new CatListVO();
-                BeanUtils.copyProperties(cat, catListVO);
-                catListVOs.add(catListVO);
+            for (CatListVO cat : cats) {
+                catListVOs.add(cat);
             }
             return catListVOs;
         }
         // 如果用户已登录，则检查点赞
         String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
-        for(Cat cat : cats){
-            CatListVO catListVO = new CatListVO();
-            BeanUtils.copyProperties(cat, catListVO);
+        for (CatListVO cat : cats) {
             // 检查是否已点赞
-            catListVO.setIsLikedToday(likeBloomFilter.contains(generateLikeKey(currentUserId, cat.getCatId())));
-            catListVOs.add(catListVO);
+            cat.setIsLikedToday(likeBloomFilter.contains(generateLikeKey(currentUserId, cat.getCatId())));
+            catListVOs.add(cat);
         }
         return catListVOs;
     }
 
     @Override
-    public IPage<Cat> selectByPage(int page,int size){
-        Page<Cat> pageObj = new Page<>(page,size);
+    public IPage<Cat> selectByPage(int page, int size) {
+        Page<Cat> pageObj = new Page<>(page, size);
         QueryWrapper<Cat> wrapper = new QueryWrapper<>();
         IPage<Cat> pageInfo = catMapper.selectPage(pageObj, wrapper);
         log.info("查找全部猫猫信息完成");
@@ -152,10 +159,10 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     }
 
     @Override
-    public List<Cat> selectByName(String name){
+    public List<Cat> selectByName(String name) {
         if (name == null || name.isEmpty()) {
             log.warn("猫猫名字不能为空");
-            //TODO throw new 
+            // TODO throw new
             return null;
         }
 
@@ -174,7 +181,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     }
 
     @Override
-    public Cat getById(Long ID){
+    public Cat getById(Long ID) {
         Cat cat = catMapper.selectById(ID);
         log.info("根据猫猫ID查找某一只猫猫信息完成");
         return cat;
@@ -184,24 +191,26 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
      * @Description 更新猫猫
      * @param cat
      */
-    public UpdateCatVO update(Cat cat){
+    public UpdateCatVO update(Cat cat) {
         UpdateCatVO updateCatVO = new UpdateCatVO();
         Map<String, String> fileNameConvertMap = new HashMap<>();
         if (cat.getAvatar() != null && !cat.getAvatar().isEmpty()) {
             // 将图片名转换为新的文件名
-            String newFileName = generatorIdUtil.GeneratorRandomId() + cat.getAvatar().substring(cat.getAvatar().lastIndexOf("."));
+            String newFileName = generatorIdUtil.GeneratorRandomId()
+                    + cat.getAvatar().substring(cat.getAvatar().lastIndexOf("."));
             cat.setAvatar(newFileName);
             fileNameConvertMap.put(cat.getAvatar(), newFileName);
         }
         catMapper.updateById(cat);
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
-        log.info("更新{}猫信息完成",cat.getCatname());
+        cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW);
+        log.info("更新{}猫信息完成", cat.getCatname());
         updateCatVO.setFileNameConvertMap(fileNameConvertMap);
         return updateCatVO;
     }
 
-    public void delete(Long ID){
+    public void delete(Long ID) {
         // 逻辑删除
         Cat cat = catMapper.selectById(ID);
         cat.setIsDeleted(1);
@@ -235,6 +244,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
             log.warn("用户未登录，无法进行点赞操作");
         }
     }
+
     // 生成点赞key
     private String generateLikeKey(String userId, Long catId) {
         return String.format("like:%s:%d:%s", userId, catId, LocalDateTime.now().format(DateTimeFormatter.ISO_DATE));
@@ -244,12 +254,12 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
 
     public List<CatPics> selectPhotoById(String ID, int page, int size) {
         // 创建分页对象
-        Page<CatPics> pageObg = new Page<>(page,size);
+        Page<CatPics> pageObg = new Page<>(page, size);
 
         // 构造查询条件
         QueryWrapper<CatPics> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("cat_id", ID)
-            .orderByDesc("create_time"); //最新的图片在前
+                .orderByDesc("create_time"); // 最新的图片在前
 
         // 执行查询并返回结果
         IPage<CatPics> result = catPicsMapper.selectPage(pageObg, queryWrapper);
@@ -272,44 +282,44 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
 
     // ================ 猫咪坐标相关方法 ================
 
-    public void addCoordinate(CoordinateDTO coordinateDTO){
+    public void addCoordinate(CoordinateDTO coordinateDTO) {
         // 获取列表中的猫猫名
         List<String> catNames = coordinateDTO.getCatNames();
 
         // 遍历猫名列表
         if (!CollectionUtils.isEmpty(catNames)) {
             for (String catName : catNames) {
-            Coordinate coordinate = new Coordinate();
-            //属性拷贝DTO to entity
-            BeanUtils.copyProperties(coordinateDTO, coordinate);
+                Coordinate coordinate = new Coordinate();
+                // 属性拷贝DTO to entity
+                BeanUtils.copyProperties(coordinateDTO, coordinate);
 
-            //生成ID并设置这一条坐标信息的唯一ID
-            Long ID = Long.parseLong(generatorIdUtil.GeneratorRandomId());
-            coordinate.setId(ID);
+                // 生成ID并设置这一条坐标信息的唯一ID
+                Long ID = Long.parseLong(generatorIdUtil.GeneratorRandomId());
+                coordinate.setId(ID);
 
-            //设置更新时间
-            coordinate.setUpdateTime(Timestamp.from(Instant.now()));
+                // 设置更新时间
+                coordinate.setUpdateTime(Timestamp.from(Instant.now()));
 
-            //根据猫猫名查找猫猫ID
-            QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("catname",catName);
-            Cat cat = catMapper.selectOne(queryWrapper);
+                // 根据猫猫名查找猫猫ID
+                QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("catname", catName);
+                Cat cat = catMapper.selectOne(queryWrapper);
 
-            if(cat==null){
-                log.info("更新失败,猫猫名不存在" + catName);
-                //TODO throw new 
-                // throw new CatNotFoundException("猫猫名不存在: " + catName);
-                continue;
+                if (cat == null) {
+                    log.info("更新失败,猫猫名不存在" + catName);
+                    // TODO throw new
+                    // throw new CatNotFoundException("猫猫名不存在: " + catName);
+                    continue;
+                }
+                coordinate.setCatId(cat.getCatId());
+
+                // 插入
+                coordinateMapper.insert(coordinate);
+                log.info("新增猫猫坐标完成");
             }
-            coordinate.setCatId(cat.getCatId());
-            
-            //插入
-            coordinateMapper.insert(coordinate);
-            log.info("新增猫猫坐标完成");
-            }
-        }else{
+        } else {
             log.info("猫猫名列表为空");
-            //TODO throw new 
+            // TODO throw new
         }
     }
 
@@ -326,86 +336,86 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         coordinateMapper.insert(coordinate);
     }
 
-    public void deleteCoordinate(List<Long> ids){
-        if(CollectionUtils.isEmpty(ids)){
+    public void deleteCoordinate(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
             log.info("猫猫ID列表为空");
-            //TODO throw new IllegalArgumentException("猫猫ID列表不能为空");
+            // TODO throw new IllegalArgumentException("猫猫ID列表不能为空");
         }
 
-        //批量删除
+        // 批量删除
         boolean removed = this.removeByIds(ids);
-        if(!removed){
+        if (!removed) {
             log.info("删除失败");
-            //TODO throw new RuntimeException("删除猫猫坐标失败");
+            // TODO throw new RuntimeException("删除猫猫坐标失败");
         }
         log.info("删除猫猫坐标完成");
     }
 
-    public void updateCoordinate(Coordinate coordinate){
+    public void updateCoordinate(Coordinate coordinate) {
         coordinateMapper.updateById(coordinate);
         log.info("更新猫猫坐标完成");
     }
 
-    public List<CoordinateVO> selectCoordinate(){
+    public List<CoordinateVO> selectCoordinate() {
         List<CoordinateVO> CoordinateVOs = coordinateMapper.getAllCatsWithLatestCoordinates();
         log.info("查找猫猫坐标完成");
         return CoordinateVOs;
     }
 
-    public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id,int page,int size){
+    public IPage<CoordinateVO> selectCoordinateByCatId(Long cat_id, int page, int size) {
         Page<CoordinateVO> pageObj = new Page<>(page, size);
         IPage<CoordinateVO> coordinateVOIPage = coordinateMapper.selectCoordinatesByCatId(pageObj, cat_id);
         log.info("分页查询单只猫的历史坐标信息完成");
         return coordinateVOIPage;
     }
 
-    public List<CoordinateVO> selectCoordinateByDate(String date){
+    public List<CoordinateVO> selectCoordinateByDate(String date) {
         // 构建查询条件 - 使用LIKE进行日期匹配
         QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
         queryWrapper.like("update_time", date)
-                   .orderByDesc("update_time"); // 按时间倒序排序
-        
+                .orderByDesc("update_time"); // 按时间倒序排序
+
         // 执行查询
         List<Coordinate> coordinates = coordinateMapper.selectList(queryWrapper);
-        
+
         // 使用HashSet存储已处理的猫ID
         Set<Long> processedCatIds = new HashSet<>();
         List<CoordinateVO> coordinateVOs = new ArrayList<>();
-        
+
         // 遍历所有坐标记录
-        for(Coordinate coordinate : coordinates) {
+        for (Coordinate coordinate : coordinates) {
             Long catId = coordinate.getCatId();
             // 如果这只猫还没处理过
-            if(!processedCatIds.contains(catId)) {
+            if (!processedCatIds.contains(catId)) {
                 CoordinateVO vo = new CoordinateVO();
                 BeanUtils.copyProperties(coordinate, vo);
                 // 查询猫名
                 Cat cat = catMapper.selectById(catId);
-                if(cat != null) {
+                if (cat != null) {
                     vo.setCatName(cat.getCatname());
                 }
                 coordinateVOs.add(vo);
                 processedCatIds.add(catId);
             }
         }
-        
+
         log.info("按日期{}查询小猫坐标信息完成,共查询到{}条记录", date, coordinateVOs.size());
         return coordinateVOs;
     }
 
-    public List<CoordinateVO> selectCoordinateByDateAndCatId(String date,Long catId){
+    public List<CoordinateVO> selectCoordinateByDateAndCatId(String date, Long catId) {
         QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
         queryWrapper.like("update_time", date)
-                    .eq("cat_id", catId)
-                    .orderByDesc("update_time"); // 按时间倒序排序
+                .eq("cat_id", catId)
+                .orderByDesc("update_time"); // 按时间倒序排序
         List<Coordinate> coordinates = coordinateMapper.selectList(queryWrapper);
         List<CoordinateVO> coordinateVOs = new ArrayList<>();
-        
+
         // 查询猫名
         Cat cat = catMapper.selectById(catId);
         String catName = cat != null ? cat.getCatname() : null;
-        
-        for(Coordinate coordinate : coordinates){
+
+        for (Coordinate coordinate : coordinates) {
             CoordinateVO vo = new CoordinateVO();
             BeanUtils.copyProperties(coordinate, vo);
             vo.setCatName(catName); // 设置猫名
@@ -422,7 +432,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
 
     // ================ 数据分析相关方法 ================
 
-    public DataAnalysisVO analysis(){
+    public DataAnalysisVO analysis() {
         List<Cat> cats = catMapper.findAll();
         HashMap<String, Integer> ageDistribution = new HashMap<>();
         // HashMap<String, Integer> quantityChange = new HashMap<>();
@@ -454,59 +464,59 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         vaccinationRatio.put("已接种", 0);
         vaccinationRatio.put("未接种", 0);
 
-        for(Cat cat : cats){
+        for (Cat cat : cats) {
             Integer age = cat.getAge();
-            if (age < 3){
+            if (age < 3) {
                 ageDistribution.put("3个月以内", ageDistribution.getOrDefault("3个月以内", 0) + 1);
-            } else if (age >= 3 && age < 6){
+            } else if (age >= 3 && age < 6) {
                 ageDistribution.put("3-6个月", ageDistribution.getOrDefault("3-6个月", 0) + 1);
-            } else if (age >= 6 && age < 12){
+            } else if (age >= 6 && age < 12) {
                 ageDistribution.put("6-12个月", ageDistribution.getOrDefault("6-12个月", 0) + 1);
-            } else if (age >= 12 && age < 18){
+            } else if (age >= 12 && age < 18) {
                 ageDistribution.put("12-18个月", ageDistribution.getOrDefault("12-18个月", 0) + 1);
-            } else if (age >= 18 && age < 24){
+            } else if (age >= 18 && age < 24) {
                 ageDistribution.put("18-24个月", ageDistribution.getOrDefault("18-24个月", 0) + 1);
-            } else if (age >= 24){
+            } else if (age >= 24) {
                 ageDistribution.put("24个月以上", ageDistribution.getOrDefault("24个月以上", 0) + 1);
             }
 
-            if (cat.getHealthStatus().equals("健康")){
+            if (cat.getHealthStatus().equals("健康")) {
                 healthStatus.put("健康", healthStatus.getOrDefault("健康", 0) + 1);
-            } else if (cat.getHealthStatus().equals("疾病")){
+            } else if (cat.getHealthStatus().equals("疾病")) {
                 healthStatus.put("疾病", healthStatus.getOrDefault("疾病", 0) + 1);
-            } else if (cat.getHealthStatus().equals("营养不良")){
+            } else if (cat.getHealthStatus().equals("营养不良")) {
                 healthStatus.put("营养不良", healthStatus.getOrDefault("营养不良", 0) + 1);
-            } else if (cat.getHealthStatus().equals("肥胖")){
+            } else if (cat.getHealthStatus().equals("肥胖")) {
                 healthStatus.put("肥胖", healthStatus.getOrDefault("肥胖", 0) + 1);
             }
 
-            if (cat.getArea().equals("北门")){
+            if (cat.getArea().equals("北门")) {
                 areaDistribution.put("北门", areaDistribution.getOrDefault("北门", 0) + 1);
-            } else if (cat.getArea().equals("岐头")){
+            } else if (cat.getArea().equals("岐头")) {
                 areaDistribution.put("岐头", areaDistribution.getOrDefault("岐头", 0) + 1);
-            } else if (cat.getArea().equals("凤翔")){
+            } else if (cat.getArea().equals("凤翔")) {
                 areaDistribution.put("凤翔", areaDistribution.getOrDefault("凤翔", 0) + 1);
-            } else if (cat.getArea().equals("厚德楼")){
+            } else if (cat.getArea().equals("厚德楼")) {
                 areaDistribution.put("厚德楼", areaDistribution.getOrDefault("厚德楼", 0) + 1);
-            } else if (cat.getArea().equals("香晖苑")){
+            } else if (cat.getArea().equals("香晖苑")) {
                 areaDistribution.put("香晖苑", areaDistribution.getOrDefault("香晖苑", 0) + 1);
             }
 
-            if (cat.getGender().equals(1)){
+            if (cat.getGender().equals(1)) {
                 genderRatio.put("公猫", genderRatio.getOrDefault("公猫", 0) + 1);
-            } else if (cat.getGender().equals(0)){
+            } else if (cat.getGender().equals(0)) {
                 genderRatio.put("母猫", genderRatio.getOrDefault("母猫", 0) + 1);
             }
 
-            if (cat.getSterilizationStatus().equals("已绝育")){
+            if (cat.getSterilizationStatus().equals("已绝育")) {
                 sterilizationRatio.put("已绝育", sterilizationRatio.getOrDefault("已绝育", 0) + 1);
-            } else if (cat.getSterilizationStatus().equals("未绝育")){
+            } else if (cat.getSterilizationStatus().equals("未绝育")) {
                 sterilizationRatio.put("未绝育", sterilizationRatio.getOrDefault("未绝育", 0) + 1);
             }
 
-            if (cat.getVaccinationStatus().equals("已接种")){
+            if (cat.getVaccinationStatus().equals("已接种")) {
                 vaccinationRatio.put("已接种", vaccinationRatio.getOrDefault("已接种", 0) + 1);
-            } else if (cat.getVaccinationStatus().equals("未接种")){
+            } else if (cat.getVaccinationStatus().equals("未接种")) {
                 vaccinationRatio.put("未接种", vaccinationRatio.getOrDefault("未接种", 0) + 1);
             }
         }
@@ -519,7 +529,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         dataAnalysisVO.setGenderRatio(genderRatio);
         dataAnalysisVO.setSterilizationRatio(sterilizationRatio);
         dataAnalysisVO.setVaccinationRatio(vaccinationRatio);
-            
+
         return dataAnalysisVO;
     }
 
@@ -537,7 +547,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         queryWrapper.eq("is_deleted", 0);
         queryWrapper.last("limit 10");
         List<CatTimeLineEvent> catTimeLineEvents = catTimeLineEventMapper.selectList(queryWrapper);
-        for(CatTimeLineEvent catTimeLineEvent : catTimeLineEvents){
+        for (CatTimeLineEvent catTimeLineEvent : catTimeLineEvents) {
             CatTimelineVO catTimelineVO = new CatTimelineVO();
             BeanUtils.copyProperties(catTimeLineEvent, catTimelineVO);
             // 将Date类型转换为字符串格式,使用SimpleDateFormat避免解析错误

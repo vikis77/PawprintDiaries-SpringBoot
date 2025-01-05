@@ -62,8 +62,10 @@ public class DataInitializationService {
                 if (!initialized) {
                     try {
                         // 查询全部猫猫数据，提前写入缓存
-                        log.info("开始预热全部猫猫数据 - 查询全部猫猫数据，写入缓存");
+                        log.info("开始预热全部猫猫数据 - 查询全部猫猫数据（实体类），写入缓存");
                         cacheUtils.put(Constant.HOT_FIRST_TIME_CAT_LIST, catManage.getCatList());
+                        log.info("开始预热全部猫猫数据 - 查询猫爪页面猫猫信息，写入缓存");
+                        cacheUtils.put(Constant.CAT_LIST_FOR_CATCLAW, catManage.getCatListForCatClaw());
                         log.info("预热全部猫猫数据完成\n");
                         // 热点小猫分析数据
                         log.info("开始预热小猫分析数据 - 查询小猫分析数据，写入缓存");
