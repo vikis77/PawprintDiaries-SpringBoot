@@ -57,7 +57,7 @@ public class Result<T> implements Serializable {
         return result;
     }
 
-    public static <T> Result<T> error(String msg,Integer enumStatusCode) {
+    public static <T> Result<T> error(Integer enumStatusCode, String msg) {
         Result<T> result = new Result<T>();
         result.msg = msg;
         result.code = enumStatusCode;

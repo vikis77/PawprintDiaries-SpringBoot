@@ -15,6 +15,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
+import com.qin.catcat.unite.common.enumclass.CatcatEnumClass;
+import com.qin.catcat.unite.exception.BusinessException;
+
 // import com.auth0.jwt.JWT;
 // import com.auth0.jwt.algorithms.Algorithm;
 
@@ -118,13 +121,15 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(authToken);
             return true;
-        } catch (JwtException ex) {
-            // 捕获所有与JWT相关的异常
-            log.error("JWT validation error: {}", ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Unexpected error while validating JWT token", ex);
         }
-        return false;
+        // Token 过期 
+        catch (ExpiredJwtException ex) {
+            log.error("Token已过期: {}", ex.getMessage());
+            return false;
+        } catch (Exception ex) {
+            log.error("JWT验证失败: {}", ex.getMessage());
+            return false;
+        }
     }
 
 }

@@ -28,6 +28,7 @@ import com.qin.catcat.unite.common.result.Result;
 import com.qin.catcat.unite.common.enumclass.CatcatEnumClass;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
+import com.qin.catcat.unite.exception.BusinessException;
 import com.qin.catcat.unite.exception.JWTIdentityVerificationFailedException;
 
 import io.jsonwebtoken.ExpiredJwtException;
@@ -126,13 +127,37 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 }
             } catch (ExpiredJwtException ex) {
                 log.error("Token已过期: {}", ex.getMessage());
+
+                // 清空TokenHolder
+                TokenHolder.clear();
+
+                // 设置响应头
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                response.setHeader("Access-Control-Allow-Headers", "*");
+                response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write(JSON.toJSONString(Result.fail(CatcatEnumClass.StatusCode.TOKEN_EXPIRED.getCode(), "Token已过期")));
+                
+                Result<?> result = Result.error(CatcatEnumClass.StatusCode.TOKEN_EXPIRED.getCode(), CatcatEnumClass.StatusCode.TOKEN_EXPIRED.getMessage());
+                response.getWriter().write(JSON.toJSONString(result));
+                response.getWriter().flush();
                 return;
             } catch (Exception ex) {
                 log.error("Token解析失败: {}", ex.getMessage());
+
+                // 清空TokenHolder
+                TokenHolder.clear();
+
+                // 设置响应头
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                response.setHeader("Access-Control-Allow-Headers", "*");
+                response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write(JSON.toJSONString(Result.fail(CatcatEnumClass.StatusCode.TOKEN_INVALID.getCode(), "Token无效")));
+                
+                Result<?> result = Result.fail(CatcatEnumClass.StatusCode.TOKEN_INVALID.getCode(), CatcatEnumClass.StatusCode.TOKEN_INVALID.getMessage());
+                response.getWriter().write(JSON.toJSONString(result));
+                response.getWriter().flush();
                 return;
             }
         } else {

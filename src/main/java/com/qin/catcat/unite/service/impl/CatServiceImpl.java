@@ -130,7 +130,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
             log.info("缓存中没有数据，从数据库中查询");
             return catManage.getCatListForCatClaw();
         });
-        log.info(TokenHolder.getToken());
+        // log.info(TokenHolder.getToken());
         List<CatListVO> catListVOs = new ArrayList<>();
         // 如果用户未登录，则不检查点赞
         if (StringUtils.isBlank(TokenHolder.getToken())) {

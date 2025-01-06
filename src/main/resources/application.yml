@@ -2,6 +2,7 @@ spring:
   application:
     name: catcat
   profiles:
+    # active: dev
     active: prod
   cache: # 缓存配置
     type: redis

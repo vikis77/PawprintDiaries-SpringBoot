@@ -125,13 +125,13 @@ public class SecurityConfig {
             .authenticationEntryPoint((request, response, authException) -> {
                 response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_OK);
-                Result<String> result = Result.error(StatusCode.UNAUTHORIZED.getMessage(), StatusCode.UNAUTHORIZED.getCode());
+                Result<String> result = Result.error(StatusCode.UNAUTHORIZED.getCode(), StatusCode.UNAUTHORIZED.getMessage());
                 response.getWriter().write(new ObjectMapper().writeValueAsString(result));
             })
             .accessDeniedHandler((request, response, accessDeniedException) -> {
                 response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_OK);
-                Result<String> result = Result.error(StatusCode.ACCESS_DENIED.getMessage(), StatusCode.ACCESS_DENIED.getCode());
+                Result<String> result = Result.error(StatusCode.ACCESS_DENIED.getCode(), StatusCode.ACCESS_DENIED.getMessage());
                 response.getWriter().write(new ObjectMapper().writeValueAsString(result));
             })
         );

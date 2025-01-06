@@ -48,7 +48,7 @@ public class WebLogAspect {
         log.info("Class Method   : {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         log.info("IP            : {}", getIpAddress(request));
         log.info("Request Args   : {}", getRequestArgs(joinPoint.getArgs()));
-        if(TokenHolder.getToken()!=null){
+        if(TokenHolder.getToken()!=null && jwtTokenProvider.validateToken(TokenHolder.getToken())){
             log.info("User Name      : {}", jwtTokenProvider.getUsernameFromToken(TokenHolder.getToken()));
             log.info("User ID        : {}", jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
         }

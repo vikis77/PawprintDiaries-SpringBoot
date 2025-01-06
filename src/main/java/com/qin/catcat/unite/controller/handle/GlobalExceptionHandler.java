@@ -13,6 +13,9 @@ import com.qin.catcat.unite.exception.JWTIdentityVerificationFailedException;
 import com.qin.catcat.unite.exception.PasswordIncorrectException;
 import com.qin.catcat.unite.exception.UserNotExistException;
 import com.qin.catcat.unite.exception.updatePasswordFailedException;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.qin.catcat.unite.exception.UserAlreadyExistsException;
 import com.qin.catcat.unite.exception.BusinessException;
 
@@ -23,7 +26,8 @@ import com.qin.catcat.unite.exception.BusinessException;
  * @Version 1.0
  * @Since 2025-01-04 01:17
  */
-@RestControllerAdvice
+@RestControllerAdvice // 只能处理Controller的异常
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -35,9 +39,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Result<String>> handleBusinessException(BusinessException ex) {
-        Result<String> result = Result.error(ex.getMessage(), ex.getStatusCode());
+        log.error("业务异常处理: {}", ex.getMessage());
+        Result<String> result = Result.error(ex.getStatusCode(), ex.getMessage());
         // 返回HTTP 200状态码，但在响应体中包含业务错误信息
-        // return ResponseEntity.ok(result);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

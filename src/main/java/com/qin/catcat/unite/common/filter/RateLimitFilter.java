@@ -242,7 +242,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private void handleBlacklistResponse(HttpServletResponse response, String ip, String uri) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
-        Result<String> result = Result.error("访问已被限制，请24小时后重试", StatusCode.REQUEST_TOO_FREQUENT.getCode());
+        Result<String> result = Result.error(StatusCode.REQUEST_TOO_FREQUENT.getCode(), "访问已被限制，请24小时后重试");
         response.getWriter().write(new ObjectMapper().writeValueAsString(result));
         log.warn("拦截黑名单访问 -> IP: {}, URI: {}", ip, uri);
     }
@@ -250,7 +250,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private void handleLimitExceeded(HttpServletResponse response, String message) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
-        Result<String> result = Result.error(message, StatusCode.REQUEST_TOO_FREQUENT.getCode());
+        Result<String> result = Result.error(StatusCode.REQUEST_TOO_FREQUENT.getCode(), "访问已被限制，请24小时后重试");
         response.getWriter().write(new ObjectMapper().writeValueAsString(result));
     }
 } 
