@@ -10,7 +10,7 @@ import com.qin.catcat.unite.common.constant.Constant;
 import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.manage.PostManage;
-import com.qin.catcat.unite.repository.EsPostIndexRepository;
+// import com.qin.catcat.unite.repository.EsPostIndexRepository;
 
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RBloomFilter;
@@ -45,8 +45,8 @@ public class DataInitializationService {
     CatAnalysisService catAnalysisService;
     @Autowired
     CatLocationService catLocationService;
-    @Autowired
-    EsPostIndexRepository esPostIndexRepository;
+    // @Autowired
+    // EsPostIndexRepository esPostIndexRepository;
 
     // 初始化完成标志
     private volatile boolean initialized = false;
@@ -61,6 +61,9 @@ public class DataInitializationService {
             synchronized (initLock) {
                 if (!initialized) {
                     try {
+                        // 清空全部缓存
+                        // cacheUtils.clearAllCache();
+                        // log.info("清空全部缓存完成\n");
                         // 查询全部猫猫数据，提前写入缓存
                         log.info("开始预热全部猫猫数据 - 查询全部猫猫数据（实体类），写入缓存");
                         cacheUtils.put(Constant.HOT_FIRST_TIME_CAT_LIST, catManage.getCatList());
@@ -84,10 +87,10 @@ public class DataInitializationService {
                         catLocationService.selectCoordinate();
                         log.info("预热所有猫咪最新位置完成\n");
                         // 预热ES索引
-                        log.info("正在删除旧的ES索引 - 删除ES索引");
-                        esPostIndexRepository.deleteAll();
-                        log.info("删除ES索引完成\n");
-                        log.info("开始保存新的ES索引 - 保存新的ES索引"); // 这里不需要保存，定时任务会自己保存
+                        // log.info("正在删除旧的ES索引 - 删除ES索引");
+                        // esPostIndexRepository.deleteAll(); // 暂时停用ES
+                        // log.info("删除ES索引完成\n");
+                        // log.info("开始保存新的ES索引 - 保存新的ES索引"); // 这里不需要保存，定时任务会自己保存
                         
                         initialized = true;
                         initLock.notifyAll(); // 通知等待的线程初始化已完成

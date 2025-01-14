@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qin.catcat.unite.common.constant.Constant;
 import com.qin.catcat.unite.common.result.Result;
+import com.qin.catcat.unite.common.utils.CacheUtils;
 import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.mapper.CatCommentMapper;
@@ -44,6 +46,8 @@ public class CatCommentServiceImpl implements CatCommentService {
     private UserMapper userMapper;
     @Autowired
     private CommentLikeMapper commentLikeMapper;
+    @Autowired
+    private CacheUtils cacheUtils;
 
     /**
      * @Description 新增小猫评论
@@ -125,6 +129,11 @@ public class CatCommentServiceImpl implements CatCommentService {
         return Result.success(catCommentVOs);
     }
 
+    /**
+     * @Description 通过小猫评论
+     * @param auditCatCommentDTO 审核小猫评论DTO
+     * @return void
+     */
     @Override
     public void auditCatComment(AuditCatCommentDTO auditCatCommentDTO) {
         try {
@@ -134,6 +143,8 @@ public class CatCommentServiceImpl implements CatCommentService {
             }
             catComment.setStatus(20); // 20表示通过
             catCommentMapper.updateById(catComment);
+            // 更新缓存
+            cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW);
         } catch (Exception e) {
             log.error("审核评论失败", e);
             throw e;

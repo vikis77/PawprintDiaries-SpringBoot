@@ -131,7 +131,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             vo.setUserName(user.getUsername());
             vo.setNickName(user.getNickName());
             vo.setAvatar(user.getAvatar());
-            vo.setRegisterTime(user.getCreateTime().toLocalDateTime());
+            vo.setRegisterTime(user.getCreateTime());
             vo.setRole("ADMIN");
             return vo;
         }).collect(Collectors.toList());
@@ -159,7 +159,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             vo.setUserName(user.getUsername());
             vo.setNickName(user.getNickName());
             vo.setAvatar(user.getAvatar());
-            vo.setRegisterTime(user.getCreateTime().toLocalDateTime());
+            vo.setRegisterTime(user.getCreateTime());
             vo.setRole(userRole.getRoleId() == 2 ? "ADMIN" : "USER");
             return vo;
         }).collect(Collectors.toList());

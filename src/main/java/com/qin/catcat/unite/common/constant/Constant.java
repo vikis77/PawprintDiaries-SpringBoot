@@ -15,6 +15,8 @@ public class Constant {
      * 缓存预热相关key
      */
     public static final String ALL_POSTS = "All_Posts"; // 全部帖子
+    public static final String GET_POST_BY_POST_ID = "KEY|GetPostByPostId"; // 帖子（实体）
+    public static final String GET_POST_BY_POST_ID_VO = "KEY|GetPostByPostIdVO"; // 帖子（VO）
     public static final String HOT_FIRST_TIME_POST_LIST = "Hot_FirstTime_PostList"; // 热点首次打开展示的帖子
     public static final String HOT_FIRST_TIME_CAT_LIST = "CatList_Entity"; // 热点首次打开展示的猫猫（实体类）
     public static final String CAT_LIST_FOR_CATCLAW = "Cat_List_For_CatClaw"; // 热点首次打开展示的猫猫（VO）

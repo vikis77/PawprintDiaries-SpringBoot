@@ -22,6 +22,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Description 猫咪基本信息管理控制器
@@ -33,6 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "猫咪基本信息管理接口")
 @RestController
+@Slf4j
 @RequestMapping("/api/cat")
 public class CatController {
     
@@ -107,6 +109,7 @@ public class CatController {
     @PostMapping("/adopt/apply")
     public Result<Void> adoptCat(@RequestBody AdoptParam adoptParam) {
         // catService.adoptCat(adoptParam);
+        log.info("领养小猫");
         return Result.success();
     }
 

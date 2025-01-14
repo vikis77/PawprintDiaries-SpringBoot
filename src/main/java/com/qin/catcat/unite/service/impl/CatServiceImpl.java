@@ -93,8 +93,10 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         Cat cat = new Cat();
         // 属性拷贝DTO to entity
         BeanUtils.copyProperties(catDTO, cat);
-        // 根据年龄反推计算生日
-        cat.setBirthday(LocalDateTime.now().minusMonths(catDTO.getAge()));
+        if (catDTO.getAge() != null) {
+            // 根据年龄反推计算生日
+            cat.setBirthday(LocalDateTime.now().minusMonths(catDTO.getAge()));
+        }
         // 将图片名转换为新的文件名
         String newFileName = generatorIdUtil.GeneratorRandomId()
                 + catDTO.getAvatar().substring(catDTO.getAvatar().lastIndexOf("."));
@@ -112,6 +114,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         Map<String, String> fileNameConvertMap = new HashMap<>();
         fileNameConvertMap.put(catDTO.getAvatar(), newFileName);
         addCatVO.setFileNameConvertMap(fileNameConvertMap);
+        addCatVO.setCatId(cat.getCatId().intValue());
         return addCatVO;
     }
 
@@ -238,7 +241,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
             cat.setLikeCount(cat.getLikeCount() + 1);
             catMapper.updateById(cat);
             // 更新缓存
-            cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
+            cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW);
             log.info("用户 {} 成功给猫咪 {} 点赞", currentUserId, catId);
         } else {
             log.warn("用户未登录，无法进行点赞操作");

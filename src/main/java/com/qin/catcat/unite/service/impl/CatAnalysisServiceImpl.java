@@ -121,14 +121,25 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
                 queryWrapper.between("create_time", Date.valueOf(firstDayOfMonth), Date.valueOf(lastDayOfMonth));
                 monthlyNewCount = Math.toIntExact(catMapper.selectCount(queryWrapper));
 
-                // 计算本月资金余额
-                QueryWrapper<FundRecord> fundQueryWrapper = new QueryWrapper<>();
-                fundQueryWrapper.eq("type", 1)
-                            .eq("is_deleted", 0)
-                            .between("date", Date.valueOf(firstDayOfMonth), Date.valueOf(lastDayOfMonth));
-                fundBalance = fundRecordMapper.selectList(fundQueryWrapper).stream()
+                // 计算目前资金余额 - 修改为计算所有历史收支
+                // 查询所有收入记录
+                QueryWrapper<FundRecord> incomeWrapper = new QueryWrapper<>();
+                incomeWrapper.eq("type", 1)
+                           .eq("is_deleted", 0);
+                BigDecimal totalIncome = fundRecordMapper.selectList(incomeWrapper).stream()
                         .map(FundRecord::getAmount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);  
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // 查询所有支出记录
+                QueryWrapper<FundRecord> expenseWrapper = new QueryWrapper<>();
+                expenseWrapper.eq("type", 2)
+                            .eq("is_deleted", 0);
+                BigDecimal totalExpense = fundRecordMapper.selectList(expenseWrapper).stream()
+                        .map(FundRecord::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // 计算总余额 = 总收入 - 总支出
+                fundBalance = totalIncome.subtract(totalExpense);
                 
                 // 计算本月支出
                 QueryWrapper<FundRecord> expenseQueryWrapper = new QueryWrapper<>();
@@ -245,19 +256,21 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
         
         for(Cat cat : cats) {
             // 分析年龄分布
-            Integer age = cat.getAge();
-            if (age < 3) {
-                ageDistribution.put("3个月以内", ageDistribution.get("3个月以内") + 1);
-            } else if (age >= 3 && age < 6) {
-                ageDistribution.put("3-6个月", ageDistribution.get("3-6个月") + 1);
-            } else if (age >= 6 && age < 12) {
-                ageDistribution.put("6-12个月", ageDistribution.get("6-12个月") + 1);
-            } else if (age >= 12 && age < 18) {
-                ageDistribution.put("12-18个月", ageDistribution.get("12-18个月") + 1);
-            } else if (age >= 18 && age < 24) {
-                ageDistribution.put("18-24个月", ageDistribution.get("18-24个月") + 1);
-            } else {
-                ageDistribution.put("24个月以上", ageDistribution.get("24个月以上") + 1);
+            if (cat.getAge() != null) {
+                Integer age = cat.getAge();
+                if (age < 3) {
+                    ageDistribution.put("3个月以内", ageDistribution.get("3个月以内") + 1);
+                } else if (age >= 3 && age < 6) {
+                    ageDistribution.put("3-6个月", ageDistribution.get("3-6个月") + 1);
+                } else if (age >= 6 && age < 12) {
+                    ageDistribution.put("6-12个月", ageDistribution.get("6-12个月") + 1);
+                } else if (age >= 12 && age < 18) {
+                    ageDistribution.put("12-18个月", ageDistribution.get("12-18个月") + 1);
+                } else if (age >= 18 && age < 24) {
+                    ageDistribution.put("18-24个月", ageDistribution.get("18-24个月") + 1);
+                } else {
+                    ageDistribution.put("24个月以上", ageDistribution.get("24个月以上") + 1);
+                }
             }
 
             // 分析健康状态
@@ -315,14 +328,25 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
      */
     @Override
     public void addOrUpdateFundRecord(AddFundRecordDTO addFundRecordDTO) {
-        // 获取当前用户ID
-        Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
-        FundRecord fundRecord = new FundRecord();
-        BeanUtils.copyProperties(addFundRecordDTO, fundRecord);
-        fundRecord.setCreateUserId(userId);
-        fundRecord.setType(addFundRecordDTO.getType());
-        fundRecord.setIsDeleted(0);
-        fundRecordMapper.insertOrUpdate(fundRecord);
+        if (addFundRecordDTO.getId() != null) {
+            // 更新
+            FundRecord fundRecord = fundRecordMapper.selectById(addFundRecordDTO.getId());
+            BeanUtils.copyProperties(addFundRecordDTO, fundRecord);
+            fundRecordMapper.updateById(fundRecord);
+        } else {
+            // 添加
+            Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+            FundRecord fundRecord = new FundRecord();
+            BeanUtils.copyProperties(addFundRecordDTO, fundRecord);
+            fundRecord.setCreateUserId(userId);
+            fundRecord.setType(addFundRecordDTO.getType());
+            fundRecord.setIsDeleted(0);
+            fundRecordMapper.insert(fundRecord);
+        }
+
+        // 更新缓存，先删除，再重新加载
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS);
+        analysis();
     }
 
     /**
@@ -347,6 +371,9 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
     @Override
     public void deleteFundRecord(Integer id) {
         fundRecordMapper.deleteById(id);
+        // 更新缓存，先删除，再重新加载
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS);
+        analysis();
     }
 
     /**

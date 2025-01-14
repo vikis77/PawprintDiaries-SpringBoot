@@ -2,6 +2,7 @@ package com.qin.catcat.unite.manage;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -55,16 +56,31 @@ public class PostManage {
         List<PostWeight> weightedPosts = calculateWeightedPosts();
 
         // -------------------
-        // TODO （临时方案）超级置顶，把pistId为26的帖子放在第一位
-        for (PostWeight pw : weightedPosts) {
-            if (pw.getPost().getPostId() == 26) {
-                weightedPosts.remove(pw);
-                weightedPosts.add(0, pw);
-                break;
+        // TODO （临时方案）超级置顶，把pistId为26的帖子放在第一位，40的帖子放在第二位
+        // 使用迭代器避免ConcurrentModificationException
+        // 先找到需要置顶的帖子
+        PostWeight post26 = null;
+        PostWeight post40 = null;
+        Iterator<PostWeight> iterator = weightedPosts.iterator();
+        while(iterator.hasNext()) {
+            PostWeight pw = iterator.next();
+            if(pw.getPost().getPostId() == 26) {
+                post26 = pw;
+                iterator.remove();
+            } else if(pw.getPost().getPostId() == 40) {
+                post40 = pw;
+                iterator.remove();
             }
         }
+        // 将帖子按顺序插入到列表开头
+        if(post40 != null) {
+            weightedPosts.add(0, post40);
+        }
+        if(post26 != null) {
+            weightedPosts.add(0, post26);
+        }
         // -------------------
-
+        
         log.info("重新计算权重和随机排序完成:{}",weightedPosts);
         // 构建缓存key
         String cacheKey = Constant.WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();

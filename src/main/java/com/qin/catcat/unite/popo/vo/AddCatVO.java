@@ -14,4 +14,6 @@ import lombok.Data;
 public class AddCatVO {
     // 文件名转换映射：key为源文件名，value为转换后的文件名
     private Map<String, String> fileNameConvertMap;
+    // 小猫ID
+    private Integer catId;
 }

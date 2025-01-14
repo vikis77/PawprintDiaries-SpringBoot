@@ -14,4 +14,12 @@ public interface SearchService {
     */
     public SearchVO searchForEsAndMysql(String words, int page, int size);
 
+    /**
+     * @Description 搜索 - 分页MySQL方式查询
+     * @param words 搜索关键词
+     * @param page 页码
+     * @param size 每页大小
+     * @return 合并后的搜索结果
+     */
+    public SearchVO searchForMysql(String words, int page, int size);
 }

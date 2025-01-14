@@ -2,6 +2,7 @@ package com.qin.catcat.unite.popo.entity;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -47,10 +48,10 @@ public class User {
     private Integer status; // 状态(1:启用,0:禁用)
     @TableField(fill = FieldFill.INSERT)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Timestamp createTime; // 创建时间,默认当前时间
+    private LocalDateTime createTime; // 创建时间,默认当前时间
     @TableField(fill = FieldFill.INSERT_UPDATE)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Timestamp updateTime; // 更新时间
+    private LocalDateTime updateTime; // 更新时间
     
     private Integer postCount; // 发帖数
     

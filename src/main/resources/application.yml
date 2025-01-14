@@ -41,7 +41,7 @@ bloom:
       capacity: 10000    # 预计元素数量
       error-rate: 0.01   # 误判率
       name: "cat:like:bloom"  # 过滤器名称
-      reset-cron: "59 59 * * * ?"  # 重置时间
+#       reset-cron: "3 * * * * ?"  # 重置时间
 
 # 缓存监控配置
 management:
@@ -61,3 +61,8 @@ management:
       application: catcat
     cache:
       instrument: true
+# 微信配置
+wx:
+  appId: wx59bda6b87d597cbf
+  appSecret: ce16d796044d4cee0b965fcf227079ce
+

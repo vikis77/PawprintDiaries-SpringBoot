@@ -57,7 +57,7 @@ import com.qin.catcat.unite.service.PostService;
 import com.qin.catcat.unite.service.QiniuService;
 import com.qin.catcat.unite.service.UserService;
 import com.qin.catcat.unite.popo.entity.EsPostIndex;
-import com.qin.catcat.unite.repository.EsPostIndexRepository;
+// import com.qin.catcat.unite.repository.EsPostIndexRepository;
 
 import io.jsonwebtoken.lang.Collections;
 import io.swagger.models.auth.In;
@@ -84,8 +84,8 @@ public class PostServiceImpl implements PostService{
     @Autowired CacheUtils cacheUtils;
     @Autowired 
     PostManage postManage;
-    @Autowired 
-    private EsPostIndexRepository esPostIndexRepository;
+    // @Autowired 
+    // private EsPostIndexRepository esPostIndexRepository;
 
     /**
     * 新增帖子
@@ -155,16 +155,29 @@ public class PostServiceImpl implements PostService{
     * @param 
     * @return 
     */
+    @Transactional(rollbackFor = Exception.class)
     public SinglePostVO getPostByPostId(String postId){
-        log.debug("Fetching post with id: {}", postId);
-        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("id", postId);
-        queryWrapper.eq("is_deleted", 0); // 查询未删除的帖子
-        // queryWrapper.eq("is_adopted", 1); // 查询通过审核的帖子
-        Post post = postMapper.selectOne(queryWrapper);
-        if (post == null) {
-            return null; // 或者抛出一个异常，表示未找到对应的帖子
+        // 尝试获取整个帖子VO
+        String userIdForKey = TokenHolder.getToken() != null ? jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()) : "0";
+        String cacheKey101 = Constant.GET_POST_BY_POST_ID_VO + ":" + postId + "|UserId:" + userIdForKey;
+        SinglePostVO singlePostCacheVO = cacheUtils.getWithMultiLevel(cacheKey101, SinglePostVO.class, () -> {return null;});
+        if (singlePostCacheVO != null) {
+            return singlePostCacheVO;
         }
+
+        // 尝试从缓存获取帖子实体
+        Post post = cacheUtils.getWithMultiLevel(Constant.GET_POST_BY_POST_ID + ":" + postId, Post.class, () -> {
+            // 如果从缓存中获取数据失败，则从数据库查询
+            QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("id", postId);
+            queryWrapper.eq("is_deleted", 0); // 查询未删除的帖子
+            Post p = postMapper.selectOne(queryWrapper);
+            if (p == null) {
+                throw new BusinessException(CatcatEnumClass.StatusCode.POST_NOT_FOUND.getCode(), CatcatEnumClass.StatusCode.POST_NOT_FOUND.getMessage());
+            }
+            return p;
+        });
+
         SinglePostVO singlePostVO = new SinglePostVO();
         singlePostVO.setPostId(post.getPostId());
         singlePostVO.setTitle(post.getTitle());
@@ -194,10 +207,11 @@ public class PostServiceImpl implements PostService{
         }else{
             throw new RuntimeException("作者不存在");
         }
+
         // 根据帖子ID查询帖子的全部图片（post_pics表）
         QueryWrapper<PostPics> queryPostPicListWrapper = new QueryWrapper<>();
         queryPostPicListWrapper.eq("post_id", postId);
-        queryPostPicListWrapper.orderByAsc("id");
+        queryPostPicListWrapper.orderByAsc("pic_number");
         List<PostPics> postPicsList = postPicsMapper.selectList(queryPostPicListWrapper);
         singlePostVO.setImages(postPicsList);
         // 当前用户已登录
@@ -223,6 +237,9 @@ public class PostServiceImpl implements PostService{
             singlePostVO.setLiked(false);
             singlePostVO.setCollected(false);
         }
+
+        // 将帖子VO放入缓存
+        cacheUtils.put(cacheKey101, singlePostVO);
         return singlePostVO;
     }
 
@@ -475,10 +492,10 @@ public class PostServiceImpl implements PostService{
             esPostIndex.setUpdateTime(java.sql.Timestamp.valueOf(post.getUpdateTime()));
         }
         
-        // 保存到ES
-        List<EsPostIndex> indexList = new ArrayList<>();
-        indexList.add(esPostIndex);
-        esPostIndexRepository.saveAll(indexList);
+        // 保存到ES （暂时不使用ES）
+        // List<EsPostIndex> indexList = new ArrayList<>();
+        // indexList.add(esPostIndex);
+        // esPostIndexRepository.saveAll(indexList);
         
         log.info("帖子{}审核通过，数据已同步到MySQL、Redis和ES", postId);
         return true;
@@ -593,6 +610,10 @@ public class PostServiceImpl implements PostService{
         user.setPostCount(user.getPostCount() - 1);
         userMapper.updateById(user);
 
+        // 清除以帖子ID为前缀的所有缓存
+        cacheUtils.removePattern(Constant.GET_POST_BY_POST_ID_VO + ":" + postId + "*");
+        // 清除该帖子实体
+        cacheUtils.remove(Constant.GET_POST_BY_POST_ID + ":" + postId);
         return true;
     }
 
@@ -644,6 +665,10 @@ public class PostServiceImpl implements PostService{
         
         // Redis更新点赞数
         updateLikeCount(postId, true);
+        // 清除以帖子ID为前缀的所有缓存
+        cacheUtils.removePattern(Constant.GET_POST_BY_POST_ID_VO + ":" + postId + "*");
+        // 清除该帖子实体
+        cacheUtils.remove(Constant.GET_POST_BY_POST_ID + ":" + postId);
         return getLikeCount(postId);
     }
 
@@ -670,6 +695,11 @@ public class PostServiceImpl implements PostService{
             // Redis更新点赞数
             updateLikeCount(postId, false);
         }
+
+        // 清除以帖子ID为前缀的所有缓存
+        cacheUtils.removePattern(Constant.GET_POST_BY_POST_ID_VO + ":" + postId + "*");
+        // 清除该帖子实体
+        cacheUtils.remove(Constant.GET_POST_BY_POST_ID + ":" + postId);
         // 返回当前Redis中点赞数
         return getLikeCount(postId);
     }

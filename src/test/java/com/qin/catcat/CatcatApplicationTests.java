@@ -47,7 +47,7 @@ import com.qin.catcat.unite.common.utils.GeneratorIdUtil;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.EsPostIndex;
-import com.qin.catcat.unite.repository.EsPostIndexRepository;
+// import com.qin.catcat.unite.repository.EsPostIndexRepository;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -64,8 +64,8 @@ class CatcatApplicationTests {
 	private GeneratorIdUtil generatorIdUtil;
 	@Autowired
 	CatMapper catMapper;
-	@Autowired
-    private EsPostIndexRepository esPostIndexRepository;
+	// @Autowired
+    // private EsPostIndexRepository esPostIndexRepository;
 	@Autowired
 	private ElasticsearchUtil elasticsearchUtil;
 
@@ -102,7 +102,7 @@ class CatcatApplicationTests {
 	@Test
     public void getAllPosts() {
 		List<EsPostIndex> EsPostIndexs = new ArrayList<>();
-		EsPostIndexs = (List<EsPostIndex>) esPostIndexRepository.findAll();
+		// EsPostIndexs = (List<EsPostIndex>) esPostIndexRepository.findAll();
 		// 断言返回的列表不为空
 		assertNotNull(EsPostIndexs);
 		assertFalse(EsPostIndexs.isEmpty());

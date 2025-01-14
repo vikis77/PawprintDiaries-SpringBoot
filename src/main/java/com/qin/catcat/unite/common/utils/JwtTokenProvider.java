@@ -124,9 +124,13 @@ public class JwtTokenProvider {
         }
         // Token 过期 
         catch (ExpiredJwtException ex) {
+            // 清除Token
+            TokenHolder.clear();
             log.error("Token已过期: {}", ex.getMessage());
             return false;
         } catch (Exception ex) {
+            // 清除Token
+            TokenHolder.clear();
             log.error("JWT验证失败: {}", ex.getMessage());
             return false;
         }

@@ -32,9 +32,21 @@ public class SearchController {
     @Autowired
     private SearchService searchSerivce;
 
+    /**
+     * @Description ES和MySQL联合搜索
+     */
     @GetMapping("/search")
     public Result<SearchVO> searchPostsOrCats(@RequestParam String words, @RequestParam(defaultValue = "1") int page, @RequestParam (defaultValue = "10") int size) {
         SearchVO resVo = searchSerivce.searchForEsAndMysql(words,page,size);
+        return Result.success(resVo);
+    }
+
+    /**
+     * @Description MySQL方式搜索
+     */
+    @GetMapping("/search/mysql")
+    public Result<SearchVO> searchPostsOrCatsForMysql(@RequestParam String words, @RequestParam(defaultValue = "1") int page, @RequestParam (defaultValue = "10") int size) {
+        SearchVO resVo = searchSerivce.searchForMysql(words,page,size);
         return Result.success(resVo);
     }
     

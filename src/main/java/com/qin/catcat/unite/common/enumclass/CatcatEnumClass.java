@@ -52,7 +52,7 @@ public class CatcatEnumClass {
         USERNAME_NOT_FOUND(20002, "用户名不存在"),
         JWT_IDENTITY_VERICION_FAILED(20003,"JWT身份校验失败"),
         PASSWORD_UPDATE_FAILURE(20004,"密码更新失败"),
-        USER_ALREADY_EXISTS(20005,"用户名，注册失败"),
+        USER_ALREADY_EXISTS(20005,"用户名已存在，请重新输入"),
         TOKEN_EXPIRED(20006,"身份已过期，请重新登录"),
         TOKEN_INVALID(20007,"身份无效，请重新登录"),
         REQUEST_TOO_FREQUENT(20008,"请求太频繁，请稍后再试"),

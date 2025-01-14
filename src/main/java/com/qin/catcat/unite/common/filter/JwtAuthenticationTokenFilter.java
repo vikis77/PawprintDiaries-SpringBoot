@@ -160,7 +160,13 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 response.getWriter().flush();
                 return;
             }
-        } else {
+        } 
+        // 请求头为空或不是Bearer token格式，设置为游客身份
+        else {
+            // 如果ThreadLocal中还存在旧的token，则清除
+            if (TokenHolder.getToken() != null) {
+                TokenHolder.clear();
+            }
             log.info("请求头为空或不是Bearer token格式，设置为游客身份");
             UserDetails userDetails = jwtTokenProvider.getUserDetailsFromToken(null);
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

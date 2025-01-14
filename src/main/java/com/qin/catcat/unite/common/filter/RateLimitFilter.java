@@ -192,6 +192,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             redisTemplate.opsForValue().set(key, "1", WINDOW_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
         } else {
             redisTemplate.opsForValue().increment(key);
+            redisTemplate.expire(key, WINDOW_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
         }
         return true;
     }
@@ -240,6 +241,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private void handleBlacklistResponse(HttpServletResponse response, String ip, String uri) throws IOException {
+        log.info("RateLimitFilter -> 拦截黑名单访问 -> IP: {}, URI: {}", ip, uri);
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
         Result<String> result = Result.error(StatusCode.REQUEST_TOO_FREQUENT.getCode(), "访问已被限制，请24小时后重试");
@@ -248,6 +250,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private void handleLimitExceeded(HttpServletResponse response, String message) throws IOException {
+        log.info("RateLimitFilter -> 访问已被限制，请24小时后重试,message:{}", message);
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
         Result<String> result = Result.error(StatusCode.REQUEST_TOO_FREQUENT.getCode(), "访问已被限制，请24小时后重试");

@@ -30,8 +30,18 @@ public class WebLogAspect {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    @Pointcut("execution(* com.qin.catcat.unite.controller..*.*(..))")
+    // 排除登录注册相关接口
+    @Pointcut("execution(* com.qin.catcat.unite.controller.UserController.login(..))")
+    public void login() {}
+    @Pointcut("execution(* com.qin.catcat.unite.controller.UserController.register(..))")
+    public void register() {}
+    // @Pointcut("execution(* com.qin.catcat.unite.controller.UserController.logout(..))")
+    // public void logout() {}
+    // @Pointcut("execution(* com.qin.catcat.unite.controller.UserController.refreshToken(..))")
+    // public void refreshToken() {}
+    @Pointcut("execution(* com.qin.catcat.unite.controller..*.*(..)) && !login() && !register()")
     public void webLog() {}
+    
 
     @Around("webLog()")
     public Object doAround(ProceedingJoinPoint joinPoint) throws Throwable {

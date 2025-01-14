@@ -28,7 +28,7 @@ import com.qin.catcat.unite.popo.vo.SinglePostVO;
 import com.qin.catcat.unite.security.HasPermission;
 import com.qin.catcat.unite.service.PostService;
 import com.qin.catcat.unite.service.UserService;
-import com.qin.catcat.unite.service.DataSyncService;
+// import com.qin.catcat.unite.service.DataSyncService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,7 +43,7 @@ public class PostController {
     @Autowired private JwtTokenProvider jwtTokenProvider;
     @Autowired private UserService userService;
     @Autowired private GeneratorIdUtil generatorIdUtil;
-    @Autowired private DataSyncService dataSyncService;
+    // @Autowired private DataSyncService dataSyncService;
 
     /**
      * 新增帖子
@@ -350,13 +350,14 @@ public class PostController {
     @PostMapping("/reindex")
     // @HasPermission("post:manage")  // 需要管理权限
     public Result<String> reindexAllPosts() {
-        try {
-            dataSyncService.reindexAll();
-            return Result.success("重新索引成功");
-        } catch (Exception e) {
-            log.error("重新索引失败: ", e);
-            return Result.error("重新索引失败: " + e.getMessage());
-        }
+        // try {
+        //     dataSyncService.reindexAll();
+        //     return Result.success("重新索引成功");
+        // } catch (Exception e) {
+        //     log.error("重新索引失败: ", e);
+        //     return Result.error("重新索引失败: " + e.getMessage());
+        // }
+        return Result.success();
     }
 
     // @PostMapping("/create")

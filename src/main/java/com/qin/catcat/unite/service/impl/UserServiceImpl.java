@@ -141,12 +141,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional(rollbackFor = Exception.class)
     public Boolean registerUser(RegisterDTO registerDTO){
         QueryWrapper<User> wrapper = new QueryWrapper<>();//创建条件构造器
-        wrapper.eq("username", registerDTO.getUsername()).or().eq("email", registerDTO.getEmail()).or();//条件构造
+        wrapper.eq("username", registerDTO.getUsername());//条件构造
         User storeUser = userMapper.selectOne(wrapper);//条件查询数据库
 
         if(storeUser!=null){
             //数据库已经存在此用户名，注册失败
-            throw new UserAlreadyExistsException("用户名或邮箱已存在，注册失败");
+            throw new BusinessException(CatcatEnumClass.StatusCode.USER_ALREADY_EXISTS.getCode(), CatcatEnumClass.StatusCode.USER_ALREADY_EXISTS.getMessage());
         }
 
         //创建新用户
@@ -269,9 +269,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User updateUser = new User();
         BeanUtils.copyProperties(updateProfileDTO, updateUser);
         updateUser.setUserId(Integer.parseInt(updateProfileDTO.getUserId()));
-        // 将图片名转换为新的文件名
-        String newFileName = generatorIdUtil.GeneratorRandomId() + updateProfileDTO.getAvatar().substring(updateProfileDTO.getAvatar().lastIndexOf("."));
-        updateUser.setAvatar(newFileName);
+        // 将图片名转换为新的文件名（前端已经处理了，这里就不需要处理了）
+        // String newFileName = generatorIdUtil.GeneratorRandomId() + updateProfileDTO.getAvatar().substring(updateProfileDTO.getAvatar().lastIndexOf("."));
+        updateUser.setAvatar(updateProfileDTO.getAvatar());
         userMapper.updateById(updateUser);
         try {
             // 执行更新操作
@@ -282,7 +282,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             UpdateProfileVO updateProfileVO = new UpdateProfileVO();
             Map<String, String> fileNameConvertMap = new HashMap<>();
-            fileNameConvertMap.put(updateProfileDTO.getAvatar(), newFileName);
+            fileNameConvertMap.put(updateProfileDTO.getAvatar(), updateProfileDTO.getAvatar());
             updateProfileVO.setFileNameConvertMap(fileNameConvertMap);
             return updateProfileVO;
         } catch (Exception e) {
