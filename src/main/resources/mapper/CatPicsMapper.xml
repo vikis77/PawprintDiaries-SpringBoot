@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qin.catcat.unite.mapper.CatPicsMapper">
+    <insert id="insertBatch">
+        INSERT INTO cat_pics (cat_id, url, update_user_id) 
+        VALUES 
+        <foreach collection="list" item="item" separator=",">
+            (#{item.catId}, #{item.url}, #{item.updateUserId})
+        </foreach>
+    </insert>
+</mapper> 

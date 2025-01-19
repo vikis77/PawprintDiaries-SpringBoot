@@ -1,6 +1,5 @@
 package com.qin.catcat.unite.popo.entity;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
@@ -11,24 +10,36 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 
+/**
+ * @Description 短链接实体类
+ *
+ * @Author liuyun
+ * @Version 1.0
+ * @Since 2025-01-18 23:21
+ */
 @Data
-@TableName("cat_pics")
-public class CatPics {
+@TableName("shot_link")
+public class ShotLink {
     /**
-     * 主键ID
+     * 主键id
      */
     @TableId(type = IdType.AUTO)
     private Integer id;
     
     /**
-     * 猫咪ID
+     * 记录类型：10猫猫 20帖子
      */
-    private Integer catId;
+    private Integer type;
     
     /**
-     * 图片URL地址
+     * 原始Url信息
      */
-    private String url;
+    private String originUrl;
+    
+    /**
+     * 转换后的url
+     */
+    private String convertUrl;
     
     /**
      * 创建时间
@@ -46,14 +57,4 @@ public class CatPics {
      * 是否删除：0否 1是
      */
     private Integer isDeleted;
-    
-    /**
-     * 更新人ID
-     */
-    private Integer updateUserId;
-    
-    /**
-     * 图片排序号
-     */
-    private Integer sortNumber;
 }

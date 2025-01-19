@@ -1,12 +1,17 @@
 package com.qin.catcat.unite.controller;
 
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.qin.catcat.unite.common.result.Result;
+import com.qin.catcat.unite.param.AddCatPhotoParam;
+import com.qin.catcat.unite.popo.dto.AddCatPhotoDTO;
 import com.qin.catcat.unite.popo.entity.CatPics;
+import com.qin.catcat.unite.popo.vo.AddCatPhotoVO;
 import com.qin.catcat.unite.service.CatPhotoService;
 import com.qin.catcat.unite.security.HasPermission;
 
@@ -28,12 +33,33 @@ public class CatPhotoController {
     @Autowired
     private CatPhotoService catPhotoService;
     
-    @Operation(summary = "上传猫咪照片")
+    @Operation(summary = "新增上传猫咪照片")
     @HasPermission("system:cat:photo:upload")
-    @PostMapping("/{catId}")
-    public Result<String> uploadPhoto(@PathVariable Long catId, @RequestParam("file") MultipartFile file) {
-        String photoUrl = catPhotoService.uploadPhoto(catId, file);
-        return Result.success(photoUrl);
+    @PostMapping("/upload/{catId}")
+    public Result<AddCatPhotoVO> uploadPhoto(@PathVariable Integer catId, @RequestBody AddCatPhotoParam param) {
+        AddCatPhotoDTO addCatPhotoDTO = new AddCatPhotoDTO();
+        addCatPhotoDTO.setCatId(catId);
+        addCatPhotoDTO.setPictrueName(param.getPictrueName());
+        AddCatPhotoVO addCatPhotoVO = catPhotoService.uploadPhoto(addCatPhotoDTO);
+        return Result.success(addCatPhotoVO);
+    }
+
+    @Operation(summary = "删除猫咪照片")
+    @HasPermission("system:cat:photo:delete")
+    @DeleteMapping("/delete/{catPhotoId}")
+    public Result<String> deletePhoto(@PathVariable Integer catPhotoId) {
+        catPhotoService.deletePhoto(catPhotoId);
+        return Result.success("删除成功");
+    }
+
+    @Operation(summary = "更新猫咪照片")
+    @HasPermission("system:cat:photo:update")
+    @PutMapping("/update/{originalPhotoId}")
+    public Result<AddCatPhotoVO> updatePhoto(@PathVariable Integer originalPhotoId, @RequestBody AddCatPhotoParam param) {
+        AddCatPhotoDTO addCatPhotoDTO = new AddCatPhotoDTO();
+        addCatPhotoDTO.setPictrueName(param.getPictrueName());
+        AddCatPhotoVO addCatPhotoVO = catPhotoService.updatePhoto(originalPhotoId, addCatPhotoDTO);
+        return Result.success(addCatPhotoVO);
     }
     
     @Operation(summary = "获取猫咪照片列表")

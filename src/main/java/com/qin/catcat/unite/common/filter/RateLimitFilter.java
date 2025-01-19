@@ -81,8 +81,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String IP_FAIL_COUNT_PREFIX = "fail:ip:";           // IP失败次数
     private static final String URI_FAIL_COUNT_PREFIX = "fail:uri:";         // URI失败次数
 
-    private static final int RATE_LIMIT_PER_SECOND_IP = 5;      // 单IP每秒限制
-    private static final int RATE_LIMIT_PER_SECOND_GLOBAL = 500; // 全局每秒限制
+    private static final int RATE_LIMIT_PER_SECOND_IP = 10;      // 单IP每秒限制
+    private static final int RATE_LIMIT_PER_SECOND_GLOBAL = 1000; // 全局每秒限制
     private static final int RATE_LIMIT_PER_SECOND_URI = 200;    // 单URI每秒限制
     private static final int FAIL_THRESHOLD = 300;               // 失败次数阈值
     private static final int BLACKLIST_EXPIRE_HOURS = 2;       // 黑名单封禁时间（小时）

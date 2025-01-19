@@ -40,6 +40,7 @@ import com.qin.catcat.unite.mapper.PostMapper;
 import com.qin.catcat.unite.mapper.PostPicsMapper;
 import com.qin.catcat.unite.mapper.UserFollowMapper;
 import com.qin.catcat.unite.mapper.UserMapper;
+import com.qin.catcat.unite.mapper.UserRoleMapper;
 import com.qin.catcat.unite.mapper.PostLikeMapper;
 import com.qin.catcat.unite.mapper.PostCollectMapper;
 import com.qin.catcat.unite.popo.dto.PostDTO;
@@ -48,6 +49,7 @@ import com.qin.catcat.unite.popo.entity.PostCollect;
 import com.qin.catcat.unite.popo.entity.PostPics;
 import com.qin.catcat.unite.popo.entity.PostWeight;
 import com.qin.catcat.unite.popo.entity.User;
+import com.qin.catcat.unite.popo.entity.UserRole;
 import com.qin.catcat.unite.popo.vo.AddPostVO;
 import com.qin.catcat.unite.popo.vo.ApplyPostVO;
 import com.qin.catcat.unite.popo.vo.HomePostVO;
@@ -76,6 +78,7 @@ public class PostServiceImpl implements PostService{
     @Autowired RabbitTemplate rabbitTemplate; //使用rabbitmq
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired UserService userService;
+    @Autowired UserRoleMapper userRoleMapper;
     @Autowired GeneratorIdUtil generatorIdUtil;
     @Autowired QiniuService qiniuService;
     @Autowired UserFollowMapper userFollowMapper;
@@ -190,11 +193,19 @@ public class PostServiceImpl implements PostService{
         singlePostVO.setUpdateTime(post.getUpdateTime());
         if (post.getIsAdopted() == 0) {
             Integer authorId = post.getAuthorId();
-            // 如果作者ID和当前用户ID不一致，则抛出异常
-            if (!String.valueOf(authorId).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()))) {
+            Integer currentUserId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
+            // 查询当前用户是否是超级管理员或管理员
+            UserRole userRole = userRoleMapper.selectOne(new LambdaQueryWrapper<UserRole>()
+                    .eq(UserRole::getUserId, currentUserId)
+                    .eq(UserRole::getRoleId, 1)
+                    .or()
+                    .eq(UserRole::getUserId, authorId)
+                    .eq(UserRole::getRoleId, 2));
+            // 如果作者ID和当前用户ID不一致并且当前用户不是超级管理员或管理员，则抛出异常
+            if (!String.valueOf(authorId).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken())) && userRole == null) {
                 throw new BusinessException(CatcatEnumClass.StatusCode.POST_NOT_APPROVED.getCode(), CatcatEnumClass.StatusCode.POST_NOT_APPROVED.getMessage());
             }
-            // 如果作者查看自己尚未通过审核的帖子，则抛出异常
+            // 如果作者查看自己尚未通过审核的帖子，则显示“帖子审核中”
             else{
                 singlePostVO.setTitle(singlePostVO.getTitle() + "（帖子审核中）");
             }

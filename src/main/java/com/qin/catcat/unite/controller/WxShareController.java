@@ -36,7 +36,7 @@ public class WxShareController {
      */
     @Operation(summary = "获取微信配置")
     @GetMapping("/wxConfig")
-    @HasPermission(value = "system:wx:wxshare:wxConfig")
+    @HasPermission(value = "system:wx:wxshare:wxConfig")    
     public Result<Map<String, String>> getWxConfig(@RequestParam String url) throws Exception {
         return Result.success(wxShareService.getWxConfig(url));
     }

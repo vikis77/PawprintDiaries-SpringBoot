@@ -36,16 +36,19 @@ import com.qin.catcat.unite.common.utils.JwtTokenProvider;
 import com.qin.catcat.unite.common.utils.ObjectPoolUtil;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.manage.CatManage;
+import com.qin.catcat.unite.mapper.CatAdoptApplyRecordMapper;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CatPicsMapper;
 import com.qin.catcat.unite.mapper.CatTimeLineEventMapper;
 import com.qin.catcat.unite.mapper.CoordinateMapper;
 import com.qin.catcat.unite.param.AddCatTimelineParam;
+import com.qin.catcat.unite.param.AdoptParam;
 import com.qin.catcat.unite.param.UpdateCatTimelineParam;
 import com.qin.catcat.unite.param.UploadCoordinateParam;
 import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
+import com.qin.catcat.unite.popo.entity.CatAdoptApplyRecord;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.CatTimeLineEvent;
 import com.qin.catcat.unite.popo.entity.Coordinate;
@@ -83,6 +86,8 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     CatTimeLineEventMapper catTimeLineEventMapper;
     @Autowired
     ObjectPoolUtil objectPoolUtil; // 对象池工具类
+    @Autowired
+    CatAdoptApplyRecordMapper catAdoptApplyRecordMapper;
 
     /**
      * @Description 新增猫猫
@@ -109,6 +114,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
 
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
+        cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW);
         log.info("新增完成");
         AddCatVO addCatVO = new AddCatVO();
         Map<String, String> fileNameConvertMap = new HashMap<>();
@@ -208,6 +214,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         // 更新缓存
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
         cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW);
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS);
         log.info("更新{}猫信息完成", cat.getCatname());
         updateCatVO.setFileNameConvertMap(fileNameConvertMap);
         return updateCatVO;
@@ -218,6 +225,16 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         Cat cat = catMapper.selectById(ID);
         cat.setIsDeleted(1);
         catMapper.updateById(cat);
+        log.info("根据猫猫ID删除信息完成");
+        // TODO 
+        // 删除时间线（逻辑删除）
+        // 删除图片
+        // 删除坐标
+        // 删除点赞
+
+        // 清除缓存
+        cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW); // 小猫列表
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS); // 小猫数据分析
         log.info("根据猫猫ID删除信息完成");
     }
 
@@ -251,6 +268,23 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     // 生成点赞key
     private String generateLikeKey(String userId, Long catId) {
         return String.format("like:%s:%d:%s", userId, catId, LocalDateTime.now().format(DateTimeFormatter.ISO_DATE));
+    }
+
+    // 领养小猫申请
+    @Override
+    public void adoptCat(AdoptParam adoptParam) {
+        CatAdoptApplyRecord catAdoptApplyRecord = new CatAdoptApplyRecord();
+        BeanUtils.copyProperties(adoptParam, catAdoptApplyRecord);
+
+        // 如果用户已登录，则设置领养人ID
+        if (StringUtils.isNotBlank(TokenHolder.getToken())) {
+            String currentUserId = jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken());
+            catAdoptApplyRecord.setApplyUserId(Integer.parseInt(currentUserId));
+        }
+
+        catAdoptApplyRecordMapper.insert(catAdoptApplyRecord);
+
+        log.info("领养小猫");
     }
 
     // ================ 猫咪照片相关方法 ================
@@ -587,6 +621,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         Integer userId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
         CatTimeLineEvent catTimeLineEvent = new CatTimeLineEvent();
         BeanUtils.copyProperties(param, catTimeLineEvent);
+        catTimeLineEvent.setDate(Date.valueOf(param.getDate()));
         catTimeLineEvent.setCreateUserId(userId);
         catTimeLineEventMapper.updateById(catTimeLineEvent);
     }

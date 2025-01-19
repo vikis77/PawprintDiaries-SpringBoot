@@ -1,5 +1,6 @@
 package com.qin.catcat.unite.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class QiniuServiceImpl implements QiniuService {
     private String bucket;
 
     /**
-     * 删除七牛云上的文件
+     * 批量删除七牛云上的文件
      * @param fileNames 文件名列表
      * @return 是否删除成功
      */
@@ -45,8 +46,8 @@ public class QiniuServiceImpl implements QiniuService {
                             key = "catcat/post_pics/" + fileName;
                         } else if (type.equals("user_avatar")){
                             key = "catcat/user_avatar/" + fileName;
-                        } else if (type.equals("post_pics")){
-                            key = "catcat/post_pics/" + fileName;
+                        } else if (type.equals("cat_pics")){
+                            key = "catcat/cat_pics/" + fileName;
                         }
                         // 删除文件
                         bucketManager.delete(bucket, key);
@@ -62,5 +63,18 @@ public class QiniuServiceImpl implements QiniuService {
             }
         }
         return true;
+    }
+
+    /**
+     * 删除单个七牛云上的文件
+     * @param fileName 文件名
+     * @param type 文件类型: user_avatar, post_pics, post_video，cat_pics
+     * @return 是否删除成功
+     */
+    @Override
+    public boolean deleteFile(String fileName, String type) {
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add(fileName);
+        return deleteFile(fileNames, type);
     }
 } 

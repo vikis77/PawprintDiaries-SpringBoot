@@ -108,7 +108,7 @@ public class CatController {
     @HasPermission("system:cat:adopt")
     @PostMapping("/adopt/apply")
     public Result<Void> adoptCat(@RequestBody AdoptParam adoptParam) {
-        // catService.adoptCat(adoptParam);
+        catService.adoptCat(adoptParam);
         log.info("领养小猫");
         return Result.success();
     }

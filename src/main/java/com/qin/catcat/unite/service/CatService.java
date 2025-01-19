@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.qin.catcat.unite.param.AddCatTimelineParam;
+import com.qin.catcat.unite.param.AdoptParam;
 import com.qin.catcat.unite.param.UpdateCatTimelineParam;
 import com.qin.catcat.unite.param.UploadCoordinateParam;
 import com.qin.catcat.unite.popo.dto.CatDTO;
@@ -50,6 +51,11 @@ public interface CatService {
      * 点赞小猫
      */
     void likeCat(Long catId);
+
+    /**
+     * 领养小猫
+     */
+    void adoptCat(AdoptParam adoptParam);
 
     /**
      * 上传猫咪照片

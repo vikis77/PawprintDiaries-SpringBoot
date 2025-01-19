@@ -40,4 +40,6 @@ public class CatDTO{
     private String catGuide;
     //品种
     private String breed;
+    //是否已被领养
+    private Integer isAdopted;
 }

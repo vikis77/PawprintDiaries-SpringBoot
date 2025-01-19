@@ -1,11 +1,14 @@
 package com.qin.catcat.unite.popo.vo;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import lombok.Data;
 
 @Data
 public class DataAnalysisVO {
+    // 月份列表
+    private List<Integer> monthList;
     // 年龄分布 ["3个月以内","3-6个月","6-12个月","12-18个月","18-24个月","24个月以上"]
     private Object AgeDistribution;
 

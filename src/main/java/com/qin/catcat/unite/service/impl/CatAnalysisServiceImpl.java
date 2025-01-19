@@ -72,7 +72,7 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
     @SuppressWarnings("unchecked")
     public DataAnalysisVO analysis() {
         try {
-            // 从缓存中获取数据
+            // 从缓存中获取分析数据
             Object cachedData = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS, DataAnalysisVO.class, () -> {
                 // 查询全部猫猫数据
                 List<Cat> cats = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_CAT_LIST, List.class, () -> {
@@ -167,6 +167,19 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
                 dataAnalysisVO.setFundBalance(fundBalance);
                 dataAnalysisVO.setMonthExpense(monthExpense);
                 dataAnalysisVO.setMonthIncome(monthIncome);
+
+                // 获取近5个月月份列表
+                List<Integer> monthList = new ArrayList<>();
+                LocalDate currentDate = LocalDate.now();
+                
+                // 循环获取近5个月的月份数字(1-12)
+                for (int i = 0; i < 6; i++) {
+                    LocalDate date = currentDate.minusMonths(i);
+                    // 获取月份数字并添加到列表中
+                    log.info("月份: {}", date.getMonthValue());
+                    monthList.add(date.getMonthValue());
+                }
+                dataAnalysisVO.setMonthList(monthList);
                 return dataAnalysisVO;
             });
 

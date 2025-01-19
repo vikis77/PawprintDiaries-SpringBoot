@@ -11,6 +11,8 @@ import lombok.Data;
  */
 @Data
 public class AdoptParam {
+    // 小猫ID
+    private Long catId;
     // 小猫名字
     private String catName;
     // 领养人姓名
