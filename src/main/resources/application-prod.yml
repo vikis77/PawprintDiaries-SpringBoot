@@ -4,9 +4,9 @@ spring:
       matching-strategy: ANT_PATH_MATCHER
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/catcat?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&allowPublicKeyRetrieval=true
-    username: qin
-    password: 7d3aa8d353b7848d
+    url: jdbc:mysql://localhost:3306/xxx?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&tinyInt1isBit=false&allowPublicKeyRetrieval=true
+    username: xxx
+    password: xxx
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       maximum-pool-size: 6 # 最大连接数
@@ -23,8 +23,8 @@ spring:
 
   elasticsearch:
     uris: http://localhost:9200
-    username: elastic
-    password: Un4kHY7C6gMJkjwKRVfZ
+    username: xxx
+    password: xxx
 # MyBatis 分页插件
 pagehelper:
   helperDialect: mysql
@@ -34,7 +34,7 @@ pagehelper:
 
 # JWT 配置
 jwt:
-  secret: XnpcgH6NWZRJ+77sEAXst0B0BDnOCbF97M08ZdX/OAE=
+  secret: xxx
   expiration: 10800000 # 3小时
 
 # Tomcat 配置
@@ -66,10 +66,10 @@ logging:
     org.springframework: WARN
 # 上传的图片存储的位置，部署时需要修改
 file:
-  upload-dir: E:/01-Codes/JavaCode/catcat-oos/uploads/pics
+  upload-dir: xxx
 # 七牛云的配置
 qiniu:
-  access-key: FvZbXvCH0RyNyxE_8glWs0AJMTos7IvQoXeaWglA
-  secret-key: b2CrZvzYP6CtCeHTFUz0qD8RnfXp2uF_wsZPAngE
-  bucket: iur-blog
-  upload-url: https://cdn.luckyiur.com/catcat/post_pics/
+  access-key: xxx
+  secret-key: xxx
+  bucket: xxx
+  upload-url: xxx
