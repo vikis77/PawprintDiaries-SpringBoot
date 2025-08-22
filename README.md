@@ -9,7 +9,7 @@
 
 **一个基于 Spring Boot 开发的校园猫咪管理与社交平台**
 
-[在线体验](https://pawprintdiaries.luckyiur.com) | [前端代码](https://github.com/vikis77/PawprintDiaries-H5) | [开发者博客](https://luckyiur.com)
+[在线体验](https://pawprintdiaries.luckyiur.com) | [前端代码](https://github.com/vikis77/PawprintDiaries-H5) | [开发者博客](https://luckyiur.com) | [项目演示视频](https://www.bilibili.com/video/BV1iJA2e4EZ3/?spm_id_from=333.1387.homepage.video_card.click&vd_source=93ed68d6c3cef9d567969b4d3c9d0437)
 
 </div>
 
