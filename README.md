@@ -257,10 +257,15 @@ A: 修改application-prod.yml配置，使用`java -jar`或Docker部署。
 
 ## 📞 联系方式
 
+
+如有问题或建议，请通过以下方式联系：
+
+- 提交 [Issue](https://github.com/vikis77/Digital-Life-Engine/issues)
 - 项目地址: [GitHub](https://github.com/your-username/PawprintDiaries)
 - 前端项目: [PawprintDiaries-H5](https://github.com/vikis77/PawprintDiaries-H5)
 - 在线体验: [https://pawprintdiaries.luckyiur.com](https://pawprintdiaries.luckyiur.com)
 - 开发者博客: [https://luckyiur.com](https://luckyiur.com)
+- 发送邮件至: qin2607994895@gmail.com
 
 ---
 
