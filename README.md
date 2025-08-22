@@ -34,6 +34,20 @@
 - 💬 **AI对话**: 基于DIFY的AI智能问答
 - 🤖 **AI识别**: 基于MobileNetV3的猫咪品种识别（85%准确率）
 
+## 📸 项目截图
+
+实际页面效果如下（图片更新于2024/12，最新版已对部分页面重新优化）
+
+![pic1_20250207234240](pic1_20250207234240.jpg)
+
+![pic2_20250207234256](pic2_20250207234256.jpg)
+
+![pic3_20250207234307](pic3_20250207234307.jpg)
+
+![pic5_20250211221456](pic5_20250211221456.jpg)
+
+![pic4_20250207234318](pic4_20250207234318.jpg)
+
 ## 🛠️ 技术栈
 
 ### 后端技术
@@ -122,39 +136,6 @@ http://localhost:8080/doc.html
 ## 📚 API文档
 
 ### 核心接口
-
-#### 用户管理
-- `POST /api/user/login` - 用户登录
-- `POST /api/user/register` - 用户注册
-- `GET /api/user/profile` - 获取用户信息
-
-#### 猫咪管理
-- `GET /api/cat/list` - 获取猫咪列表
-- `POST /api/cat` - 添加猫咪信息
-- `PUT /api/cat/{id}` - 更新猫咪信息
-- `DELETE /api/cat/{id}` - 删除猫咪
-- `POST /api/cat/like/{catId}` - 点赞猫咪
-- `POST /api/cat/adopt/apply` - 申请领养
-
-#### 帖子管理
-- `POST /api/digital/addpost` - 发布帖子
-- `POST /api/digital/getOnePost` - 获取随机帖子
-- `POST /api/digital/getUnAuditedPost` - 获取待审核帖子
-- `POST /api/digital/auditPost` - 审核通过帖子
-- `POST /api/digital/rejectPost` - 拒绝帖子
-
-#### 评论管理
-- `POST /api/digital/comment` - 发表评论
-- `POST /api/digital/getUnAuditedComment` - 获取待审核评论
-- `POST /api/digital/auditComment` - 审核通过评论
-- `POST /api/digital/rejectComment` - 拒绝评论
-
-#### 位置服务
-- `GET /api/cat/location/list` - 获取猫咪位置列表
-- `POST /api/cat/location/upload` - 上传猫咪位置
-
-#### AI服务
-- `POST /api/cat/prediction/predict` - 猫咪品种识别
 
 完整API文档请访问：`http://localhost:8080/doc.html`
 
@@ -276,19 +257,5 @@ A: 修改application-prod.yml配置，使用`java -jar`或Docker部署。
 Made with ❤️ for stray cats
 
 </div>
-
-## 📸 项目截图
-
-实际页面效果如下（图片更新于2024/12，最新版已对部分页面重新优化）
-
-![pic1_20250207234240](pic1_20250207234240.jpg)
-
-![pic2_20250207234256](pic2_20250207234256.jpg)
-
-![pic3_20250207234307](pic3_20250207234307.jpg)
-
-![pic5_20250211221456](pic5_20250211221456.jpg)
-
-![pic4_20250207234318](pic4_20250207234318.jpg)
 
 
