@@ -5,9 +5,7 @@ target/
 !**/src/test/**/target/
 
 ### Configuration Files ###
-src/main/resources/application-dev.yml
-src/main/resources/application-prod.yml
-src/main/resources/application-local.yml
+
 
 ### STS ###
 .apt_generated
@@ -69,3 +67,8 @@ Desktop.ini
 ### Test Scripts ###
 test_*.ps1
 test_*.sh
+
+### 本地配置和敏感文件 ###
+src\main\resources\application.yml
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
