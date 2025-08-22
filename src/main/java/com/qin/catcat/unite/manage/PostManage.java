@@ -81,7 +81,7 @@ public class PostManage {
         }
         // -------------------
         
-        log.info("重新计算权重和随机排序完成:{}",weightedPosts);
+        // log.info("重新计算权重和随机排序完成:{}",weightedPosts);
         // 构建缓存key
         String cacheKey = Constant.WEIGHTED_POSTS_KEY + currentUserId + ":" + System.currentTimeMillis();
         // 缓存权重排序结果

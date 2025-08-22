@@ -1,39 +1,74 @@
 package com.qin.catcat.unite.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.qin.catcat.unite.common.interceptor.JwtInterceptor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.extern.slf4j.Slf4j;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
-//不过这里？？
+/**
+ * Web配置类，处理HTTP请求和响应的编码
+ */
 @Configuration
-@Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
-    // @Autowired
-    // private JwtInterceptor jwtInterceptor;
+    private final ObjectMapper objectMapper;
 
-    // @Override
-    // public void addInterceptors(InterceptorRegistry registry) {
-    //     log.info("WebConfig->addInterceptors()");
-    //     registry.addInterceptor(jwtInterceptor)
-    //             .addPathPatterns("/**")
-    //             .excludePathPatterns("/login","/register"); // 登录接口不需要 JWT 验证
-    // }
+    public WebConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
-    // @Override
-    // public void addCorsMappings(CorsRegistry registry) {
-    //     registry.addMapping("/**") // 对所有请求路径生效
-    //             .allowedOrigins("https://pawprintdiaries.luckyiur.com") // 允许的来源
-    //             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 允许的请求方法
-    //             .allowCredentials(true) // 是否允许凭证
-    //             .allowedHeaders("*") // 允许的请求头
-    //             .exposedHeaders("*") // 允许暴露的响应头
-    //             .maxAge(3600); // 预检请求的有效期
-    // }
+    /**
+     * 配置内容协商，确保SSE响应使用UTF-8编码
+     */
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer
+            .defaultContentType(MediaType.APPLICATION_JSON)
+            .mediaType("json", MediaType.APPLICATION_JSON)
+            .mediaType("stream", new MediaType("text", "event-stream", StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 配置字符串消息转换器，使用UTF-8编码
+     */
+    @Bean
+    public StringHttpMessageConverter stringHttpMessageConverter() {
+        StringHttpMessageConverter converter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
+        converter.setWriteAcceptCharset(false);  // 避免添加'accept-charset'参数
+        
+        // 设置支持的媒体类型，包括SSE
+        List<MediaType> mediaTypes = Arrays.asList(
+            new MediaType("text", "plain", StandardCharsets.UTF_8),
+            new MediaType("text", "html", StandardCharsets.UTF_8),
+            new MediaType("application", "json", StandardCharsets.UTF_8),
+            new MediaType("text", "event-stream", StandardCharsets.UTF_8)
+        );
+        converter.setSupportedMediaTypes(mediaTypes);
+        
+        return converter;
+    }
+    
+    /**
+     * 配置JSON消息转换器，使用UTF-8编码
+     */
+    @Bean
+    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
+        converter.setSupportedMediaTypes(Arrays.asList(
+            MediaType.APPLICATION_JSON,
+            MediaType.TEXT_PLAIN,
+            new MediaType("text", "event-stream", StandardCharsets.UTF_8)
+        ));
+        converter.setDefaultCharset(StandardCharsets.UTF_8);
+        return converter;
+    }
 }

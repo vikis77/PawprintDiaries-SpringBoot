@@ -1,14 +1,10 @@
 package com.qin.catcat.unite.service.impl;
 
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -87,6 +84,8 @@ public class PostServiceImpl implements PostService{
     @Autowired CacheUtils cacheUtils;
     @Autowired 
     PostManage postManage;
+    @Autowired
+    private ApplicationContext applicationContext;
     // @Autowired 
     // private EsPostIndexRepository esPostIndexRepository;
 
@@ -195,14 +194,12 @@ public class PostServiceImpl implements PostService{
             Integer authorId = post.getAuthorId();
             Integer currentUserId = Integer.parseInt(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken()));
             // 查询当前用户是否是超级管理员或管理员
-            UserRole userRole = userRoleMapper.selectOne(new LambdaQueryWrapper<UserRole>()
-                    .eq(UserRole::getUserId, currentUserId)
-                    .eq(UserRole::getRoleId, 1)
+            List<UserRole> userRole = userRoleMapper.selectList(new LambdaQueryWrapper<UserRole>()
+                    .eq(UserRole::getUserId, currentUserId).eq(UserRole::getRoleId, 1)
                     .or()
-                    .eq(UserRole::getUserId, authorId)
-                    .eq(UserRole::getRoleId, 2));
+                    .eq(UserRole::getUserId, authorId).eq(UserRole::getRoleId, 2));
             // 如果作者ID和当前用户ID不一致并且当前用户不是超级管理员或管理员，则抛出异常
-            if (!String.valueOf(authorId).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken())) && userRole == null) {
+            if (!String.valueOf(authorId).equals(jwtTokenProvider.getUserIdFromJWT(TokenHolder.getToken())) && userRole.isEmpty()) {
                 throw new BusinessException(CatcatEnumClass.StatusCode.POST_NOT_APPROVED.getCode(), CatcatEnumClass.StatusCode.POST_NOT_APPROVED.getMessage());
             }
             // 如果作者查看自己尚未通过审核的帖子，则显示“帖子审核中”
@@ -300,7 +297,7 @@ public class PostServiceImpl implements PostService{
 
     /** 
     * 权重随机推送帖子：
-    *   使用 Redis 来缓存一个用户在特定时间段内的推荐结果，
+    * 使用 Redis 来缓存一个用户在特定时间段内的推荐结果，
     * 这样就能保证同一用户在短时间内翻页时看到的是同一批经过随机权重排序的帖子。
     * 当请求第一页时，重新计算随机权重排序，保证推荐的新鲜度。
     * @param page 页码
@@ -921,6 +918,23 @@ public class PostServiceImpl implements PostService{
             esPostIndex.setUpdateTime(java.sql.Timestamp.valueOf(post.getUpdateTime()));
         }
         return esPostIndex;
+    }
+
+    /**
+     * 随机获取一个帖子
+     * @return
+     */
+    public SinglePostVO getRandomPost() {
+        // 刷新获取首页帖子
+        List<HomePostVO> posts = getRandomWeightedPosts(1, 10, true);
+        // 随机获取一个
+        // 随机索引
+        int randomIndex = ThreadLocalRandom.current().nextInt(posts.size());
+        HomePostVO homePostVO = posts.get(randomIndex);
+        // 获取帖子详情
+        PostService proxy = applicationContext.getBean(PostService.class);
+        SinglePostVO result = proxy.getPostByPostId(String.valueOf(homePostVO.getPostId()));
+        return result;
     }
 
 }

@@ -7,7 +7,7 @@ public class UploadCoordinateParam {
     /* 
      * 猫猫id
      */
-    private Long catId;
+    private Integer catId;
 
     /* 
      * 经度

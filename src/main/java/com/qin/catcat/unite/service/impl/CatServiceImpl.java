@@ -26,6 +26,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -37,6 +38,7 @@ import com.qin.catcat.unite.common.utils.ObjectPoolUtil;
 import com.qin.catcat.unite.common.utils.TokenHolder;
 import com.qin.catcat.unite.manage.CatManage;
 import com.qin.catcat.unite.mapper.CatAdoptApplyRecordMapper;
+import com.qin.catcat.unite.mapper.CatCommentMapper;
 import com.qin.catcat.unite.mapper.CatMapper;
 import com.qin.catcat.unite.mapper.CatPicsMapper;
 import com.qin.catcat.unite.mapper.CatTimeLineEventMapper;
@@ -49,6 +51,7 @@ import com.qin.catcat.unite.popo.dto.CatDTO;
 import com.qin.catcat.unite.popo.dto.CoordinateDTO;
 import com.qin.catcat.unite.popo.entity.Cat;
 import com.qin.catcat.unite.popo.entity.CatAdoptApplyRecord;
+import com.qin.catcat.unite.popo.entity.CatComment;
 import com.qin.catcat.unite.popo.entity.CatPics;
 import com.qin.catcat.unite.popo.entity.CatTimeLineEvent;
 import com.qin.catcat.unite.popo.entity.Coordinate;
@@ -88,6 +91,8 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
     ObjectPoolUtil objectPoolUtil; // 对象池工具类
     @Autowired
     CatAdoptApplyRecordMapper catAdoptApplyRecordMapper;
+    @Autowired
+    CatCommentMapper catCommentMapper;
 
     /**
      * @Description 新增猫猫
@@ -113,14 +118,16 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         catMapper.insert(cat);
 
         // 更新缓存
-        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST);
-        cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW);
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST); // 小猫列表
+        cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW); // 小猫列表
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS); // 小猫数据分析
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_COORDINATE_LIST); // 坐标列表
         log.info("新增完成");
         AddCatVO addCatVO = new AddCatVO();
         Map<String, String> fileNameConvertMap = new HashMap<>();
         fileNameConvertMap.put(catDTO.getAvatar(), newFileName);
         addCatVO.setFileNameConvertMap(fileNameConvertMap);
-        addCatVO.setCatId(cat.getCatId().intValue());
+        addCatVO.setCatId(cat.getId());
         return addCatVO;
     }
 
@@ -220,7 +227,11 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         return updateCatVO;
     }
 
-    public void delete(Long ID) {
+    /**
+     * @Description 删除猫猫
+     * @param ID 猫猫ID
+     */
+    public void delete(Integer ID) {
         // 逻辑删除
         Cat cat = catMapper.selectById(ID);
         cat.setIsDeleted(1);
@@ -229,12 +240,24 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         // TODO 
         // 删除时间线（逻辑删除）
         // 删除图片
-        // 删除坐标
+        // 删除坐标（逻辑删除）
+        UpdateWrapper<Coordinate> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("cat_id", ID);
+        updateWrapper.set("is_deleted", 1);
+        coordinateMapper.update(updateWrapper);
         // 删除点赞
+        // 删除该小猫对应的待审核评论（逻辑删除）
+        UpdateWrapper<CatComment> updateWrapperCatComment = new UpdateWrapper<>();
+        updateWrapperCatComment.eq("cat_id", ID);
+        updateWrapperCatComment.eq("status", 10);
+        updateWrapperCatComment.set("is_deleted", 1);
+        catCommentMapper.update(updateWrapperCatComment);
 
         // 清除缓存
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_LIST); // 小猫列表
         cacheUtils.remove(Constant.CAT_LIST_FOR_CATCLAW); // 小猫列表
         cacheUtils.remove(Constant.HOT_FIRST_TIME_CAT_DATA_ANALYSIS); // 小猫数据分析
+        cacheUtils.remove(Constant.HOT_FIRST_TIME_COORDINATE_LIST); // 坐标列表
         log.info("根据猫猫ID删除信息完成");
     }
 
@@ -331,11 +354,11 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
                 BeanUtils.copyProperties(coordinateDTO, coordinate);
 
                 // 生成ID并设置这一条坐标信息的唯一ID
-                Long ID = Long.parseLong(generatorIdUtil.GeneratorRandomId());
+                Integer ID = Integer.parseInt(generatorIdUtil.GeneratorRandomId());
                 coordinate.setId(ID);
 
                 // 设置更新时间
-                coordinate.setUpdateTime(Timestamp.from(Instant.now()));
+                coordinate.setUpdateTime(LocalDateTime.now());
 
                 // 根据猫猫名查找猫猫ID
                 QueryWrapper<Cat> queryWrapper = new QueryWrapper<>();
@@ -348,7 +371,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
                     // throw new CatNotFoundException("猫猫名不存在: " + catName);
                     continue;
                 }
-                coordinate.setCatId(cat.getCatId());
+                coordinate.setCatId(cat.getId());
 
                 // 插入
                 coordinateMapper.insert(coordinate);
@@ -369,7 +392,7 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         coordinate.setUploader(uploadCoordinateParam.getUploader());
         coordinate.setDescription("");
         coordinate.setArea("");
-        coordinate.setUpdateTime(Timestamp.from(Instant.now()));
+        coordinate.setUpdateTime(LocalDateTime.now());
         coordinateMapper.insert(coordinate);
     }
 
@@ -416,12 +439,12 @@ public class CatServiceImpl extends ServiceImpl<CatMapper, Cat> implements CatSe
         List<Coordinate> coordinates = coordinateMapper.selectList(queryWrapper);
 
         // 使用HashSet存储已处理的猫ID
-        Set<Long> processedCatIds = new HashSet<>();
+        Set<Integer> processedCatIds = new HashSet<>();
         List<CoordinateVO> coordinateVOs = new ArrayList<>();
 
         // 遍历所有坐标记录
         for (Coordinate coordinate : coordinates) {
-            Long catId = coordinate.getCatId();
+            Integer catId = coordinate.getCatId();
             // 如果这只猫还没处理过
             if (!processedCatIds.contains(catId)) {
                 CoordinateVO vo = new CoordinateVO();

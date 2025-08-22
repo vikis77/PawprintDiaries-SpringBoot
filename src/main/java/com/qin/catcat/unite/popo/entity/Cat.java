@@ -28,9 +28,9 @@ import lombok.NoArgsConstructor;
 public class Cat implements Serializable {
     private static final long serialVersionUID = 1L;
     
-    @TableId(value = "cat_id",type = IdType.AUTO)
+    @TableId(value = "id",type = IdType.AUTO)
     //ID 主键
-    private Long catId;
+    private Integer id;
     //猫名
     private String catname;
     //性别 1雄性 0雌性

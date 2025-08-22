@@ -1,12 +1,14 @@
 package com.qin.catcat.unite.popo.entity;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 
 /**
@@ -22,7 +24,7 @@ public class Coordinate {
      * 主键
      */
     @TableId(value = "id",type = IdType.AUTO)
-    private Long id;
+    private Integer id;
     /**
      * 区域
      */
@@ -30,7 +32,7 @@ public class Coordinate {
     /**
      * 猫猫ID
      */
-    private Long catId;
+    private Integer catId;
     /**
      * 描述
      */
@@ -47,9 +49,14 @@ public class Coordinate {
      * 更新时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Timestamp updateTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateTime;
     /* 
      * 上传者
      */
     private String uploader;
+    /**
+     * 是否删除
+     */
+    private Integer isDeleted;
 }

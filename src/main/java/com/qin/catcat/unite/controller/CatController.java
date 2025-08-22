@@ -85,7 +85,7 @@ public class CatController {
     @Operation(summary = "删除猫咪")
     @HasPermission("system:cat:delete")
     @DeleteMapping("/{catId}")
-    public Result<Void> deleteCat(@PathVariable Long catId) {
+    public Result<Void> deleteCat(@PathVariable Integer catId) {
         catService.delete(catId);
         return Result.success();
     }

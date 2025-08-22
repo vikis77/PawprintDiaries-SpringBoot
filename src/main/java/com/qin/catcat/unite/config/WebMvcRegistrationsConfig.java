@@ -1,18 +1,17 @@
 package com.qin.catcat.unite.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
-
-import com.qin.catcat.unite.common.interceptor.JwtInterceptor;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.extern.slf4j.Slf4j;
  
- 
+/**
+ * 静态资源配置
+ */
 @Configuration
 @Slf4j
-public class WebMvcRegistrationsConfig extends WebMvcConfigurationSupport {
+public class WebMvcRegistrationsConfig implements WebMvcConfigurer {
     /**
      * 静态资源配置（使用swagger knife4j 配置，不然404）
      * @param registry

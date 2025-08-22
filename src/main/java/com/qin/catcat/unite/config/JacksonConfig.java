@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -26,11 +27,14 @@ public class JacksonConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
-        
-        // 配置 LocalDateTime 序列化格式
-        javaTimeModule.addSerializer(java.time.LocalDateTime.class, 
-            new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
-            
+
+        // 配置 LocalDateTime 序列化和反序列化格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
+        javaTimeModule.addSerializer(java.time.LocalDateTime.class,
+            new LocalDateTimeSerializer(formatter));
+        javaTimeModule.addDeserializer(java.time.LocalDateTime.class,
+            new LocalDateTimeDeserializer(formatter));
+
         objectMapper.registerModule(javaTimeModule);
         // 禁用将日期写为时间戳
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qin.catcat.unite.mapper.CoordinateMapper">
+    
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.qin.catcat.unite.popo.entity.Coordinate">
+        <id column="id" property="id"/>
+        <result column="cat_id" property="catId"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="area" property="area"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <!-- 坐标VO结果映射 -->
+    <resultMap id="CoordinateVOMap" type="com.qin.catcat.unite.popo.vo.CoordinateVO">
+        <id column="id" property="id"/>
+        <result column="cat_id" property="catId"/>
+        <result column="catname" property="catName"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="area" property="area"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <!-- 查询全部猫猫坐标（最新） -->
+    <select id="getAllCatsWithLatestCoordinates" resultMap="CoordinateVOMap">
+        SELECT 
+            coord.id, 
+            c.id as cat_id,
+            c.catname, 
+            coord.longitude,
+            coord.latitude,
+            coord.update_time,
+            coord.area,
+            coord.description
+        FROM cat c
+        INNER JOIN (
+            SELECT 
+                coord1.id, 
+                coord1.cat_id, 
+                coord1.longitude, 
+                coord1.latitude, 
+                coord1.update_time, 
+                coord1.area, 
+                coord1.description
+            FROM coordinate coord1
+            INNER JOIN (
+                SELECT 
+                    cat_id, 
+                    MAX(update_time) AS latest_timestamp
+                FROM coordinate
+                GROUP BY cat_id
+            ) coord2 ON coord1.cat_id = coord2.cat_id 
+            AND coord1.update_time = coord2.latest_timestamp
+        ) coord ON c.id = coord.cat_id
+        WHERE c.is_deleted = 0
+    </select>
+
+    <!-- 分页查询单只猫的历史坐标信息 -->
+    <select id="selectCoordinatesByCatId" resultMap="CoordinateVOMap">
+        SELECT 
+            coord.id, 
+            coord.cat_id, 
+            c.catname, 
+            coord.longitude,
+            coord.latitude,
+            coord.update_time,
+            coord.area,
+            coord.description
+        FROM cat c
+        LEFT JOIN coordinate coord ON c.id = coord.cat_id
+        WHERE coord.cat_id = #{catId}
+        ORDER BY coord.update_time DESC
+    </select>
+</mapper> 

@@ -10,8 +10,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 
 /**
@@ -25,16 +24,6 @@ import org.springframework.context.annotation.Primary;
  */
 @Configuration
 public class DateConverterConfig {
-
-    @Autowired
-    private GenericConversionService conversionService;
-
-    @Bean
-    public GenericConversionService dateConverters() {
-        conversionService.addConverter(new DateToTimestampConverter());
-        conversionService.addConverter(new TimestampToDateConverter());
-        return conversionService;
-    }
 
     @Bean(name = "dateElasticsearchCustomConversions")
     @Primary

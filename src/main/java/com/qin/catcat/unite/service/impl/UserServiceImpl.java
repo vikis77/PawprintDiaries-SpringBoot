@@ -253,7 +253,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public UpdateProfileVO updateProfile(UpdateProfileDTO updateProfileDTO){
         // 1、查询用户是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username", updateProfileDTO.getUsername());
+        queryWrapper.eq("id", updateProfileDTO.getUserId());
         User user = userMapper.selectOne(queryWrapper);
         if (user.getUserId() != Integer.parseInt(updateProfileDTO.getUserId()) && user.getUsername() != updateProfileDTO.getUsername()) {
             throw new BusinessException(CatcatEnumClass.StatusCode.USER_ALREADY_EXISTS.getCode(), CatcatEnumClass.StatusCode.USER_ALREADY_EXISTS.getMessage());

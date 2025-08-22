@@ -3,7 +3,11 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+### Configuration Files ###
+src/main/resources/application-dev.yml
 src/main/resources/application-prod.yml
+src/main/resources/application-local.yml
 
 ### STS ###
 .apt_generated
@@ -32,3 +36,36 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+*.log
+logs/
+
+### Upload Files ###
+uploads/
+pics/
+files/
+catcat-oos/
+
+### Temporary Files ###
+*.tmp
+*.temp
+*.pid
+*.pid.lock
+
+### Database ###
+*.db
+*.sqlite
+
+### Redis ###
+dump.rdb
+
+### OS ###
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Test Scripts ###
+test_*.ps1
+test_*.sh

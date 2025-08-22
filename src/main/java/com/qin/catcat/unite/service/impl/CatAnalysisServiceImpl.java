@@ -287,7 +287,8 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
             }
 
             // 分析健康状态
-            healthStatus.put(cat.getHealthStatus(), healthStatus.get(cat.getHealthStatus()) + 1);
+            // 暂时不分析健康状态
+            // healthStatus.put(cat.getHealthStatus(), healthStatus.get(cat.getHealthStatus()) + 1);
 
             // 分析区域分布
             String area = cat.getArea();
@@ -310,8 +311,9 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
                                  sterilizationRatio.get(cat.getSterilizationStatus()) + 1);
 
             // 分析疫苗接种情况
-            vaccinationRatio.put(cat.getVaccinationStatus(), 
-                               vaccinationRatio.get(cat.getVaccinationStatus()) + 1);
+            // 暂时不分析疫苗接种情况
+            // vaccinationRatio.put(cat.getVaccinationStatus(), 
+            //                    vaccinationRatio.get(cat.getVaccinationStatus()) + 1);
         }
     }
     
@@ -410,7 +412,7 @@ public class CatAnalysisServiceImpl implements CatAnalysisService {
                    .eq("is_deleted", 0);
 
         // 初始化最近6个月的数据
-        Map<Integer, FundCalculateVO> monthlyData = new TreeMap<>();
+        Map<Integer, FundCalculateVO> monthlyData = new LinkedHashMap<>();
         for (int i = 0; i < 6; i++) {
             LocalDate date = currentDate.minusMonths(i);
             int month = date.getMonthValue();

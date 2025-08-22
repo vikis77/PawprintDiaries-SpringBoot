@@ -1,13 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.qin.catcat.unite.mapper.CatMapper">
+
+    <!-- 定义CatListVO的结果映射,用于将数据库字段映射到VO对象属性 -->
+    <resultMap id="CatListVOMap" type="com.qin.catcat.unite.popo.vo.CatListVO">
+        <id column="id" property="catId"/>
+        <result column="catname" property="catname"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="birthday" property="birthday"/>
+        <result column="avatar" property="avatar"/>
+        <result column="food" property="food"/>
+        <result column="taboo" property="taboo"/>
+        <result column="cat_character" property="catCharacter"/>
+        <result column="health_status" property="healthStatus"/>
+        <result column="sterilization_status" property="sterilizationStatus"/>
+        <result column="vaccination_status" property="vaccinationStatus"/>
+        <result column="bad_record" property="badRecord"/>
+        <result column="area" property="area"/>
+        <result column="breed" property="breed"/>
+        <result column="cat_guide" property="catGuide"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="trending" property="trending"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="is_adopted" property="isAdopted"/>
+        <result column="is_liked_today" property="isLikedToday"/>
+        <result column="comment_count" property="commentCount"/>
+    </resultMap>
+    
     <!-- 查询猫咪列表及其评论数量 -->
-    <select id="selectCatList">
+    <select id="selectCatList" resultMap="CatListVOMap">
         SELECT c.*, COUNT(cc.id) as comment_count
         FROM cat c
-        LEFT JOIN cat_comment cc ON c.cat_id = cc.cat_id AND cc.is_deleted = 0 AND cc.status = 20
+        LEFT JOIN cat_comment cc ON c.id = cc.id AND cc.is_deleted = 0 AND cc.status = 20
         WHERE c.is_deleted = 0
-        GROUP BY c.cat_id
+        GROUP BY c.id
         ORDER BY c.create_time ASC
     </select>
 </mapper>

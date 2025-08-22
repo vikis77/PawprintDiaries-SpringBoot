@@ -1,7 +1,11 @@
 package com.qin.catcat.unite.param;
 
+import java.io.Serial;
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import com.qin.catcat.unite.popo.entity.Post;
 
 import lombok.Data;
 
@@ -32,4 +36,20 @@ public class UpdateProfileParam {
     private String signature;
     // 头像
     private String avatar;
+    // 状态(1:启用,0:禁用)
+    private Integer status;
+    // 创建时间
+    private LocalDateTime createTime;
+    // 更新时间
+    private LocalDateTime updateTime;
+    // 粉丝数
+    private Integer fansCount;
+    // 关注数
+    private Integer followCount;
+    // 帖子数
+    private Integer postCount;
+    // 帖子点赞数
+    private Integer postLikedCount;
+    // 帖子
+    private List<Post> postList;
 }

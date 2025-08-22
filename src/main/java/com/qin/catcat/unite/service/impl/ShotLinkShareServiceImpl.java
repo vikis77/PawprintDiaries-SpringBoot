@@ -53,7 +53,6 @@ public class ShotLinkShareServiceImpl implements ShotLinkShareService {
             // 使用算法生成（Base62编码）：根据url生成短链接关键词
             long urlId = getUrlId(url);
             String shortLink = ShortLinkUtils.generateShortLink(urlId);
-
             ShotLink shotLinkEntity = new ShotLink();
             if (url.contains("catId=")) {
                 shotLinkEntity.setType(10);
@@ -66,7 +65,6 @@ public class ShotLinkShareServiceImpl implements ShotLinkShareService {
             shotLinkEntity.setConvertUrl(shortLink);
             // 保存短链接到数据库
             shotLinkShareMapper.insert(shotLinkEntity);
-
             String returnUrl = "";
             // 如果是开发环境,返回开发环境链接
             if ("dev".equals(environment.getProperty("spring.profiles.active"))) {
@@ -91,8 +89,6 @@ public class ShotLinkShareServiceImpl implements ShotLinkShareService {
                             "这是一个关于校园流浪猫救助和分享的社区，快来一起关注和讨论吧！";
                 }
             }
-
-            
             shotLinkEntity.setConvertUrl(returnUrl);
             return shotLinkEntity;
         });
@@ -107,8 +103,14 @@ public class ShotLinkShareServiceImpl implements ShotLinkShareService {
     @Override
     public String getOriginUrl(String shortLink) {
         // 获取短链接中?之后的部分
-        // String shortLinkWithoutParam = shortLink.substring(shortLink.indexOf("?") + 1);
-        ShotLink shotLink = shotLinkShareMapper.selectOne(new LambdaQueryWrapper<ShotLink>().eq(ShotLink::getConvertUrl, shortLink).eq(ShotLink::getIsDeleted, 0));
+        // 根据短链接和未删除状态查询最新的一条记录
+        ShotLink shotLink = shotLinkShareMapper.selectOne(
+            new LambdaQueryWrapper<ShotLink>()
+                .eq(ShotLink::getConvertUrl, shortLink)
+                .eq(ShotLink::getIsDeleted, 0)
+                .orderByDesc(ShotLink::getUpdateTime)
+                .last("LIMIT 1")
+        );
         // 如果是开发环境,直接返回原始链接,方便调试
         if ("dev".equals(environment.getProperty("spring.profiles.active"))) {
             if (shotLink.getType() == 10) {

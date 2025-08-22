@@ -45,7 +45,7 @@ public interface CatService {
     /**
      * 删除猫咪
      */
-    void delete(Long id);
+    void delete(Integer id);
 
     /**
      * 点赞小猫

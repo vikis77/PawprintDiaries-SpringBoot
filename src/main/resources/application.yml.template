@@ -63,6 +63,14 @@ management:
       instrument: true
 # 微信配置
 wx:
-  appId: wx59bda6b87d597cbf
-  appSecret: ce16d796044d4cee0b965fcf227079ce
+  appId: 
+  appSecret: 
+
+# 服务器配置
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 

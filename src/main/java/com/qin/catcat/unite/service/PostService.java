@@ -167,4 +167,9 @@ public interface PostService {
     * 分页获取同步ES的全部帖子数据
     */
     public List<EsPostIndex> selectEsPostIndexByPage(int page,int pageSize);
+
+    /**
+     * 随机获取一个帖子
+     */
+    public SinglePostVO getRandomPost();
 }

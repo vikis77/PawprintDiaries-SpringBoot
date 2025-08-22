@@ -8,6 +8,8 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 import com.qin.catcat.unite.controller.handle.CatWebSocketHandler;
+import com.randb.springaichatstarter.websocket.ChatWebSocketHandler;
+
 
 @Configuration
 @EnableWebSocket

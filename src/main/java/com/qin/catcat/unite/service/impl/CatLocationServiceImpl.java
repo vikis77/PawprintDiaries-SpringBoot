@@ -3,6 +3,7 @@ package com.qin.catcat.unite.service.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -92,8 +93,12 @@ public class CatLocationServiceImpl implements CatLocationService {
     @SuppressWarnings("unchecked")
     public List<CoordinateVO> selectCoordinate() {
         // 从缓存中获取数据，如果缓存中没有数据，则从数据库中查询
-        return cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_COORDINATE_LIST, List.class, 
+        List<CoordinateVO> coordinateVOs = cacheUtils.getWithMultiLevel(Constant.HOT_FIRST_TIME_COORDINATE_LIST, List.class, 
                 () -> coordinateMapper.getAllCatsWithLatestCoordinates());
+        // 按时间排序
+        coordinateVOs.sort(Comparator.comparing(CoordinateVO::getUpdateTime).reversed());
+        log.info("获取所有猫咪最新位置完成,共查询到{}条记录", coordinateVOs.size());
+        return coordinateVOs;
     }
 
     @Override
@@ -110,17 +115,14 @@ public class CatLocationServiceImpl implements CatLocationService {
         QueryWrapper<Coordinate> queryWrapper = new QueryWrapper<>();
         queryWrapper.like("update_time", date)
                    .orderByDesc("update_time"); // 按时间倒序排序
-        
         // 执行查询
         List<Coordinate> coordinates = coordinateMapper.selectList(queryWrapper);
-        
         // 使用HashSet存储已处理的猫ID
-        Set<Long> processedCatIds = new HashSet<>();
+        Set<Integer> processedCatIds = new HashSet<>();
         List<CoordinateVO> coordinateVOs = new ArrayList<>();
-        
         // 遍历所有坐标记录
         for(Coordinate coordinate : coordinates) {
-            Long catId = coordinate.getCatId();
+            Integer catId = coordinate.getCatId();
             // 如果这只猫还没处理过
             if(!processedCatIds.contains(catId)) {
                 CoordinateVO vo = new CoordinateVO();
@@ -134,7 +136,6 @@ public class CatLocationServiceImpl implements CatLocationService {
                 processedCatIds.add(catId);
             }
         }
-        
         log.info("按日期{}查询小猫坐标信息完成,共查询到{}条记录", date, coordinateVOs.size());
         return coordinateVOs;
     }
